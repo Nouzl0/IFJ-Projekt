@@ -1,3 +1,5 @@
+#include <stdio.h>
+
 #include "string_builder.h"
 
 string_builder_t* string_builder_ctor(){
@@ -35,6 +37,12 @@ void string_builder_add_char(string_builder_t* sb_ptr, char c){
 	sb_ptr->content[sb_ptr->len] = '\0';
 }
 
+void string_builder_print(string_builder_t* sb_ptr){
+	for (int i = 0; i < sb_ptr->len; i++){
+		printf("%c",sb_ptr->content[i]);
+	}
+	printf("%c",'\n');
+}
 
 void string_builder_dtor(string_builder_t* sb_ptr){
 	free(sb_ptr->content);

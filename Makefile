@@ -17,11 +17,11 @@ debug: createdirs
 build: createdirs
 	cd src && $(MAKE) build EXE="$(EXE)" BLDDIR="$(BLDDIR)"
 
-run: build
-	./build/$(EXE)
+run: debug
+	./$(DBGDIR)/$(EXE)
 
 gdb: debug
-	gdb ./debug_build/$(EXE)
+	gdb ./$(DBGDIR)/$(EXE)
 
 clean:
 	rm -rf build debug_build
