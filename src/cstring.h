@@ -4,9 +4,9 @@
 #define STRING_BASE_SIZE 10
 
 typedef struct {
-    int size;
+	int size;
 	int len;
-    char* content;
+	char* content;
 } cstring_t;
 
 cstring_t* cstring_ctor();

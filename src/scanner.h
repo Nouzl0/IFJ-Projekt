@@ -6,6 +6,8 @@
 #define BUFFER_SIZE 8
 
 typedef struct {
+	int found_end;
+	int end_index;
 	char buffer[BUFFER_SIZE];
 } sbuffer_t;
 

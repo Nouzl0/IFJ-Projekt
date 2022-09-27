@@ -33,7 +33,7 @@ enum token_type {
 	
 	IDENTIFIER,     // Promena, jmeno funkce 
 	STRING,         //  
-	NUMBER         //
+	NUMBER          //
 	
 }
 

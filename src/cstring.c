@@ -7,7 +7,6 @@ cstring_t* cstring_ctor(){
 	char* str_ptr = malloc(sizeof(char) *STRING_BASE_SIZE );
 
 	if (cs_ptr == NULL || str_ptr == NULL){
-		//TODO: alloc error handle
 		return NULL;
 	}
 	
@@ -42,7 +41,7 @@ void cstring_add_char(cstring_t* cs_ptr, char c){
 
 void cstring_print(cstring_t* cs_ptr){
 	for (int i = 0; i < cs_ptr->len; i++){
-		printf("%c",cs_ptr->content[i]);
+		printf("|%c|",cs_ptr->content[i]);
 	}
 	
 	printf("%c",'\n');
@@ -53,7 +52,6 @@ cstring_t* cstring_import(char* str_ptr, int len){
 	char* content_ptr = malloc(sizeof(char) * (len + 1));
 	
 	if (cs_ptr == NULL || str_ptr == NULL){
-		//TODO: alloc error handle
 		return NULL;
 	}
 	
