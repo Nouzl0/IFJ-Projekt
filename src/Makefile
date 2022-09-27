@@ -31,10 +31,10 @@ all: build
 debug: $(DBGEXE)
 
 $(DBGEXE): $(DBGOBJS)
-	$(CC) $(CFLAGS) $(DBGCFLAGS) -o $(DBGEXE) $^
+	@$(CC) $(CFLAGS) $(DBGCFLAGS) -o $(DBGEXE) $^
 
 $(DBGDIRUP)/%.o: %.c
-	$(CC) -c $(CFLAGS) $(DBGCFLAGS) -o $@ $<
+	@$(CC) -c $(CFLAGS) $(DBGCFLAGS) -o $@ $<
 
 #
 # Build rules
@@ -42,7 +42,7 @@ $(DBGDIRUP)/%.o: %.c
 build: $(BLDEXE)
 
 $(BLDEXE): $(BLDOBJS)
-	$(CC) $(CFLAGS) $(BLDCFLAGS) -o $(BLDEXE) $^
+	@$(CC) $(CFLAGS) $(BLDCFLAGS) -o $(BLDEXE) $^
 
 $(BLDDIRUP)/%.o: %.c
-	$(CC) -c $(CFLAGS) $(BLDCFLAGS) -o $@ $<
+	@$(CC) -c $(CFLAGS) $(BLDCFLAGS) -o $@ $<

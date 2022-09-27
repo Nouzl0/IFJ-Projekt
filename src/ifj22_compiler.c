@@ -1,10 +1,15 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "cstring.h"
+#include "scanner.h"
 
 int main() {
 	
+	
+	scanner_tokenize_file("./example2.php");
+	
+	
+	/*
 	cstring_t* cs_ptr = cstring_ctor();
 	
 	cstring_add_char(cs_ptr,'h');
@@ -22,34 +27,7 @@ int main() {
 	cstring_print(cs_ptr);
 	
 	cstring_dtor(cs_ptr);
-	
-	
-	/*
-
-	FILE* f = fopen("./example.php","r");
-
-	if (f == NULL){
-		return 1;
-	}
-
-
-	while (1){
-		char c = fgetc(f);
-		//curr_char_ptr = 1;
-
-		if(c == EOF){
-		  break;
-		}
-		
-	printf("%d\n",c);
-		
-	}
-	
-	free(f);
-
-
 	*/
-	
 	
 	return 0;
 }

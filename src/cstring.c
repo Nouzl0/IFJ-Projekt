@@ -1,5 +1,3 @@
-#include <stdio.h>
-
 #include "cstring.h"
 
 cstring_t* cstring_ctor(){
@@ -18,6 +16,11 @@ cstring_t* cstring_ctor(){
 	cs_ptr->content = str_ptr;
 
 	return cs_ptr;
+}
+
+void cstring_dtor(cstring_t* cs_ptr){
+	free(cs_ptr->content);
+	free(cs_ptr);
 }
 
 void cstring_add_char(cstring_t* cs_ptr, char c){
@@ -41,10 +44,35 @@ void cstring_print(cstring_t* cs_ptr){
 	for (int i = 0; i < cs_ptr->len; i++){
 		printf("%c",cs_ptr->content[i]);
 	}
+	
 	printf("%c",'\n');
 }
 
-void cstring_dtor(cstring_t* cs_ptr){
-	free(cs_ptr->content);
-	free(cs_ptr);
+cstring_t* cstring_import(char* str_ptr, int len){
+	cstring_t* cs_ptr = malloc(sizeof(cstring_t));
+	char* content_ptr = malloc(sizeof(char) * (len + 1));
+	
+	if (cs_ptr == NULL || str_ptr == NULL){
+		//TODO: alloc error handle
+		return NULL;
+	}
+	
+	cs_ptr->size = len + 1;
+	cs_ptr->len = len;
+	cs_ptr->content = content_ptr;
+
+	for (int i = 0; i < len; i++){
+		cs_ptr->content[i] = str_ptr[i];
+	}
+
+	cs_ptr->content[len] = '\0';
+
+	return cs_ptr;
+	
+}
+
+void cstring_import_print(char* str_ptr, int len){
+	cstring_t* cs_ptr = cstring_import(str_ptr,len);
+	cstring_print(cs_ptr);
+	cstring_dtor(cs_ptr);
 }

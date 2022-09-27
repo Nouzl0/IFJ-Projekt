@@ -8,20 +8,27 @@ BLDDIR=build
 # Deafult
 all: build
 
+# Pomocne 
 createdirs:
 	@mkdir -p $(DBGDIR) $(BLDDIR)
+
+clean:
+	rm -rf build debug_build
+
+clearterminal:
+	@clear
 	
 debug: createdirs
-	cd src && $(MAKE) debug EXE="$(EXE)" DBGDIR="$(DBGDIR)"
+	@cd src && $(MAKE) debug EXE="$(EXE)" DBGDIR="$(DBGDIR)"
 
 build: createdirs
-	cd src && $(MAKE) build EXE="$(EXE)" BLDDIR="$(BLDDIR)"
+	@cd src && $(MAKE) build EXE="$(EXE)" BLDDIR="$(BLDDIR)"
 
-run: debug
+run: clearterminal debug
 	./$(DBGDIR)/$(EXE)
 
 gdb: debug
 	gdb ./$(DBGDIR)/$(EXE)
-
-clean:
-	rm -rf build debug_build
+	
+valgrind: debug
+	valgrind ./$(DBGDIR)/$(EXE)
