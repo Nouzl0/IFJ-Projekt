@@ -1,28 +1,27 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "string_builder.h"
+#include "cstring.h"
 
 int main() {
 	
+	cstring_t* cs_ptr = cstring_ctor();
 	
-	string_builder_t* sb_ptr = string_builder_ctor();
+	cstring_add_char(cs_ptr,'h');
+	cstring_add_char(cs_ptr,'e');
+	cstring_add_char(cs_ptr,'l');
+	cstring_add_char(cs_ptr,'l');
+	cstring_add_char(cs_ptr,'o');
+	cstring_add_char(cs_ptr,' ');
+	cstring_add_char(cs_ptr,'w');
+	cstring_add_char(cs_ptr,'o');
+	cstring_add_char(cs_ptr,'r');
+	cstring_add_char(cs_ptr,'l');
+	cstring_add_char(cs_ptr,'d');
 	
-	string_builder_add_char(sb_ptr,'h');
-	string_builder_add_char(sb_ptr,'e');
-	string_builder_add_char(sb_ptr,'l');
-	string_builder_add_char(sb_ptr,'l');
-	string_builder_add_char(sb_ptr,'o');
-	string_builder_add_char(sb_ptr,' ');
-	string_builder_add_char(sb_ptr,'w');
-	string_builder_add_char(sb_ptr,'o');
-	string_builder_add_char(sb_ptr,'r');
-	string_builder_add_char(sb_ptr,'l');
-	string_builder_add_char(sb_ptr,'d');
+	cstring_print(cs_ptr);
 	
-	string_builder_print(sb_ptr);
-	
-	string_builder_dtor(sb_ptr);
+	cstring_dtor(cs_ptr);
 	
 	
 	/*
