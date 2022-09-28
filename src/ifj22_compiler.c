@@ -5,7 +5,7 @@
 int main() {
 	
 	
-	scanner_tokenize_file("./example2.php");
+	scanner_tokenize_file("./example.php");
 	
 	
 	/*

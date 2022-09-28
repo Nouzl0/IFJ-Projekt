@@ -1,11 +1,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "cstring.h"
+#include "string.h"
+#include "token.h"
 
 #define BUFFER_SIZE 8
 
 typedef struct {
+	FILE* source;
 	int found_end;
 	int end_index;
 	char buffer[BUFFER_SIZE];
@@ -18,6 +20,10 @@ typedef struct {
     char* content;
 } scanner_t;
 */
+
+void sbuffer_shift(sbuffer_t* sb);
+
+sbuffer_t* sbuffer_init(FILE* source);
 
 void scanner_tokenize(FILE* source);
 

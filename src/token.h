@@ -1,9 +1,20 @@
 #include <stdlib.h>
 
+#include "cstring.h"
+
 #define TOKEN_ARRAY_BASE_SIZE 20
 #define TOKEN_BASE_SIZE 6
 
-enum token_type {
+typedef enum {
+	
+	EQUAL,          // ==
+	NOT_EQUAL,      // !=
+	GREATER_EQUAL,  // >=
+	LESS_EQUAL,     // <=
+	GREATER,        // >
+	LESS,           // <
+	ASSIGN,         // =
+	NEG,            // !
 	LEFT_PAREN,     // (
 	RIGHT_PAREN,    // )
 	LEFT_BRACE,     // {
@@ -14,28 +25,30 @@ enum token_type {
 	PLUS,           // +
 	SEMICOLON,      // ;
 	STAR,           // *
+	DOL,            // &
 	SLASH,          // /
 	
-	NOT,            // !
-	EQUAL,          // ==
-	NOT_EQUAL,      // !=
-	GREATER_EQUAL,  // >=
-	LESS_EQUAL ,    // <=
 	
 	AND, 
 	OR,
 	NIL,
 	IF,
 	ELSE,
-	STRING,
 	WHILE,
 	FUNC,
+	RETURN,
+	INT,
+	FLOAT,
+	STRING,  
 	
-	IDENTIFIER,     // Promena, jmeno funkce 
-	STRING,         //  
-	NUMBER          //
-	
-}
+	IDENTIFIER    // Promena, jmeno funkce                
+} token_type;
+
+typedef struct {
+	char* match;
+	token_type type;
+} trecord_t;
+
 
 //Token
 typedef struct {
@@ -56,3 +69,5 @@ typedef struct {
 //int add_new_token(int line);
 
 int token_array_ctor(token_array_t* token_array);
+
+int compare_keywords(char* str_ptr);

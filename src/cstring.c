@@ -39,7 +39,7 @@ void cstring_add_char(cstring_t* cs_ptr, char c){
 	cs_ptr->content[cs_ptr->len] = '\0';
 }
 
-void cstring_print(cstring_t* cs_ptr){
+void cstring_debug_print(cstring_t* cs_ptr){
 	for (int i = 0; i < cs_ptr->len; i++){
 		printf("|%c|",cs_ptr->content[i]);
 	}
@@ -69,8 +69,31 @@ cstring_t* cstring_import(char* str_ptr, int len){
 	
 }
 
-void cstring_import_print(char* str_ptr, int len){
+void cstring_debug_import_print(char* str_ptr, int len){
 	cstring_t* cs_ptr = cstring_import(str_ptr,len);
-	cstring_print(cs_ptr);
+	cstring_debug_print(cs_ptr);
 	cstring_dtor(cs_ptr);
+}
+
+int cstring_get_length(char* str_ptr){
+	int len = 0;
+	while(str_ptr[len] != '\0'){
+		len++;
+	}
+	return len;
+}
+
+cstring_t* cstring_new(char* str_ptr){
+	return cstring_import(str_ptr,cstring_get_length(str_ptr));
+}
+
+int cstring_compare(char* str_ptr1, char* str_ptr2){
+	int i = 0;
+	while(str_ptr1[i] != '\0'){
+		if(str_ptr1[i] != str_ptr2[i]){
+			return 0;
+		}
+		i++;
+	}
+	return 1;
 }
