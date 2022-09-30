@@ -24,7 +24,7 @@ debug: createdirs
 build: createdirs
 	@cd src && $(MAKE) build EXE="$(EXE)" BLDDIR="$(BLDDIR)"
 
-run: clearterminal debug
+run: debug
 	./$(DBGDIR)/$(EXE)
 
 gdb: debug

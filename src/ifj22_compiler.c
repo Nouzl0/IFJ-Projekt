@@ -1,32 +1,15 @@
 #include <stdlib.h>
 
-#include "scanner.h"
+#include "lex.h"
 
-int main() {
+int main(){
 	
+	token_array_t token_array;
+	token_array_ctor(&token_array);
 	
-	scanner_tokenize_file("./example.php");
+	lex_tokenize_file(&token_array,"./example.php");
 	
-	
-	/*
-	cstring_t* cs_ptr = cstring_ctor();
-	
-	cstring_add_char(cs_ptr,'h');
-	cstring_add_char(cs_ptr,'e');
-	cstring_add_char(cs_ptr,'l');
-	cstring_add_char(cs_ptr,'l');
-	cstring_add_char(cs_ptr,'o');
-	cstring_add_char(cs_ptr,' ');
-	cstring_add_char(cs_ptr,'w');
-	cstring_add_char(cs_ptr,'o');
-	cstring_add_char(cs_ptr,'r');
-	cstring_add_char(cs_ptr,'l');
-	cstring_add_char(cs_ptr,'d');
-	
-	cstring_print(cs_ptr);
-	
-	cstring_dtor(cs_ptr);
-	*/
+	token_array_dtor(&token_array);
 	
 	return 0;
 }

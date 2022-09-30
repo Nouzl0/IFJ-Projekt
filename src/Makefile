@@ -1,8 +1,8 @@
 CC=gcc
 CFLAGS=-Wall -Wextra -std=c99
 
-SRCS=$(wildcard *.c)
-OBJS=$(SRCS:.c=.o)
+SRCS := $(wildcard *.c)
+OBJS := $(SRCS:.c=.o)
 
 #
 # Debug build settings
@@ -25,6 +25,7 @@ BLDCFLAGS = -DNDEBUG
 # Deafult
 all: build
 
+
 #
 # Debug build rules
 #
@@ -32,6 +33,7 @@ debug: $(DBGEXE)
 
 $(DBGEXE): $(DBGOBJS)
 	@$(CC) $(CFLAGS) $(DBGCFLAGS) -o $(DBGEXE) $^
+
 
 $(DBGDIRUP)/%.o: %.c
 	@$(CC) -c $(CFLAGS) $(DBGCFLAGS) -o $@ $<
