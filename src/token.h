@@ -3,10 +3,10 @@
 #include "cstring.h"
 
 #define TOKEN_ARRAY_BASE_SIZE 20
-#define TOKEN_BASE_SIZE 6
 
 typedef enum {
-	
+	HEADER,         // <?php
+	FOOTER,         // ?>
 	EQUAL,          // ==
 	NOT_EQUAL,      // !=
 	GREATER_EQUAL,  // >=
@@ -25,9 +25,8 @@ typedef enum {
 	PLUS,           // +
 	SEMICOLON,      // ;
 	STAR,           // *
-	DOL,            // &
 	SLASH,          // /
-	
+	DDOT,           // :
 	
 	AND, 
 	OR,
@@ -41,7 +40,12 @@ typedef enum {
 	FLOAT,
 	STRING,  
 	
-	IDENTIFIER    // Promena, jmeno funkce                
+	IDENTIFIER,             // Nazev funkce
+	VARIABLE,       // Nazev promene
+	NUMBER,         // Obsah cele cislo 
+	FRACTION,       // Obsah cisla s desetinou carou
+	TEXT            // Obsah retezce
+	
 } token_type;
 
 typedef struct {
@@ -52,10 +56,9 @@ typedef struct {
 
 //Token
 typedef struct {
-    int size;
-	int len;
+	token_type type;
 	int line;
-    char* content;
+    cstring_t* content;
 } token_t;
 
 //Pole tokenu
@@ -68,6 +71,16 @@ typedef struct {
 //Vytváří token a přidává ho do pole tokenu
 //int add_new_token(int line);
 
+trecord_t keyword_register[11];
+
+trecord_t symbol_register[22];
+
+int token_compare_keywords(char* str_ptr);
+
+int token_compare_symbol(char* str_ptr);
+
 int token_array_ctor(token_array_t* token_array);
 
-int compare_keywords(char* str_ptr);
+int token_array_add(token_array_t* ta_ptr, token_type type, int line, cstring_t* str_ptr);
+
+void token_array_dtor(token_array_t* token_array);
