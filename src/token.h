@@ -48,6 +48,49 @@ typedef enum {
 	
 } token_type;
 
+
+static const char *TOKEN_ENUM_STRINGS[] = {
+    "HEADER",
+	"FOOTER",
+	"EQUAL",
+	"NOT_EQUAL",
+	"GREATER_EQUAL",
+	"LESS_EQUAL",
+	"GREATER",
+	"LESS",
+	"ASSIGN",
+	"NEG",
+	"LEFT_PAREN",
+	"RIGHT_PAREN",
+	"LEFT_BRACE",
+	"RIGHT_BRACE",
+	"COMMA",
+	"DOT",
+	"MINUS",
+	"PLUS",
+	"SEMICOLON",
+	"STAR",
+	"SLASH",
+	"DDOT",
+	"AND",
+	"OR",
+	"NIL",
+	"IF",
+	"ELSE",
+	"WHILE",
+	"FUNC",
+	"RETURN",
+	"INT",
+	"FLOAT",
+	"STRING",
+	"IDENTIFIER",
+	"VARIABLE",
+	"NUMBER",
+	"FRACTION",
+	"TEXT"
+};
+
+
 typedef struct {
 	char* match;
 	token_type type;
@@ -75,9 +118,9 @@ trecord_t keyword_register[11];
 
 trecord_t symbol_register[22];
 
-int token_compare_keywords(char* str_ptr);
+int token_compare_keywords(char* str_ptr, int* ttype_ptr);
 
-int token_compare_symbol(char* str_ptr);
+int token_compare_symbol(char* str_ptr, int* ttype_ptr);
 
 int token_array_ctor(token_array_t* token_array);
 

@@ -39,24 +39,26 @@ trecord_t keyword_register[11] = {
 	{"string", STRING}
 };
 
-int token_compare_keywords(char* str_ptr){
+int token_compare_keywords(char* str_ptr, int* ttype_ptr){
 	int len = sizeof(keyword_register) / sizeof(keyword_register[0]);
 	for (int i = 0; i < len; i++){
 		if(cstring_compare(keyword_register[i].match,str_ptr)){
-			return i;
+			*ttype_ptr = keyword_register[i].type;
+			return cstring_get_length(keyword_register[i].match); 
 		}
 	}
-	return -1;
+	return 0;
 }
 
-int token_compare_symbol(char* str_ptr){
+int token_compare_symbol(char* str_ptr, int* ttype_ptr){
 	int len = sizeof(symbol_register) / sizeof(symbol_register[0]);
 	for (int i = 0; i < len; i++){
 		if(cstring_compare(symbol_register[i].match,str_ptr)){
-			return i;
+			*ttype_ptr = symbol_register[i].type;
+			return cstring_get_length(symbol_register[i].match); 
 		}
 	}
-	return -1;
+	return 0;
 }
 
 
@@ -74,30 +76,6 @@ int token_array_ctor(token_array_t* ta_ptr){
 	ta_ptr->elems = tokens;
 	return 0;	
 }
-
-
-
-
-/*
-void cstring_add_char(cstring_t* cs_ptr, char c){
-	//Zjistuje jestli je misto
-	if(cs_ptr->len + 1 >= cs_ptr->size){
-		cs_ptr->content = realloc(cs_ptr->content, cs_ptr->size * 2 * sizeof(char));
-		
-		if (cs_ptr->content == NULL){
-			//TODO: alloc error handle
-		}
-		
-		cs_ptr->size =  cs_ptr->size * 2;
-	}
-	
-	cs_ptr->content[cs_ptr->len] = c;
-	cs_ptr->len++;
-	cs_ptr->content[cs_ptr->len] = '\0';
-}
-*/
-
-
 
 int token_array_add(token_array_t* ta_ptr, token_type type, int line, cstring_t* str_ptr){
 	

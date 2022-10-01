@@ -1,6 +1,6 @@
 #include "lex.h"
 
-int handle_variable(sbuffer_t* sb_ptr){
+void handle_variable(sbuffer_t* sb_ptr){
 	sbuffer_shift(sb_ptr);
 	
 	cstring_t* cs_ptr = cstring_ctor();
@@ -8,40 +8,28 @@ int handle_variable(sbuffer_t* sb_ptr){
 		cstring_add_char(cs_ptr, sb_ptr->buffer[0]);
 		sbuffer_shift(sb_ptr);
 	}
-	printf("VARIABLE: %s\n",cs_ptr->content);
-	cstring_dtor(cs_ptr);
-
-	return 0;
+	
+	token_array_add(sb_ptr->ta_ptr,VARIABLE, sb_ptr->line, cs_ptr);
 }
 
-int handle_number(sbuffer_t* sb_ptr){
+void handle_number(sbuffer_t* sb_ptr){
 	cstring_t* cs_ptr = cstring_ctor();
 	while(is_char_number(sb_ptr->buffer[0])){
 		cstring_add_char(cs_ptr, sb_ptr->buffer[0]);
 		sbuffer_shift(sb_ptr);
 	}
-	printf("NUMBER: %s\n",cs_ptr->content);
-	cstring_dtor(cs_ptr);
 
-	return 0;
+	token_array_add(sb_ptr->ta_ptr,NUMBER, sb_ptr->line, cs_ptr);
 }
 
-int handle_keyword(sbuffer_t* sb_ptr,int index){
-	printf("KEYWORD: %s\n", keyword_register[index].match);
-	sbuffer_skip(sb_ptr,cstring_get_length(keyword_register[index].match));
-	return 1;
-}
-
-int handle_identifier(sbuffer_t* sb_ptr){
+void handle_identifier(sbuffer_t* sb_ptr){
 	cstring_t* cs_ptr = cstring_ctor();
 	while(is_char_variable_name(sb_ptr->buffer[0])){
 		cstring_add_char(cs_ptr, sb_ptr->buffer[0]);
 		sbuffer_shift(sb_ptr);
 	}
-	printf("IDENTIFIER: %s\n",cs_ptr->content);
-	cstring_dtor(cs_ptr);
 
-	return 0;
+	token_array_add(sb_ptr->ta_ptr, IDENTIFIER, sb_ptr->line, cs_ptr);
 }
 
 
@@ -61,7 +49,7 @@ int handle_block_comment(sbuffer_t *sb_ptr){
 			sbuffer_skip(sb_ptr,2);
 			return 0;
 		}
-		
+		//Detekuje nekonecny komentar
 		if(sb_ptr->found_end){
 			return 1;
 		}
@@ -76,12 +64,11 @@ int handle_text(sbuffer_t* sb_ptr){
 	sbuffer_shift(sb_ptr);
 	while(1){
 		if(sb_ptr->buffer[0] == term_char){
-			printf("TEXT: %s\n",cs_ptr->content);
-			cstring_dtor(cs_ptr);
+			token_array_add(sb_ptr->ta_ptr, TEXT, sb_ptr->line, cs_ptr);
 			sbuffer_shift(sb_ptr);
 			return 0;
 		}
-		
+		//Detekuje chybejici ukoceni 
 		if(sb_ptr->found_end){
 			return 1;
 		}
@@ -91,16 +78,13 @@ int handle_text(sbuffer_t* sb_ptr){
 	
 }
 
-void handle_symbol(sbuffer_t* sb_ptr, int index){
-	printf("SYMBOL: %s\n", symbol_register[index].match);
-	sbuffer_skip(sb_ptr,cstring_get_length(symbol_register[index].match));
-}
-
 void lex_tokenize(token_array_t* ta_ptr, FILE* source){
 	
 	//token_array_add(ta_ptr,VARIABLE,0,NULL)
 	
 	sbuffer_t* sb = sbuffer_init(source);
+	
+	sb->ta_ptr = ta_ptr;
 	
 	while(sb->end_index > 0){
 		
@@ -118,13 +102,14 @@ void lex_tokenize(token_array_t* ta_ptr, FILE* source){
 		
 		//Klicove slovo a identifikator
 		if(is_char_letter(sb->buffer[0])){
+			int token_type = 0;
+			int to_skip = token_compare_keywords(sb->buffer,&token_type);
 			
-			int keyword_index = token_compare_keywords(sb->buffer);
-			
-			if(keyword_index != -1){
-				char next = sb->buffer[cstring_get_length(keyword_register[keyword_index].match)];
+			if(to_skip){
+				char next = sb->buffer[to_skip];
 				if(!is_char_variable_name(next)){
-					handle_keyword(sb,keyword_index);
+					token_array_add(sb->ta_ptr, token_type, sb->line, NULL);
+					sbuffer_skip(sb,to_skip);
 					continue;
 				}
 			} 
@@ -152,9 +137,11 @@ void lex_tokenize(token_array_t* ta_ptr, FILE* source){
 		}
 		
 		//Operatory a symboly + php header a footer
-		int index = token_compare_symbol(sb->buffer);
-		if(index > -1){
-			handle_symbol(sb,index);
+		int token_type = 0;
+		int to_skip = token_compare_symbol(sb->buffer, &token_type);
+		if(to_skip){
+			token_array_add(sb->ta_ptr, token_type, sb->line, NULL);
+			sbuffer_skip(sb,to_skip);
 			continue;
 		}
 		
@@ -168,12 +155,7 @@ void lex_tokenize(token_array_t* ta_ptr, FILE* source){
 		break;
 	} 
 	
-	
-	
 	free(sb);
-	
-	
-
 	
 }
 
