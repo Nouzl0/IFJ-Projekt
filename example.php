@@ -10,7 +10,7 @@
 	}
 	$a = "ahoj ";
 	$ret = concat($a, "svete");
-	$b = 45 + 83 + 120 / 20
+	$b = 45 + 83 + 120 / 20;
 	write($ret, $a);
-	returnx();
+	returnx()
 ?>

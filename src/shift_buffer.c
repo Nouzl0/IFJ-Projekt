@@ -20,11 +20,6 @@ int is_char_variable_name(char c){
 	return is_char_letter(c) || is_char_number(c) || c == '_';
 }
 
-	//32 space
-	//13 newline RF
-	//10 newline LF
-	//9  tab
-
 int is_char_permited(char c){
 	return (
 		c == 32 || // Space
@@ -40,6 +35,11 @@ void sbuffer_shift(sbuffer_t* sb){
 		sb->buffer[i] = sb->buffer[i+1];
 	}
 	
+	if(sb->buffer[0] == 13){
+		sb->line++;
+		return;
+	}
+	
 	if(sb->found_end){
 		sb->end_index--;
 		sb->buffer[BUFFER_SIZE - 1] = '\0';
@@ -48,11 +48,6 @@ void sbuffer_shift(sbuffer_t* sb){
 	
 	char c = fgetc(sb->source);
 	sb->buffer[BUFFER_SIZE - 1] = c;
-	
-	if(sb->buffer[0] == 13){
-		sb->line++;
-		return;
-	}
 	
 	if(c == EOF){
 		sb->found_end = 1;

@@ -2,6 +2,7 @@
 
 void handle_variable(sbuffer_t* sb_ptr){
 	sbuffer_shift(sb_ptr);
+	int line = sb_ptr->line;
 	
 	cstring_t* cs_ptr = cstring_ctor();
 	while(is_char_variable_name(sb_ptr->buffer[0])){
@@ -9,27 +10,31 @@ void handle_variable(sbuffer_t* sb_ptr){
 		sbuffer_shift(sb_ptr);
 	}
 	
-	token_array_add(sb_ptr->ta_ptr,VARIABLE, sb_ptr->line, cs_ptr);
+	token_array_add(sb_ptr->ta_ptr,VARIABLE, line, cs_ptr);
 }
 
 void handle_number(sbuffer_t* sb_ptr){
 	cstring_t* cs_ptr = cstring_ctor();
+	int line = sb_ptr->line;
+	
 	while(is_char_number(sb_ptr->buffer[0])){
 		cstring_add_char(cs_ptr, sb_ptr->buffer[0]);
 		sbuffer_shift(sb_ptr);
 	}
 
-	token_array_add(sb_ptr->ta_ptr,NUMBER, sb_ptr->line, cs_ptr);
+	token_array_add(sb_ptr->ta_ptr,NUMBER, line, cs_ptr);
 }
 
 void handle_identifier(sbuffer_t* sb_ptr){
+	int line = sb_ptr->line;
+	
 	cstring_t* cs_ptr = cstring_ctor();
 	while(is_char_variable_name(sb_ptr->buffer[0])){
 		cstring_add_char(cs_ptr, sb_ptr->buffer[0]);
 		sbuffer_shift(sb_ptr);
 	}
 
-	token_array_add(sb_ptr->ta_ptr, IDENTIFIER, sb_ptr->line, cs_ptr);
+	token_array_add(sb_ptr->ta_ptr, IDENTIFIER, line, cs_ptr);
 }
 
 
@@ -89,7 +94,7 @@ void lex_tokenize(token_array_t* ta_ptr, FILE* source){
 	while(sb->end_index > 0){
 		
 		//Jmeno promene
-		if(sb->buffer[0] == '$'){
+		if(sb->buffer[0] == '$' &&  is_char_variable_name(sb->buffer[1])){
 			handle_variable(sb);
 			continue;
 		}
@@ -114,7 +119,6 @@ void lex_tokenize(token_array_t* ta_ptr, FILE* source){
 				}
 			} 
 			handle_identifier(sb);
-
 			continue;
 		}
 		

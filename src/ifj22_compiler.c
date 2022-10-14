@@ -17,12 +17,13 @@ int main(){
 		if(line != token_array.elems[i].line){
 			printf("\n");
 			line = token_array.elems[i].line;
+			printf("%d\t|",line);
 		}
 		
 		if (token_array.elems[i].content == NULL){
-			printf("[%s,-]", TOKEN_ENUM_STRINGS[token_array.elems[i].type]);
+			printf("[%s,-,%d]", TOKEN_ENUM_STRINGS[token_array.elems[i].type],token_array.elems[i].line);
 		} else {
-			printf("[%s,%s]", TOKEN_ENUM_STRINGS[token_array.elems[i].type], token_array.elems[i].content->content);
+			printf("[%s,%s,%d]", TOKEN_ENUM_STRINGS[token_array.elems[i].type], token_array.elems[i].content->content,token_array.elems[i].line);
 		}
 		
 	}
