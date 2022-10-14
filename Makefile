@@ -32,3 +32,6 @@ gdb: debug
 	
 valgrind: debug
 	valgrind ./$(DBGDIR)/$(EXE)
+	
+valgrindf: debug
+	valgrind --leak-check=full ./$(DBGDIR)/$(EXE)

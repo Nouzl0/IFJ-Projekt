@@ -1,1 +1,4 @@
-<?php declare(strict_types=1); $x = $x . $y; ?>
+<?php
+functionx  
+declare(strict_types)
+ $x = $x . $y; " "?>

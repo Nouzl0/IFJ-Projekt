@@ -1,7 +1,8 @@
+#pragma once
 #include <stdlib.h>
 #include <stdio.h>
 
-#define BUFFER_SIZE 8
+#define BUFFER_SIZE 9
 
 typedef struct {
 	FILE* source;
