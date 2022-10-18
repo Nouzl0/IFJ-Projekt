@@ -1,6 +1,13 @@
 #include "lex.h"
+/*
+	TODO:
+	Parsovani cisel s desetinou carkou
+	Pocitani otevrenych a uzavrenych zavorek
+	Nektere funkce by mozna sly implementovat pomoci jedne
 
-//TODO: toto by melo jit udelat pomoci jedne funkce
+*/
+
+
 void handle_variable(sbuffer_t* sb_ptr){
 	sbuffer_shift(sb_ptr);
 	int line = sb_ptr->line;

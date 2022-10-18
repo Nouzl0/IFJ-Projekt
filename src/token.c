@@ -157,3 +157,67 @@ void token_array_dtor(token_array_t* ta_ptr){
 	}
 	free(ta_ptr->elems);
 }
+
+
+
+void token_array_print(token_array_t ta_ptr){
+	static const char *TOKEN_ENUM_STRINGS[] = {
+		"EQUAL",
+		"NOT_EQUAL",
+		"GREATER_EQUAL",
+		"LESS_EQUAL",
+		"GREATER",
+		"LESS",
+		"ASSIGN",
+		"NEG",
+		"LEFT_PAREN",
+		"RIGHT_PAREN",
+		"LEFT_BRACE",
+		"RIGHT_BRACE",
+		"COMMA",
+		"DOT",
+		"MINUS",
+		"PLUS",
+		"SEMICOLON",
+		"STAR",
+		"SLASH",
+		"DDOT",
+		"AND",
+		"OR",
+		"NIL",
+		"IF",
+		"ELSE",
+		"WHILE",
+		"FUNC",
+		"RETURN",
+		"INT",
+		"FLOAT",
+		"STRING",
+		"IDENTIFIER",
+		"VARIABLE",
+		"NUMBER",
+		"FRACTION",
+		"TEXT",
+		"HEADER",
+		"FOOTER"
+	};
+	
+	
+	int line = 0;
+	for (int i = 0; i < ta_ptr.len; i++){
+		
+		if(line != ta_ptr.elems[i].line){
+			printf("\n");
+			line = ta_ptr.elems[i].line;
+			printf("%d\t|",line);
+		}
+		
+		if (ta_ptr.elems[i].content == NULL){
+			printf("[%s,-,%d]", TOKEN_ENUM_STRINGS[ta_ptr.elems[i].type],ta_ptr.elems[i].line);
+		} else {
+			printf("[%s,%s,%d]", TOKEN_ENUM_STRINGS[ta_ptr.elems[i].type], ta_ptr.elems[i].content->content,ta_ptr.elems[i].line);
+		}
+		
+	}
+	printf("\n");
+}
