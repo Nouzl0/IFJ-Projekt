@@ -89,26 +89,23 @@ void binary_tree_add_branch(binary_tree_t* bt_ptr, token_type type, char* data){
 				continue;
 			}
 			*/
-			bt_item_ptr->right = curr_ptr->left;
-			
+			bt_item_ptr->left = curr_ptr->right;
 			curr_ptr->left = bt_item_ptr;
-			
 			bt_ptr->active = bt_item_ptr;
-			
 			//Pushnout mezi
 			//Zbytek stromu vlozit vlevo
 			return;
 		}
 		
-		//Pokracuje dolu smerem vlevo
-		if(curr_ptr->left != NULL && !curr_ptr->left->is_leaf){
-			curr_ptr = curr_ptr->left;
-			continue;
-		}
-		
 		//Pokracuje dolu smerem vpravo
 		if(curr_ptr->right != NULL && !curr_ptr->right->is_leaf){
 			curr_ptr = curr_ptr->right;
+			continue;
+		}
+		
+		//Pokracuje dolu smerem vlevo
+		if(curr_ptr->left != NULL && !curr_ptr->left->is_leaf){
+			curr_ptr = curr_ptr->left;
 			continue;
 		}
 		
@@ -134,8 +131,10 @@ void binary_tree_add_leaf(binary_tree_t* bt_ptr, char* data){
 	
 	if(bt_ptr->active->left == NULL){
 		bt_ptr->active->left = bt_item_ptr;
-	} else {
+	} else if (bt_ptr->active->right == NULL){
 		bt_ptr->active->right = bt_item_ptr;
+	} else {
+		//syntax errori protoze uz neni kam dat list
 	}
 	
 }
@@ -146,7 +145,14 @@ void recursive_print(btree_item_t* bi){
 		return;
 	}
 	printf("{");
-	printf("\"value\": \"%s\",",bi->data);
+	printf("\"data\": \"%s\",",bi->data);
+	
+	if(bi->is_leaf){
+		printf("\"is_leaf\": true,");
+	} else {
+		printf("\"is_leaf\": false,");
+	}
+	
 	printf("\"left\": ");
 	recursive_print(bi->left);
 	printf(",");
