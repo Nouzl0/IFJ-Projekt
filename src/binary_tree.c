@@ -82,33 +82,21 @@ void binary_tree_add_branch(binary_tree_t* bt_ptr, token_type type, char* data){
 	btree_item_t* curr_ptr = bt_ptr->root;
 	while(1){
 		
-		if (bt_item_ptr->precedence < curr_ptr->precedence){
-			/*
-			if(curr_ptr->right != NULL && !curr_ptr->right->is_leaf){
-				curr_ptr = curr_ptr->right;
-				continue;
-			}
-			*/
+		if (curr_ptr->precedence - bt_item_ptr->precedence == 1){
 			bt_item_ptr->left = curr_ptr->right;
-			curr_ptr->left = bt_item_ptr;
+			curr_ptr->right = bt_item_ptr;
 			bt_ptr->active = bt_item_ptr;
 			//Pushnout mezi
 			//Zbytek stromu vlozit vlevo
 			return;
 		}
 		
-		//Pokracuje dolu smerem vpravo
+		//Pokracuje dolu smerem vpravo jelikoz ctu z leva do prava
 		if(curr_ptr->right != NULL && !curr_ptr->right->is_leaf){
 			curr_ptr = curr_ptr->right;
 			continue;
 		}
-		
-		//Pokracuje dolu smerem vlevo
-		if(curr_ptr->left != NULL && !curr_ptr->left->is_leaf){
-			curr_ptr = curr_ptr->left;
-			continue;
-		}
-		
+
 		//Uplne posledni mozny branch za ktery to jde vlozit
 		bt_item_ptr->left = curr_ptr->right;
 		curr_ptr->right = bt_item_ptr;
@@ -129,12 +117,13 @@ void binary_tree_add_leaf(binary_tree_t* bt_ptr, char* data){
 		return;
 	}
 	
+	//Pridava identifikator k operatoru
 	if(bt_ptr->active->left == NULL){
 		bt_ptr->active->left = bt_item_ptr;
 	} else if (bt_ptr->active->right == NULL){
 		bt_ptr->active->right = bt_item_ptr;
 	} else {
-		//syntax errori protoze uz neni kam dat list
+		//syntax errori protoze uz neni kam dat identifikator, 2 id za sebou
 	}
 	
 }

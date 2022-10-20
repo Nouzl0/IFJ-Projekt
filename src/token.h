@@ -7,45 +7,55 @@
 #define TOKEN_ARRAY_BASE_SIZE 20
 
 typedef enum {
+	//Data types
+	INT,
+	FLOAT,
+	STRING,
+	
+	//Terminals
+	IDENTIFIER,     // Nazev funkce
+	VARIABLE,       // Nazev promene
+	NUMBER,         // Data celeho cisla 
+	FRACTION,       // Data cisla s desetinou carou
+	TEXT,           // Data retezce
+	NIL,            // null
+	
+	//Non-Terminals
+	NEG,            // !
+	//Matika
+	MINUS,          // -
+	PLUS,           // +
+	STAR,           // *
+	SLASH,          // /
+	DOT,            // .
+	//Porovnavace
 	EQUAL,          // ==
 	NOT_EQUAL,      // !=
 	GREATER_EQUAL,  // >=
 	LESS_EQUAL,     // <=
 	GREATER,        // >
 	LESS,           // <
+	AND,            // and
+	OR,             // or
+	
+	//Specialni znaky
 	ASSIGN,         // =
-	NEG,            // !
 	LEFT_PAREN,     // (
 	RIGHT_PAREN,    // )
 	LEFT_BRACE,     // {
 	RIGHT_BRACE,    // }
 	COMMA,          // ,
-	DOT,            // .
-	MINUS,          // -
-	PLUS,           // +
 	SEMICOLON,      // ;
-	STAR,           // *
-	SLASH,          // /
 	DDOT,           // :
 	
-	AND, 
-	OR,
-	NIL,
-	IF,
-	ELSE,
-	WHILE,
-	FUNC,
-	RETURN,
-	INT,
-	FLOAT,
-	STRING,  
+	//Klicove slova
+	IF,             // if
+	ELSE,           // else
+	WHILE,          // while
+	FUNC,           // function
+	RETURN,         // return
 	
-	IDENTIFIER,     // Nazev funkce
-	VARIABLE,       // Nazev promene
-	NUMBER,         // Obsah cele cislo 
-	FRACTION,       // Obsah cisla s desetinou carou
-	TEXT,           // Obsah retezce
-	
+	//Zbytek
 	HEADER,         // <?php
 	FOOTER          // ?>
 	
@@ -82,4 +92,4 @@ void token_array_add(token_array_t* ta_ptr, token_type type, int line, cstring_t
 
 void token_array_dtor(token_array_t* token_array);
 
-void token_array_print(token_array_t token_array);
+void token_array_debug_print(token_array_t token_array);

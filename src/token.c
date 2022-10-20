@@ -159,48 +159,64 @@ void token_array_dtor(token_array_t* ta_ptr){
 }
 
 
-
-void token_array_print(token_array_t ta_ptr){
-	static const char *TOKEN_ENUM_STRINGS[] = {
+char* token_debug_get_string(token_type type){
+	static char *TOKEN_ENUM_STRINGS[] = {
+		//Data types
+		"INT",
+		"FLOAT",
+		"STRING",
+		
+		//Terminals
+		"IDENTIFIER",
+		"VARIABLE",
+		"NUMBER",
+		"FRACTION",
+		"TEXT",
+		"NIL",
+		
+		//Non-Terminals
+		"NEG",
+		//Matika
+		"MINUS",
+		"PLUS",
+		"STAR",
+		"SLASH",
+		"DOT",
+		//Porovnavace
 		"EQUAL",
 		"NOT_EQUAL",
 		"GREATER_EQUAL",
 		"LESS_EQUAL",
 		"GREATER",
 		"LESS",
+		"AND",
+		"OR",
+		
+		//Specialni znaky
 		"ASSIGN",
-		"NEG",
 		"LEFT_PAREN",
 		"RIGHT_PAREN",
 		"LEFT_BRACE",
 		"RIGHT_BRACE",
 		"COMMA",
-		"DOT",
-		"MINUS",
-		"PLUS",
 		"SEMICOLON",
-		"STAR",
-		"SLASH",
 		"DDOT",
-		"AND",
-		"OR",
-		"NIL",
+		
+		//Klicove slova
 		"IF",
 		"ELSE",
 		"WHILE",
 		"FUNC",
 		"RETURN",
-		"INT",
-		"FLOAT",
-		"STRING",
-		"IDENTIFIER",
-		"VARIABLE",
-		"NUMBER",
-		"FRACTION",
-		"TEXT",
+		
+		//Zbytek
 		"HEADER",
 		"FOOTER"
 	};
+	return TOKEN_ENUM_STRINGS[type];
+}
+
+void token_array_debug_print(token_array_t ta_ptr){
 	
 	
 	int line = 0;
@@ -213,9 +229,9 @@ void token_array_print(token_array_t ta_ptr){
 		}
 		
 		if (ta_ptr.elems[i].content == NULL){
-			printf("[%s,-,%d]", TOKEN_ENUM_STRINGS[ta_ptr.elems[i].type],ta_ptr.elems[i].line);
+			printf("[%s,-,%d]", token_debug_get_string(ta_ptr.elems[i].type),ta_ptr.elems[i].line);
 		} else {
-			printf("[%s,%s,%d]", TOKEN_ENUM_STRINGS[ta_ptr.elems[i].type], ta_ptr.elems[i].content->content,ta_ptr.elems[i].line);
+			printf("[%s,%s,%d]", token_debug_get_string(ta_ptr.elems[i].type), ta_ptr.elems[i].content->content,ta_ptr.elems[i].line);
 		}
 		
 	}
