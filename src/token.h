@@ -8,6 +8,7 @@
 
 typedef enum {
 	//Data types
+	VOID,
 	INT,
 	FLOAT,
 	STRING,
@@ -91,5 +92,7 @@ int token_array_ctor(token_array_t* token_array);
 void token_array_add(token_array_t* ta_ptr, token_type type, int line, cstring_t* str_ptr);
 
 void token_array_dtor(token_array_t* token_array);
+
+char* token_debug_get_string(token_type type);
 
 void token_array_debug_print(token_array_t token_array);

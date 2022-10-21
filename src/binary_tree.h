@@ -1,3 +1,5 @@
+#pragma once
+
 #include "error_handler.h"
 #include "token.h"
 
@@ -24,7 +26,9 @@ binary_tree_t* binary_tree_init();
 
 //void binary_tree_add(binary_tree_t* bt_ptr, token_type operand, char id1 , char id2);
 
-void binary_tree_add_branch(binary_tree_t* bt_ptr, token_type, char* data);
+void binary_tree_fork(binary_tree_t* bt_ptr, token_type, char* data);
+
+void binary_tree_fork_prec(binary_tree_t* bt_ptr, int cmp_prec, int save_prec, char* data);
 
 void binary_tree_add_leaf(binary_tree_t* bt_ptr, char* data);
 

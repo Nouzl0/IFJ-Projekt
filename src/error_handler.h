@@ -28,10 +28,14 @@ typedef struct {
     int semantic;
 } error_handler_t;
 
+void handle_program_error();
+
 void error_handler_ctor(error_handler_t* eh_ptr);
 
 void register_lex_error(error_handler_t* eh_ptr, int line, char* buffer);
 
 void handle_lex_error(error_handler_t eh);
 
-void handle_program_error();
+void register_syntax_error(error_handler_t* eh_ptr, int line);
+
+void handle_syntax_error(error_handler_t eh);

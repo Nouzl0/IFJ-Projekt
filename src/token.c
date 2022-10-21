@@ -1,6 +1,14 @@
 #include "token.h"
 
-#define KEYWORD_REGISTER_LENGTH 11
+/*
+TODO: 
+
+	pridat do token i cislo sloupce na jakem byl precten
+	kvuli indetifikaci chyb
+
+*/
+
+#define KEYWORD_REGISTER_LENGTH 12
 trecord_t keyword_register[KEYWORD_REGISTER_LENGTH] = {
 	{"and", AND}, 
 	{"or", OR},
@@ -12,7 +20,8 @@ trecord_t keyword_register[KEYWORD_REGISTER_LENGTH] = {
 	{"return", RETURN},
 	{"int", INT},
 	{"float", FLOAT},
-	{"string", STRING}
+	{"string", STRING},
+	{"void", VOID}
 };
 
 #define SYMBOL_REGISTER_LENGTH 22
@@ -162,6 +171,7 @@ void token_array_dtor(token_array_t* ta_ptr){
 char* token_debug_get_string(token_type type){
 	static char *TOKEN_ENUM_STRINGS[] = {
 		//Data types
+		"VOID",
 		"INT",
 		"FLOAT",
 		"STRING",

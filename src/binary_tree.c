@@ -1,23 +1,35 @@
 #include "binary_tree.h"
 
+/*
+TODO:
+
+	Pridat Uvolneni pameti
+
+	Prejmenovat na prec_tree
+
+	Mozna prejmenovat nektere funkce
+
+	Mozna zkusit vytvorit lepsi algoritmus na zjisteni
+	urovne precedene podle tokenu
+
+*/
+
 
 int get_precedence_by_type(token_type type){
 	token_type arr1[] = {
 		NEG,
 		STAR, SLASH,
-		PLUS, MINUS,
+		PLUS, MINUS, DOT,
 		GREATER, LESS, EQUAL, GREATER_EQUAL, LESS_EQUAL,
-		AND, OR,
-		ASSIGN
+		AND, OR
 		};
 	
 	int arr2[] = {
 		1,
 		2, 2,
-		3, 3,
+		3, 3, 3,
 		4, 4, 4, 4, 4,
-		5, 5,
-		6
+		5, 5
 	};
 	
 	for (unsigned int i = 0; i < sizeof(arr1) / sizeof(int); i++){
@@ -55,10 +67,10 @@ btree_item_t* get_item_by_level(binary_tree_t* bt_ptr){
 
 
 
-void binary_tree_add_branch(binary_tree_t* bt_ptr, token_type type, char* data){
+void binary_tree_fork_prec(binary_tree_t* bt_ptr, int cmp_prec, int save_prec, char* data){
 	btree_item_t* bt_item_ptr = malloc(sizeof(btree_item_t));
 	bt_item_ptr->is_leaf = 0;
-	bt_item_ptr->precedence = get_precedence_by_type(type);
+	bt_item_ptr->precedence = save_prec;
 	bt_item_ptr->data = data;
 	
 	//Uplne prvni operand ve stromu
@@ -71,7 +83,7 @@ void binary_tree_add_branch(binary_tree_t* bt_ptr, token_type type, char* data){
 	}
 	
 	//Operand je pridan uplne na zacatek jelikoz je provaden naposled
-	if(bt_item_ptr->precedence >= bt_ptr->root->precedence){
+	if(cmp_prec >= bt_ptr->root->precedence){
 		bt_item_ptr->left = bt_ptr->root;
 		bt_ptr->active = bt_item_ptr;
 		bt_ptr->root = bt_item_ptr;
@@ -104,6 +116,11 @@ void binary_tree_add_branch(binary_tree_t* bt_ptr, token_type type, char* data){
 		
 		break;
 	}
+}
+
+void binary_tree_fork(binary_tree_t* bt_ptr, token_type type, char* data){
+	int prec = get_precedence_by_type(type);
+	binary_tree_fork_prec(bt_ptr, prec, prec, data);
 }
 
 void binary_tree_add_leaf(binary_tree_t* bt_ptr, char* data){
@@ -151,5 +168,7 @@ void recursive_print(btree_item_t* bi){
 }
 
 void binary_tree_to_json(binary_tree_t* bt_ptr){
+	printf("--------------------------------\n");
 	recursive_print(bt_ptr->root);
+	printf("\n--------------------------------\n");
 }
