@@ -65,24 +65,18 @@ btree_item_t* get_item_by_level(binary_tree_t* bt_ptr){
 }
 */
 
-
-
-void binary_tree_fork_prec(binary_tree_t* bt_ptr, int cmp_prec, int save_prec, char* data){
-	btree_item_t* bt_item_ptr = malloc(sizeof(btree_item_t));
-	bt_item_ptr->is_leaf = 0;
-	bt_item_ptr->precedence = save_prec;
-	bt_item_ptr->data = data;
-	
+void binary_tree_extend(binary_tree_t* bt_ptr, int cmp_prec, btree_item_t* bt_item_ptr){
 	//Uplne prvni operand ve stromu
 	if (bt_ptr->active == NULL){
-		bt_item_ptr->left = bt_ptr->root;
-		bt_item_ptr->right = NULL;
+		if(bt_ptr->root != NULL){
+			bt_item_ptr->left = bt_ptr->root;
+		}
 		bt_ptr->root = bt_item_ptr;
 		bt_ptr->active = bt_item_ptr;
 		return;
 	}
 	
-	//Operand je pridan uplne na zacatek jelikoz je provaden naposled
+	//Operand je pridan uplne na zacatek jelikoz ma nejvetsi precedenci
 	if(cmp_prec >= bt_ptr->root->precedence){
 		bt_item_ptr->left = bt_ptr->root;
 		bt_ptr->active = bt_item_ptr;
@@ -118,6 +112,19 @@ void binary_tree_fork_prec(binary_tree_t* bt_ptr, int cmp_prec, int save_prec, c
 	}
 }
 
+
+void binary_tree_fork_prec(binary_tree_t* bt_ptr, int cmp_prec, int save_prec, char* data){
+	btree_item_t* bt_item_ptr = malloc(sizeof(btree_item_t));
+	bt_item_ptr->is_leaf = 0;
+	bt_item_ptr->precedence = save_prec;
+	bt_item_ptr->data = data;
+	bt_item_ptr->right = NULL;
+	bt_item_ptr->left = NULL;
+	
+	binary_tree_extend(bt_ptr, cmp_prec, bt_item_ptr);
+	
+}
+
 void binary_tree_fork(binary_tree_t* bt_ptr, token_type type, char* data){
 	int prec = get_precedence_by_type(type);
 	binary_tree_fork_prec(bt_ptr, prec, prec, data);
@@ -128,22 +135,27 @@ void binary_tree_add_leaf(binary_tree_t* bt_ptr, char* data){
 	bt_item_ptr->is_leaf = 1;
 	bt_item_ptr->data = data;
 	
+	if(bt_item_ptr == NULL){
+		handle_program_error();
+	}
+	
 	//Uplne prvni identifikator ve stromu;
 	if (bt_ptr->active == NULL){
 		bt_ptr->root = bt_item_ptr;
+		
 		return;
 	}
 	
 	//Pridava identifikator k operatoru
 	if(bt_ptr->active->left == NULL){
 		bt_ptr->active->left = bt_item_ptr;
-	} else if (bt_ptr->active->right == NULL){
-		bt_ptr->active->right = bt_item_ptr;
 	} else {
-		//syntax errori protoze uz neni kam dat identifikator, 2 id za sebou
+		bt_ptr->active->right = bt_item_ptr;
 	}
 	
 }
+
+
 
 void recursive_print(btree_item_t* bi){
 	if (bi == NULL){

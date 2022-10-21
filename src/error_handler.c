@@ -1,7 +1,7 @@
 #include "error_handler.h"
 
 void handle_program_error(){
-	fprintf(stderr, "Unrecognized internal program error");
+	fprintf(stderr, "Unrecognized internal program error, try to compile again!");
 	exit(PROGRAM_ERROR);
 }
 

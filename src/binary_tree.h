@@ -30,6 +30,8 @@ void binary_tree_fork(binary_tree_t* bt_ptr, token_type, char* data);
 
 void binary_tree_fork_prec(binary_tree_t* bt_ptr, int cmp_prec, int save_prec, char* data);
 
+void binary_tree_extend(binary_tree_t* bt_ptr, int cmp_prec, btree_item_t* bt_item_ptr);
+
 void binary_tree_add_leaf(binary_tree_t* bt_ptr, char* data);
 
 void binary_tree_to_json(binary_tree_t* bt_ptr);
