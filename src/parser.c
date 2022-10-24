@@ -1,142 +1,67 @@
 #include "parser.h"
 /*
-
+	TODO:
 	Rozdelit parser a statement_parser na dva soubory
+
+	Prvni token musi byt header 
+
+*/
+
+/*
+
+PRAVIDLA PRO PARSER:
+------------------------------------------------
+// Definice funkce by nemela byt parsovana v rekurzivnim volani.
+// function funkce(string $x, ...): string { }
+S -> FUNC, IDENTIFIER, LEFT_PAREN, {[STRING|INT|FLOAT], VARIABLE}, COMMA, {...}, RIGHT_PAREN, DDOT, [STRING|INT|FLOAT], LEFT_BRACE, {PARSER}, RIGHT_BRACE
+
+
+// string $a = 10 + 3 * 8;
+S -> [STRING|INT|FLOAT], VARIABLE, ASSIGN, {STATAEMENT}, SEMICOLON 
+
+
+// string $a;
+S -> [STRING|INT|FLOAT], VARIABLE, SEMICOLON 
+
+
+// $a = 10 + 3 * 8;
+S -> VARIABLE, ASSIGN, {STATEMENT}, SEMICOLON
+
+
+// $a + $b;
+// funkce(32,64);
+// 20 * 10;
+// "jo" . "ne";
+S -> [VARIABLE|IDENTIFIER|NUMBER|TEXT|NIL|NEG|MINUS|PLUS] -> {STATEMENT}, SEMICOLON
+
+
+// return $x;
+S -> RETURN, {STATEMENT}, SEMICOLON
+
+
+// if (x > 3){ }
+S -> IF, LEFT_PAREN, {STATEMENT}, RIGHT_PAREN, LEFT_BRACE, {PARSER}, RIGHT_BRACE
+
+
+// else { }
+S -> ELSE, LEFT_BRACE, {PARSER}, RIGHT_BRACE
+
+
+// while(x > 3) { }
+S -> WHILE, LEFT_PAREN, {STATEMENT}, RIGHT_PAREN, LEFT_BRACE, {PARSER}, RIGHT_BRACE
 
 */
 
 
-int get_stmt_end_index(token_array_t tok_arr, int start_index, token_type ending){
-	int index = start_index;
-	int offset = 0;
-	int parens = 0;
-	while (tok_arr.len > index){
-		token_t tok = tok_arr.elems[index];
-		
-		//printf("Start index: %s\n",token_debug_get_string(tok.type));
-		
-		//Nalezeni znaku na kterem ma vyraz koncit
-		if(tok.type == ending && !parens){
-			return offset;
-		}
-		
-		if(tok.type == LEFT_PAREN){
-			index++;
-			offset++;
-			parens++;
-			continue;
-		}
-		
-		if(tok.type == RIGHT_PAREN){
-			index++;
-			offset++;
-			parens--;
-			continue;
-		}
-		
-		//Povolene token ve vyrazu
-		if(tok.type >= IDENTIFIER && tok.type <= OR){
-			index++;
-			offset++;
-			continue;
-		}
-		
-		//Token nepatri do vyrazu
-		return 0;
-		
-	}
-	//Kdyby vyraz obsahoval uplne posledni token
-	return 0;
-}
-
-binary_tree_t* parse_statement(token_array_t tok_arr, int start_index, int end_index){
-	
-	binary_tree_t* btree_ptr = binary_tree_init();
-	
-	int terminal = 0;
-	//int non_terminal = 0;
-	for (int i = start_index; i < end_index; i++){
-		token_t tok = tok_arr.elems[i];
-		
-		//Vyreseni zavorek
-		if (tok.type == LEFT_PAREN){
-			
-			i++; //Preskoceni LEFT_PAREN (
-			int rec_end_index = get_stmt_end_index(tok_arr, i, RIGHT_PAREN);
-			
-			if (!rec_end_index){
-				//Syntax error pri hledani konce vyrazu v zavorkach
-				return NULL;
-			}
-			
-			binary_tree_t* stmt_tree_ptr = parse_statement(tok_arr, i, i+rec_end_index);
-			stmt_tree_ptr->root->precedence = -1;
-			binary_tree_extend(btree_ptr, -1, stmt_tree_ptr->root);
-
-			i+= rec_end_index;
-			terminal = 1;
-			continue;
-		}
-		
-		
-		//Terminal
-		if (tok.type <= NIL){
-			//Bacha moze to byt funkce
-			terminal = 1;
-			//non_terminal = 0;
-			binary_tree_add_leaf(btree_ptr, tok.content->content);
-			continue;
-		}
-		
-		//Unary Non-Terminal
-		if (tok.type == NEG && !terminal){
-			binary_tree_fork_prec(btree_ptr, 1, 0, token_debug_get_string(tok.type));
-			continue;
-		}
-		
-		//Binary-Unary Non-Terminal
-		if (tok.type == PLUS || tok.type == MINUS){
-			if (terminal){
-				//Binarni operace
-				//non_terminal = 1;
-				terminal = 0;
-				binary_tree_fork(btree_ptr, tok.type, token_debug_get_string(tok.type));
-			} else {
-				//Unarni operace
-				//Asi pridat nulu
-				//non_terminal = 1;
-				//binary_tree_add_leaf(btree_ptr,"in:0");
-				
-				binary_tree_fork_prec(btree_ptr, 1, 0, token_debug_get_string(tok.type));
-				
-				//binary_tree_fork(btree_ptr, NEG, token_debug_get_string(tok.type));
-			}
-			
-			continue;
-		}
-		
-		//Binary Non-Terminal
-		if (terminal){
-			//non_terminal = 1;
-			terminal = 0;
-			binary_tree_fork(btree_ptr, tok.type, token_debug_get_string(tok.type));
-			continue;
-		}
-		
-		//Syntax error jelikoz nemohlo byt uplatneno ani jedno pravidlo
-		return NULL;
-
-	}
-	
-	if(!terminal){
-		//Syntax error protoze vyraz nekonci terminalem
-		return NULL;
-	}
-	
-	return btree_ptr;
-	
-}
-
+/**
+ * Token po tokenu prochazi pole a vytvari abstraktni syntakticky strom
+ * 
+ * @param tok_arr Pole tokenu
+ * @param start_index Index v poli tokenu kde ma vyraz zancinat
+ * @param end_index Index v poli tokenu na kterem ma vyraz koncit
+ * @returns NULL kdyz je vyraz neplatny jinak ukazatel na korenovy prvek
+ * stromu precedence
+ */
 void parse_token_array(error_handler_t* eh_ptr, token_array_t tok_arr){
 	int index = 1; // 0 by mel vzdy byt header
 	while(index < tok_arr.len){
@@ -163,13 +88,13 @@ void parse_token_array(error_handler_t* eh_ptr, token_array_t tok_arr){
 				int offset = get_stmt_end_index(tok_arr,index,SEMICOLON);
 				//TODO: kdyz je offset 0 tak syntax errori
 				
-				binary_tree_t* stmt_tree_ptr = parse_statement(tok_arr,index,index + offset);
+				ptree_item_t* stmt_tree_ptr = parse_statement(tok_arr,index,index + offset);
 				
 				if(stmt_tree_ptr == NULL){
 					register_syntax_error(eh_ptr,tok_arr.elems[index].line);
 					return;
 				} else {
-					binary_tree_to_json(stmt_tree_ptr);
+					ptree_debug_to_json(stmt_tree_ptr);
 				
 					//Pridat binarni strom do AST
 				}

@@ -4,10 +4,16 @@
 	Parsovani cisel s desetinou carkou
 	Pocitani otevrenych a uzavrenych zavorek
 	Nektere funkce by mozna sly implementovat pomoci jedne
-
+	
+	Nastavit limit velikosti u stringu a cisel
+	Limit velikosti nazvu funkci a promenych
 */
 
-
+/**
+ * 
+ * 
+ * @param sb_ptr Ukazatel na posuvny buffer
+ */
 void handle_variable(sbuffer_t* sb_ptr){
 	sbuffer_shift(sb_ptr);
 	int line = sb_ptr->line;
@@ -21,6 +27,11 @@ void handle_variable(sbuffer_t* sb_ptr){
 	token_array_add(sb_ptr->ta_ptr,VARIABLE, line, cs_ptr);
 }
 
+/**
+ * 
+ * 
+ * @param sb_ptr Ukazatel na posuvny buffer
+ */
 void handle_number(sbuffer_t* sb_ptr){
 	cstring_t* cs_ptr = cstring_ctor();
 	int line = sb_ptr->line;
@@ -32,7 +43,11 @@ void handle_number(sbuffer_t* sb_ptr){
 
 	token_array_add(sb_ptr->ta_ptr,NUMBER, line, cs_ptr);
 }
-
+/**
+ * 
+ * 
+ * @param sb_ptr Ukazatel na posuvny buffer
+ */
 void handle_identifier(sbuffer_t* sb_ptr){
 	int line = sb_ptr->line;
 	
