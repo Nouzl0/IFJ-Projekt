@@ -1,13 +1,5 @@
 #include "token.h"
 
-/*
-TODO: 
-
-	pridat do token i cislo sloupce na jakem byl precten
-	kvuli indetifikaci chyb
-
-*/
-
 #define KEYWORD_REGISTER_LENGTH 12
 trecord_t keyword_register[KEYWORD_REGISTER_LENGTH] = {
 	{"and", AND}, 
@@ -122,12 +114,11 @@ int token_array_ctor(token_array_t* ta_ptr){
 /**
  * Pridava do pole tokenu novy token
  * 
- * @param ta_ptr Ukazatel na pole tokenu
+ * @param sb_ptr Ukazatel na posuvny buffer ktery uchovava zbytek dalsi potrebne data
  * @param token_type Typ tokenu
- * @param line Cislo radku na kterem byl token precteny
  * @param str_ptr Ukazatel na obash tokenu je li potreba jinak null
  */
-void token_array_add(token_array_t* ta_ptr, token_type type, int line, cstring_t* str_ptr){
+void token_array_add(token_array_t* ta_ptr, token_type type, int line, int column, cstring_t* str_ptr){
 	
 	if(ta_ptr->len >= ta_ptr->size){
 		ta_ptr->elems = realloc(ta_ptr->elems, ta_ptr->size * 2 * sizeof(token_t));
@@ -142,6 +133,7 @@ void token_array_add(token_array_t* ta_ptr, token_type type, int line, cstring_t
 	token_t token = {
 		.type = type,
 		.line = line,
+		.column = column,
 		.content = str_ptr
 	};
 	
@@ -228,7 +220,7 @@ char* token_debug_get_string(token_type type){
 
 void token_array_debug_print(token_array_t ta_ptr){
 	
-	
+	printf("Vypisuju tokeny ve formatu [type,obsah,sloupec,radek]\n");
 	int line = 0;
 	for (int i = 0; i < ta_ptr.len; i++){
 		
@@ -239,9 +231,9 @@ void token_array_debug_print(token_array_t ta_ptr){
 		}
 		
 		if (ta_ptr.elems[i].content == NULL){
-			printf("[%s,-,%d]", token_debug_get_string(ta_ptr.elems[i].type),ta_ptr.elems[i].line);
+			printf("[%s,-,%d,%d]", token_debug_get_string(ta_ptr.elems[i].type),ta_ptr.elems[i].column,ta_ptr.elems[i].line);
 		} else {
-			printf("[%s,%s,%d]", token_debug_get_string(ta_ptr.elems[i].type), ta_ptr.elems[i].content->content,ta_ptr.elems[i].line);
+			printf("[%s,%s,%d,%d]", token_debug_get_string(ta_ptr.elems[i].type), ta_ptr.elems[i].content->content,ta_ptr.elems[i].column,ta_ptr.elems[i].line);
 		}
 		
 	}

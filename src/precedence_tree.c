@@ -87,6 +87,7 @@ void ptree_extend(ptree_t* pt_ptr, int cmp_prec, ptree_item_t* pt_item_ptr){
 	ptree_item_t* curr_ptr = pt_ptr->root;
 	while(1){
 		
+		//
 		if (curr_ptr->precedence - pt_item_ptr->precedence == 1){
 			pt_item_ptr->left = curr_ptr->right;
 			curr_ptr->right = pt_item_ptr;

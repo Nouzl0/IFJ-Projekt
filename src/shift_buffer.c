@@ -34,13 +34,17 @@ int is_char_permited(char c){
  * @param sb_ptr Ukazatel na posuvny buffer
  * 
  */
-void sbuffer_shift(sbuffer_t* sb_ptr){	
+void sbuffer_shift(sbuffer_t* sb_ptr){
+	sb_ptr->column++;	
+	
 	for (int i = 0; i < BUFFER_SIZE - 1; i++){
 		sb_ptr->buffer[i] = sb_ptr->buffer[i+1];
 	}
 	
-	if(sb_ptr->buffer[0] == 13){
+	//Zaregistruje novy radek
+	if(sb_ptr->buffer[0] == '\n'){
 		sb_ptr->line++;
+		sb_ptr->column = 0;
 	}
 	
 	if(sb_ptr->found_end){
@@ -77,6 +81,7 @@ sbuffer_t* sbuffer_init(FILE* source){
 	sb->line = 1;
 	sb->end_index = BUFFER_SIZE;
 	sb->source = source;
+	sb->column = 1;
 	
 	for(int i = 0; i < BUFFER_SIZE; i++){
 		sb->buffer[i] = 0;
@@ -91,6 +96,8 @@ sbuffer_t* sbuffer_init(FILE* source){
 			break;
 		}	
 	}
+	
+	sb->column = 1;
 	
 	return sb;
 }

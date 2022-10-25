@@ -85,23 +85,23 @@ void parse_token_array(error_handler_t* eh_ptr, token_array_t tok_arr){
 				//Vyraz se bude ukladat do promene
 			} else {
 				
-				int offset = get_stmt_end_index(tok_arr,index,SEMICOLON);
-				//TODO: kdyz je offset 0 tak syntax errori
+				int offset = get_stmt_end_index(eh_ptr,tok_arr,index,SEMICOLON);
+				if (!offset){
+					//Nebyl nalezen ani jeden prvek do vyrazu
+					return;
+				}
 				
-				ptree_item_t* stmt_tree_ptr = parse_statement(tok_arr,index,index + offset);
+				ptree_item_t* stmt_tree_ptr = parse_statement(eh_ptr,tok_arr,index,index + offset);
 				
 				if(stmt_tree_ptr == NULL){
-					register_syntax_error(eh_ptr,tok_arr.elems[index].line);
+					//Syntakticka chyba ve vyrazu
 					return;
 				} else {
 					ptree_debug_to_json(stmt_tree_ptr);
-				
 					//Pridat binarni strom do AST
 				}
 				
 				index += offset;
-				
-				//printf("Skipping to index: %d by: %d\n",index,offset);
 			}
 			
 		}

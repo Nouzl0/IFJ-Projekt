@@ -9,6 +9,8 @@ typedef struct {
 	int found_end;
 	int end_index;
 	int line;
+	int column;
+	int exact_column;
 	void* ta_ptr;
 	char buffer[BUFFER_SIZE];
 } sbuffer_t;

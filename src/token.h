@@ -1,8 +1,9 @@
 #pragma once
 #include <stdlib.h>
 
-#include "cstring.h"
 #include "error_handler.h"
+#include "cstring.h"
+#include "shift_buffer.h"
 
 #define TOKEN_ARRAY_BASE_SIZE 20
 
@@ -72,6 +73,7 @@ typedef struct {
 typedef struct {
 	token_type type;
 	int line;
+	int column;
     cstring_t* content;
 } token_t;
 
@@ -89,7 +91,7 @@ int token_compare_symbol(char* str_ptr, int* ttype_ptr);
 
 int token_array_ctor(token_array_t* token_array);
 
-void token_array_add(token_array_t* ta_ptr, token_type type, int line, cstring_t* str_ptr);
+void token_array_add(token_array_t* ta_ptr, token_type type, int line, int colum, cstring_t* str_ptr);
 
 void token_array_dtor(token_array_t* token_array);
 

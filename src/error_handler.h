@@ -36,6 +36,6 @@ void register_lex_error(error_handler_t* eh_ptr, int line, char* buffer);
 
 void handle_lex_error(error_handler_t eh);
 
-void register_syntax_error(error_handler_t* eh_ptr, int line);
+void register_syntax_error(error_handler_t* eh_ptr, int line, int column);
 
 void handle_syntax_error(error_handler_t eh);

@@ -26,9 +26,9 @@ void handle_lex_error(error_handler_t eh){
 }
 
 
-void register_syntax_error(error_handler_t* eh_ptr, int line){
+void register_syntax_error(error_handler_t* eh_ptr, int line, int column){
 	eh_ptr->syntax++;
-	fprintf(stderr, "Unexpected token on line: %d\n", line);
+	fprintf(stderr, "Unexpected token on line: %d column: %d\n", line, column);
 }
 
 void handle_syntax_error(error_handler_t eh){
