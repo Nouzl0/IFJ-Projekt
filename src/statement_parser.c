@@ -1,5 +1,15 @@
 #include "statement_parser.h"
 /*
+
+TODO:
+	Vytovrit funkce pro pole tokenu
+	A vlozit do pole tokenu i error handler
+	
+	Mozna by bylo dobre aby kazde pravidlo melo definovanou svoji funkci
+
+	Upravit komentare
+
+
 STATEMENT:
 ----------------------------------------------
 F -> TEXT                     // "hello world" 
@@ -26,6 +36,41 @@ F -> F DOT F                  // F . F
 */
 
 /**
+ * Vraci pocet carek v poli tokenu podle zadaneho indexu
+ *
+ * @param tok_arr Pole tokenu
+ * @param start_index Index v poli tokenu kde ma vyraz zancinat
+ * @returns 0 kdyz vyraz neni platny nebo index konce vyrazu
+ */
+ 
+int get_count_of_commas(token_array_t tok_arr, int start_index){
+	int index = start_index;
+	int parens = 0;
+	int count = 0;
+	while (tok_arr.len > index){
+		token_t tok = tok_arr.elems[index];
+		//Detekuje carku
+		if (tok.type == COMMA){
+			count++;
+		//Detekuje ukonceni vyrazu budto zadanym tokenem nebo carkou
+		} else if (tok.type == RIGHT_PAREN && !parens){	
+			return count;
+		//Detekuje levou zavorku
+		} else if (tok.type == LEFT_PAREN){
+			parens++;
+		//Detekuje pravou zavorku ktera neukoncuje vyraz ale znaci precedenci ve vyrazu
+		} else if (tok.type == RIGHT_PAREN){
+			parens--;
+		} 
+		
+		index++;
+		
+	}
+	return 0;
+}
+
+
+/**
  * Vraci index konce vyrazu v poli tokenu podle
  * tokenu ktery ma vyraz ukoncit
  *
@@ -34,17 +79,19 @@ F -> F DOT F                  // F . F
  * @param ending Typ tokenu kterym ma vyraz koncit
  * @returns 0 kdyz vyraz neni platny nebo index konce vyrazu
  */
-int get_stmt_end_index(error_handler_t* eh_ptr, token_array_t tok_arr, int start_index, token_type ending){
+int get_stmt_end_index(error_handler_t* eh_ptr, token_array_t tok_arr, int start_index, token_type ending, int delimiter){
 	int index = start_index;
 	int offset = 0;
 	int parens = 0;
-	while (tok_arr.len > index){
+	while (tok_arr.len > index+offset){
 		token_t tok = tok_arr.elems[index+offset];
 		
-		//Detekuje ukonceni vyrazu
-		if(tok.type == ending && !parens){
+		//Detekuje ukonceni vyrazu budto zadanym tokenem nebo carkou
+		if (delimiter && (tok.type == ending || tok.type == COMMA) && !parens ){
 			return offset;
-		
+		//Detekuje ukonci pouze zadanym token
+		} else if(!delimiter && tok.type == ending && !parens){
+			return offset;
 		//Detekuje levou zavorku
 		} else if (tok.type == LEFT_PAREN){
 			parens++;
@@ -52,18 +99,19 @@ int get_stmt_end_index(error_handler_t* eh_ptr, token_array_t tok_arr, int start
 		} else if (tok.type == RIGHT_PAREN){
 			parens--;
 		//Detekuje token ktery ve vyrazu neni povoleny
-		} else if (tok.type < IDENTIFIER || tok.type > OR){
+		} else if (tok.type < IDENTIFIER || tok.type > COMMA){
 			//Token nepatri do vyrazu
-			register_syntax_error(eh_ptr,tok_arr.elems[index].line,tok_arr.elems[index].column);
-			return 0;
+			register_syntax_error(eh_ptr,tok.line,tok.column);
+			return offset;
 		}
 		
 		offset++;
 		
 	}
 	
-	//Kdyby vyraz obsahoval uplne posledni token coz znamena ze neni ukoncen strednikem
-	return 0;
+	//Kdyby vyraz obsahoval uplne posledni token coz znamena ze neni ukoncen
+	register_syntax_error(eh_ptr,tok_arr.elems[index+offset].line,tok_arr.elems[index+offset].column);
+	return offset;
 }
 
 
@@ -88,46 +136,100 @@ ptree_item_t* parse_statement(error_handler_t* eh_ptr, token_array_t tok_arr, in
 		token_t tok = tok_arr.elems[index];
 		
 		//Zavorky
-		if (tok.type == LEFT_PAREN){
+		if (tok.type == LEFT_PAREN && !terminal){
 			
 			index++; //Preskoceni LEFT_PAREN (
-			int rec_end_index = get_stmt_end_index(eh_ptr, tok_arr, index, RIGHT_PAREN);
+			int end_offset = get_stmt_end_index(eh_ptr, tok_arr, index, RIGHT_PAREN, 0);
 			
-			if (!rec_end_index){
+			if (eh_ptr->syntax){
 				//Syntax error pri hledani zavorek a povolenych znaku
 				return NULL;
 			}
 			
-			//Rekurzivni volani na vytvoreni stromu pro vyraz v zavorkach
-			ptree_item_t* stmt_tree_ptr = parse_statement(eh_ptr, tok_arr, index, index+rec_end_index);
-			
-			if (stmt_tree_ptr == NULL){
-				//Syntax error pri vytvareni stromu
-				return NULL;
+			ptree_item_t* stmt_tree_ptr = NULL;
+			//Aby nebyl tvoren precedencni strom z prazdnych zavorek
+			if (end_offset){
+				//Rekurzivni volani na vytvoreni stromu pro vyraz v zavorkach
+				stmt_tree_ptr = parse_statement(eh_ptr, tok_arr, index, index+end_offset);
+				terminal = 1;
 			}
 			
-			//Pripojuje strom zavorek do stavajiciho vyrazu
-			stmt_tree_ptr->precedence = -1;
-			ptree_extend(btree_ptr, -1, stmt_tree_ptr);
+			//Kdyz byl precedenci strom uspesne vytvoren
+			if (stmt_tree_ptr != NULL){
+				//Pripojuje precedencni strom zavorek do stavajiciho vyrazu
+				stmt_tree_ptr->precedence = -1;
+				ptree_extend(btree_ptr, -1, stmt_tree_ptr);
+			}
 			
-			//Posunuje se o tolik jak je dlouhy vyraz v zavorkach vcetne RIGHT_PAREN )
-			index+= rec_end_index;
-			terminal = 1;
+			//Posunuje se o tolik jak je dlouhy vyraz v zavorkach
+			index+= end_offset;
 			continue;
 		}
 		
 		
 		//Terminal
-		if (tok.type <= NIL){
-			//Bacha moze to byt funkce
-			terminal = 1;
-			prec_tree_add_leaf(btree_ptr, tok.content->content);
-			continue;
+		if (tok.type <= NIL && !terminal){
+			//Volani funkce
+			if (tok.type == IDENTIFIER && tok_arr.elems[index+1].type == LEFT_PAREN){
+				
+				ptree_item_t* ptree_item_ptr = prec_tree_add_leaf(btree_ptr, tok);
+				
+				index += 2;
+				int commas = get_count_of_commas(tok_arr,index);
+				
+				if(commas){
+					ptree_item_ptr->params_len = commas + 1;
+					ptree_item_ptr->params = malloc(sizeof(ptree_item_t*) * ptree_item_ptr->params_len); 
+				}
+				
+				for (int i = 0; i < commas; i++){
+					int end_offset = get_stmt_end_index(eh_ptr, tok_arr, index, COMMA, 0);
+					
+					if (!end_offset){
+						//Syntax error jeliko mezi carkami neni vyraz
+						//return NULL;
+					}
+					
+					ptree_item_ptr->params[i] = parse_statement(eh_ptr,tok_arr,index,index+end_offset);
+					
+					//printf("Zacatek: %s\n",token_debug_get_string(tok_arr.elems[index].type));
+					//printf("Konec: %s\n",token_debug_get_string(tok_arr.elems[index+end_offset].type));
+					
+					index += end_offset;
+					index++; //Preskakuje ,
+				}
+				
+				int end_offset = get_stmt_end_index(eh_ptr, tok_arr, index, RIGHT_PAREN, 0);
+				
+				if (!end_offset && commas){
+					//Syntax error, jsou zaznamenany carky ale posledni vyraz je prazdny
+				}
+				
+				if (end_offset && !commas){
+					ptree_item_ptr->params_len = commas + 1;
+					ptree_item_ptr->params = malloc(sizeof(ptree_item_t*));
+					ptree_item_ptr->params[0] = parse_statement(eh_ptr,tok_arr,index,index+end_offset);
+				}
+				
+				
+				
+				//printf("Zacatek: %s\n",token_debug_get_string(tok_arr.elems[index].type));
+				//printf("Konec: %s\n",token_debug_get_string(tok_arr.elems[index+end_offset].type));
+				
+				index += end_offset;
+				
+				terminal = 1;
+				continue;
+			} else if(tok.type != IDENTIFIER){
+				prec_tree_add_leaf(btree_ptr, tok);
+				terminal = 1;
+				continue;
+			}
 		}
 		
 		//Unary Non-Terminal
 		if (tok.type == NEG && !terminal){
-			ptree_add_branch_prec(btree_ptr, 1, 0, token_debug_get_string(tok.type));
+			ptree_add_branch_prec(btree_ptr, 1, 0, tok);
 			continue;
 		}
 		
@@ -136,10 +238,10 @@ ptree_item_t* parse_statement(error_handler_t* eh_ptr, token_array_t tok_arr, in
 			if (terminal){
 				//Binarni operace
 				terminal = 0;
-				ptree_add_branch(btree_ptr, tok.type, token_debug_get_string(tok.type));
+				ptree_add_branch(btree_ptr, tok);
 			} else {
 				//Unarni operace
-				ptree_add_branch_prec(btree_ptr, 0, 1, token_debug_get_string(tok.type));
+				ptree_add_branch_prec(btree_ptr, 0, 1, tok);
 			}
 			
 			continue;
@@ -149,7 +251,7 @@ ptree_item_t* parse_statement(error_handler_t* eh_ptr, token_array_t tok_arr, in
 		if (terminal){
 			//non_terminal = 1;
 			terminal = 0;
-			ptree_add_branch(btree_ptr, tok.type, token_debug_get_string(tok.type));
+			ptree_add_branch(btree_ptr, tok);
 			continue;
 		}
 		

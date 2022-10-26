@@ -1,10 +1,17 @@
 #include "parser.h"
 /*
 	TODO:
-	Rozdelit parser a statement_parser na dva soubory
+	
+	Kazde pravidlo by melo mit definovanou svoji funkci
 
-	Prvni token musi byt header 
+	Strom by se mel skladat z itemu ktere muzou mit nekonecne mnoho deti
+	item bude reprezentovat pravidlo a jeho deti statement a nebo pole statementu
+	nebo dalsi item
+	
+	if item bude ukazovat na pole podminek a bloku kodu pro reprezentaci else if 
 
+	pridat check next protoze se muze jednat o posledni token tudiz
+	neplatny index
 */
 
 /*
@@ -63,31 +70,38 @@ S -> WHILE, LEFT_PAREN, {STATEMENT}, RIGHT_PAREN, LEFT_BRACE, {PARSER}, RIGHT_BR
  * stromu precedence
  */
 void parse_token_array(error_handler_t* eh_ptr, token_array_t tok_arr){
+	if(tok_arr.elems[0].type != HEADER){
+		register_syntax_error(eh_ptr,tok_arr.elems[0].line,tok_arr.elems[0].column);
+		return;
+	}
+	
+	
 	int index = 1; // 0 by mel vzdy byt header
 	while(index < tok_arr.len){
 		token_t tok = tok_arr.elems[index];
 		
-		//Funkce
+		//Deklarace funkce
 		if(tok.type == FUNC){
 			
 		}
 		
 		//Deklarace nebo deklarace s inicializaci
-			//Poznam podle toho ze za next 
+		//Poznam podle toho ze za next je bud vyraz nebo semicolon
 		if(tok.type >= INT && tok.type <= STRING){
 			
 		}
 		
-		
+		//Ulozeni vyrazu do promene nebo samotny vyraz
 		if((tok.type >= IDENTIFIER && tok.type <= PLUS) || tok.type == LEFT_PAREN){
 			
+			//Ulozeni vyrazu do promene
 			if (tok.type == VARIABLE && tok_arr.elems[index + 1].type == ASSIGN){
-				//Vyraz se bude ukladat do promene
+				//dodelat
 			} else {
 				
-				int offset = get_stmt_end_index(eh_ptr,tok_arr,index,SEMICOLON);
-				if (!offset){
-					//Nebyl nalezen ani jeden prvek do vyrazu
+				int offset = get_stmt_end_index(eh_ptr,tok_arr,index,SEMICOLON,0);
+				if (!offset || eh_ptr->syntax){
+					//Vyraz je prazdny nebo je jeho zadani neplatne
 					return;
 				}
 				
@@ -101,6 +115,7 @@ void parse_token_array(error_handler_t* eh_ptr, token_array_t tok_arr){
 					//Pridat binarni strom do AST
 				}
 				
+				ptree_dtor(stmt_tree_ptr);
 				index += offset;
 			}
 			

@@ -8,6 +8,9 @@ TODO:
 	Zkusit vytvorit lepsi algoritmus na zjisteni
 	urovne precedene podle tokenu
 
+
+	Upravit komentare
+	
 */
 
 
@@ -86,14 +89,18 @@ void ptree_extend(ptree_t* pt_ptr, int cmp_prec, ptree_item_t* pt_item_ptr){
 	//Postupuju stromem dolu smerem doprava
 	ptree_item_t* curr_ptr = pt_ptr->root;
 	while(1){
-		
-		//
+		/*
+			Nalezen operand ktery ma o jednu uroven mensi precedenci 
+			tudiz je potreba novy operand vlozit nad neho
+		*/
 		if (curr_ptr->precedence - pt_item_ptr->precedence == 1){
+			/*
+				Zbytek stromu ktery se pod novym operandem nachazi
+				je do noveho prvku vlozen doleva
+			*/
 			pt_item_ptr->left = curr_ptr->right;
 			curr_ptr->right = pt_item_ptr;
 			pt_ptr->active = pt_item_ptr;
-			//Pushnout mezi
-			//Zbytek stromu vlozit vlevo
 			return;
 		}
 		
@@ -102,8 +109,12 @@ void ptree_extend(ptree_t* pt_ptr, int cmp_prec, ptree_item_t* pt_item_ptr){
 			curr_ptr = curr_ptr->right;
 			continue;
 		}
-
-		//Uplne posledni mozny branch za ktery to jde vlozit
+		
+		/*
+			Jelikoz nebyla nalezena nizsi precedence nez precedence
+			vlozeneho operandu je operand vlozen az uplne na konec 
+			v prave vetvi stromu
+		*/
 		if (curr_ptr->right != NULL){
 			pt_item_ptr->left = curr_ptr->right;
 		}
@@ -123,14 +134,15 @@ void ptree_extend(ptree_t* pt_ptr, int cmp_prec, ptree_item_t* pt_item_ptr){
  * @param save_prec Hodna precedence ktera se vklada do prvku
  * @param data Ukazatel na data operatoru
  */
-void ptree_add_branch_prec(ptree_t* pt_ptr, int cmp_prec, int save_prec, char* data){
+void ptree_add_branch_prec(ptree_t* pt_ptr, int cmp_prec, int save_prec, token_t tok){
 	ptree_item_t* pt_item_ptr = malloc(sizeof(ptree_item_t));
 	pt_item_ptr->is_terminal = 0;
 	pt_item_ptr->precedence = save_prec;
-	pt_item_ptr->data = data;
+	pt_item_ptr->token = tok;
+	pt_item_ptr->params_len = 0;
+	pt_item_ptr->params = NULL;
 	pt_item_ptr->right = NULL;
 	pt_item_ptr->left = NULL;
-	
 	ptree_extend(pt_ptr, cmp_prec, pt_item_ptr);
 	
 }
@@ -143,32 +155,38 @@ void ptree_add_branch_prec(ptree_t* pt_ptr, int cmp_prec, int save_prec, char* d
  * @param type Typ jakeho je vkladany operator
  * @param data Ukazatel na data operatoru
  */
-void ptree_add_branch(ptree_t* pt_ptr, token_type type, char* data){
-	int prec = get_precedence_by_type(type);
-	ptree_add_branch_prec(pt_ptr, prec, prec, data);
+void ptree_add_branch(ptree_t* pt_ptr, token_t tok){
+	int prec = get_precedence_by_type(tok.type);
+	ptree_add_branch_prec(pt_ptr, prec, prec, tok);
 }
 
 
 /**
- * Pridava listovy prvek ktery je budto promena nebo konstanta
+ * Pridava listovy prvek ktery je budto promena, konstanta nebo volani funkce
  *
  * @param pt_ptr Ukazatel na strom precedence
- * @param data Ukazatel na data hodnoty ci promene
+ * @param data Ukazatel na data hodnoty, promene ci funkce
+ * @returns NULL kdyz se nepovede alokace jinak ukazatel na pridany terminal
  */
-void prec_tree_add_leaf(ptree_t* pt_ptr, char* data){
+ptree_item_t* prec_tree_add_leaf(ptree_t* pt_ptr, token_t tok){
 	ptree_item_t* pt_item_ptr = malloc(sizeof(ptree_item_t));
 	pt_item_ptr->is_terminal = 1;
-	pt_item_ptr->data = data;
+	pt_item_ptr->token = tok;
+	pt_item_ptr->precedence = 0;
+	pt_item_ptr->params_len = 0;
+	pt_item_ptr->params = NULL;
+	pt_item_ptr->left = NULL;
+	pt_item_ptr->right = NULL;
 	
 	if(pt_item_ptr == NULL){
 		handle_program_error();
+		return NULL;
 	}
 	
 	//Uplne prvni identifikator ve stromu;
 	if (pt_ptr->active == NULL){
 		pt_ptr->root = pt_item_ptr;
-		
-		return;
+		return pt_item_ptr;
 	}
 	
 	//Pridava identifikator k operatoru
@@ -178,13 +196,41 @@ void prec_tree_add_leaf(ptree_t* pt_ptr, char* data){
 		pt_ptr->active->right = pt_item_ptr;
 	}
 	
+	return pt_item_ptr;
+	
 }
 
 
 /**
- * Pridava listovy prvek ktery je budto promena nebo konstanta
+ * Rekurzivnim volanim uvolnuje pamet zabiranou precedencnim stromem
  *
- * @param pt_item_ptr Ukazatel na strom precedence
+ * @param pt_item_ptr Ukazatel na korenovy prvek stromu precedence
+ */
+void ptree_dtor(ptree_item_t* pt_item_ptr){
+	if (pt_item_ptr == NULL){
+		return;
+	}
+	
+	if(pt_item_ptr->params_len){
+		for (int i = 0; i < pt_item_ptr->params_len; i++){
+			ptree_dtor(pt_item_ptr->params[i]);
+		}
+		free(pt_item_ptr->params);
+		pt_item_ptr->params = NULL;
+	}
+	
+	ptree_dtor(pt_item_ptr->left);
+	ptree_dtor(pt_item_ptr->right);
+	
+	free(pt_item_ptr);
+	
+}
+
+
+/**
+ * Vypisuje obsah precedenciho stromu jako JSON objekt
+ *
+ * @param pt_item_ptr Ukazatel na prvek stromu precedence
  */
 void recursive_print(ptree_item_t* pt_item_ptr){
 	if (pt_item_ptr == NULL){
@@ -192,12 +238,29 @@ void recursive_print(ptree_item_t* pt_item_ptr){
 		return;
 	}
 	printf("{");
-	printf("\"data\": \"%s\",",pt_item_ptr->data);
 	
+	printf("\"type\": \"%s\",",token_debug_get_string(pt_item_ptr->token.type));
+	if(pt_item_ptr->token.content != NULL){
+		printf("\"content\": \"%s\",",pt_item_ptr->token.content->content);
+	}
+	printf("\"precedence\": \"%d\",",pt_item_ptr->precedence);
 	if(pt_item_ptr->is_terminal){
 		printf("\"is_terminal\": true,");
 	} else {
 		printf("\"is_terminal\": false,");
+	}
+	printf("\"line\": %d,",pt_item_ptr->token.line);
+	printf("\"column\": %d,",pt_item_ptr->token.column);
+	
+	if(pt_item_ptr->params_len){
+		printf("\"params\":[");
+		for (int i = 0; i < pt_item_ptr->params_len; i++){
+			recursive_print(pt_item_ptr->params[i]);
+			if(i != pt_item_ptr->params_len-1){
+				printf(",");
+			}
+		}
+		printf("],");
 	}
 	
 	printf("\"left\": ");
@@ -208,6 +271,11 @@ void recursive_print(ptree_item_t* pt_item_ptr){
 	printf("}");
 }
 
+/**
+ * Pomocna funkce pro vypis
+ *
+ * @param bi_ptr Ukazatel na prvek stromu precedence
+ */
 void ptree_debug_to_json(ptree_item_t* bi_ptr){	
 	printf("--------------------------------\n");
 	recursive_print(bi_ptr);

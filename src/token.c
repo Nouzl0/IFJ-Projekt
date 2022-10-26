@@ -195,12 +195,12 @@ char* token_debug_get_string(token_type type){
 		"OR",
 		
 		//Specialni znaky
+		"COMMA",
 		"ASSIGN",
 		"LEFT_PAREN",
 		"RIGHT_PAREN",
 		"LEFT_BRACE",
 		"RIGHT_BRACE",
-		"COMMA",
 		"SEMICOLON",
 		"DDOT",
 		

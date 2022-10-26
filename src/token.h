@@ -41,12 +41,12 @@ typedef enum {
 	OR,             // or
 	
 	//Specialni znaky
+	COMMA,          // ,
 	ASSIGN,         // =
 	LEFT_PAREN,     // (
 	RIGHT_PAREN,    // )
 	LEFT_BRACE,     // {
 	RIGHT_BRACE,    // }
-	COMMA,          // ,
 	SEMICOLON,      // ;
 	DDOT,           // :
 	

@@ -15,7 +15,7 @@ void error_handler_ctor(error_handler_t* eh_ptr){
 
 void register_lex_error(error_handler_t* eh_ptr, int line, char* buffer){
 	eh_ptr->lex++;
-	fprintf(stderr, "Invalid token on line: %d in: %s\n", line, buffer);
+	fprintf(stderr, "Invalid character on line: %d in: %s\n", line, buffer);
 }
 
 
