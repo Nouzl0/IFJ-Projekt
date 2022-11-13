@@ -35,4 +35,6 @@ ptree_item_t* prec_tree_add_leaf(ptree_t* pt_ptr, token_t tok);
 
 void ptree_dtor(ptree_item_t* ptree_item_ptr);
 
+void recursive_print(ptree_item_t* bi_ptr);
+
 void ptree_debug_to_json(ptree_item_t* pt_ptr);

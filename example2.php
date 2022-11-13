@@ -7,6 +7,14 @@
 
 //$a * $b + funkce(c + 20,funkce($x * $c),10,20 * $b) + 100;
 
-jojkekw($lol);
-//jojkekw($lol,$kek)
+function concat(string $x, string $y): string {
+	$x = $x . $y;
+	return $x . " " . $y;
+}
+
+concat($lol);
+4 * (5 + 2);
+
+$a = 45 * 5;
+
 ?>

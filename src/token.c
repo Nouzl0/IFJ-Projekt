@@ -142,7 +142,6 @@ void token_array_add(token_array_t* ta_ptr, token_type type, int line, int colum
 	
 }
 
-
 /**
  * Uvolnuje pamet zabranou polem tokenu
  * 
@@ -150,8 +149,8 @@ void token_array_add(token_array_t* ta_ptr, token_type type, int line, int colum
  */
 void token_array_dtor(token_array_t* ta_ptr){
 	for (int i = 0; i < ta_ptr->len; i++){
-		//TODO: call dtor on ta_ptr->elems[i].content
 		if(ta_ptr->elems[i].content != NULL){
+			//Maze obsah tokenu kdyz nejaky obsah ma
 			cstring_dtor(ta_ptr->elems[i].content);
 		}
 	
@@ -220,7 +219,7 @@ char* token_debug_get_string(token_type type){
 
 void token_array_debug_print(token_array_t ta_ptr){
 	
-	printf("Vypisuju tokeny ve formatu [type,obsah,sloupec,radek]\n");
+	printf("Vypisuju tokeny ve formatu [typ,obsah,sloupec,radek]\n");
 	int line = 0;
 	for (int i = 0; i < ta_ptr.len; i++){
 		

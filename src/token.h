@@ -7,6 +7,13 @@
 
 #define TOKEN_ARRAY_BASE_SIZE 20
 
+/*
+
+TODO: Pridat relativni a absolutni adresovani v poli tokenu
+at je mozne s nim mnohem jednodusej pracova v parserech
+
+*/
+
 typedef enum {
 	//Data types
 	VOID,

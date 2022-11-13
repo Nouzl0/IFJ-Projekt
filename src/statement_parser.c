@@ -2,13 +2,15 @@
 /*
 
 TODO:
-	Vytovrit funkce pro pole tokenu
-	A vlozit do pole tokenu i error handler
+	Asi by bylo dobre vytvorit strukturu stmt parseru a do ni
+	vlozit promene ktere jsou potreba v kazde funkci
+	
 	
 	Mozna by bylo dobre aby kazde pravidlo melo definovanou svoji funkci
 
 	Upravit komentare
 
+	Parsovani carek ve vyrazu pridat jako funkci pro pole tokenu
 
 STATEMENT:
 ----------------------------------------------
