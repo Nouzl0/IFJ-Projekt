@@ -9,7 +9,7 @@
 
 /*
 
-TODO: Pridat relativni a absolutni adresovani v poli tokenu
+TODO: Pridat relativni a absolutni adresovani a pomocne funkce v poli tokenu
 at je mozne s nim mnohem jednodusej pracova v parserech
 
 */

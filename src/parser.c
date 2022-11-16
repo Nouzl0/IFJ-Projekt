@@ -4,16 +4,10 @@
 	
 	Kazde pravidlo by melo mit definovanou svoji funkci
 
-	Strom by se mel skladat z itemu ktere muzou mit nekonecne mnoho deti
-	item bude reprezentovat pravidlo a jeho deti statement a nebo pole statementu
-	nebo dalsi item
-	
-	if item bude ukazovat na pole podminek a bloku kodu pro reprezentaci else if 
 
 	pridat check next protoze se muze jednat o posledni token tudiz
 	neplatny index
 
-	pridat parsovani declare(strict_types=1);
 
 */
 
@@ -93,15 +87,18 @@ void token_array_parser(stree_item_t* st_root, error_handler_t* eh_ptr, token_ar
 		
 		//Deklarace funkce
 		if(tok.type == FUNC && tok_arr.elems[index + 1].type == IDENTIFIER && tok_arr.elems[index + 2].type == LEFT_PAREN){
-			index += 3;
+			stree_item_t* function_item = stree_new_item(FUNCBLOCK,3);
+			stree_item_t* name_item = stree_new_item(FUNCNAME,0);
+			name_item->token = &tok_arr.elems[index + 1];
 			
-			tok = tok_arr.elems[index];
-			
-			stree_item_t* function_item = stree_new_item(FUNCBLOCK,2);
+			stree_insert_to_block(function_item,name_item);
 			stree_item_t* params_item = stree_new_item(FUNCPARAMS,5);
 			stree_insert_to_block(function_item,params_item);
 			
 			stree_insert_to_block(st_root,function_item);
+		
+			index += 3;
+			tok = tok_arr.elems[index];
 		
 			while(1){
 				if(tok.type >= INT && tok.type <= STRING){
@@ -179,7 +176,9 @@ void token_array_parser(stree_item_t* st_root, error_handler_t* eh_ptr, token_ar
 			//Ulozeni vyrazu do promene
 			if (tok.type == VARIABLE && tok_arr.elems[index + 1].type == ASSIGN){
 				
-				int offset = get_stmt_end_index(eh_ptr,tok_arr,index+2,SEMICOLON,0);
+				index += 2;
+				//printf("debug: %s\n",token_debug_get_string(tpl.type));
+				int offset = get_stmt_end_index(eh_ptr,tok_arr,index,SEMICOLON,0);
 				
 				if (!offset || eh_ptr->syntax){
 					//Vyraz je prazdny nebo je jeho zadani neplatne
@@ -188,9 +187,13 @@ void token_array_parser(stree_item_t* st_root, error_handler_t* eh_ptr, token_ar
 				}
 				
 				stree_item_t* assign_item = stree_new_item(ASSIGNSTMT,0);
-				assign_item->token = &tok_arr.elems[index];
+				assign_item->token = &tok_arr.elems[index-2];
 				
 				ptree_item_t* stmt_tree_ptr = parse_statement(eh_ptr,tok_arr,index,index + offset);
+				
+				//ptree_debug_to_json(stmt_tree_ptr);
+				
+				
 				
 				if(stmt_tree_ptr == NULL){
 					//Syntakticka chyba ve vyrazu
@@ -201,9 +204,7 @@ void token_array_parser(stree_item_t* st_root, error_handler_t* eh_ptr, token_ar
 				
 				stree_insert_to_block(st_root,assign_item);
 				
-				index = index + offset + 2;
-				
-				
+				index += offset;
 				
 			//Samotny vyraz
 			} else {
@@ -229,7 +230,7 @@ void token_array_parser(stree_item_t* st_root, error_handler_t* eh_ptr, token_ar
 			
 		}
 		
-		
+		//Klicove solovo RETURN
 		if(tok.type == RETURN){
 			index++;
 			tok = tok_arr.elems[index];
@@ -254,17 +255,126 @@ void token_array_parser(stree_item_t* st_root, error_handler_t* eh_ptr, token_ar
 			index += offset;
 		}
 		
-		if(tok.type == IF){
-			//Klicove slovo if
+		//Klicove slovo IF
+		if(tok.type == IF && tok_arr.elems[index + 1].type == LEFT_PAREN){
+			index += 2;
+			int offset = get_stmt_end_index(eh_ptr,tok_arr,index,RIGHT_PAREN,0);
+			if (!offset || eh_ptr->syntax){
+				//Vyraz je prazdny nebo je jeho zadani neplatne
+				return;
+			}
+			
+			stree_item_t* ifelse_item = stree_new_item(IFELSE,2);
+			stree_insert_to_block(st_root, ifelse_item);
+			
+			
+			ptree_item_t* stmt_tree_ptr = parse_statement(eh_ptr,tok_arr,index,index + offset);
+			
+			if(stmt_tree_ptr == NULL){
+				//Strom neexistuje
+				return;
+			}
+			
+			index += offset;
+			index++;
+			
+			ifelse_item->stmt = stmt_tree_ptr;
+			
+			tok = tok_arr.elems[index];
+			
+			if(tok.type != LEFT_BRACE){
+				//Chybi oteviraci slozena zavorka
+				return;
+			}
+			
+			index++;
+			
+			offset = get_braces_end_index(tok_arr,index);
+			
+			stree_item_t* if_body = stree_new_block(st_root->level+1);
+			
+			token_array_parser(if_body,eh_ptr,tok_arr,index,index+offset);
+			
+			stree_insert_to_block(ifelse_item,if_body);
+			
+			index+= offset;
+			
+			tok = tok_arr.elems[index];
+			if (tok.type != RIGHT_BRACE){
+				//Chybi uzaviraci slozena zavorka
+				return;
+			}
+			
+			
+			
+			if (tok_arr.elems[index+1].type == ELSE){
+				
+				if(tok_arr.elems[index+2].type != LEFT_BRACE){
+					//Chybi oteviraci slozena zavorka
+					return;
+				}
+				
+				
+				index+= 3;
+				
+				offset = get_braces_end_index(tok_arr,index);
+				stree_item_t* else_body = stree_new_block(st_root->level+1);
+				token_array_parser(else_body,eh_ptr,tok_arr,index,index+offset);
+				stree_insert_to_block(ifelse_item,else_body);
+				index += offset;
+			}
+			
+			
 		}
-		/*
-		if(tok.type == ELSE){
-			//Klicove slovo else
-		}
-		*/
 		
-		if(tok.type == WHILE){
-			//Klicove slovo while
+		//Klicove slovo while
+		if(tok.type == WHILE && tok_arr.elems[index + 1].type == LEFT_PAREN){
+			
+			index += 2;
+			int offset = get_stmt_end_index(eh_ptr,tok_arr,index,RIGHT_PAREN,0);
+			if (!offset || eh_ptr->syntax){
+				//Vyraz je prazdny nebo je jeho zadani neplatne
+				return;
+			}
+
+			stree_item_t* while_block = stree_new_item(WHILEBLOCK,5);
+			stree_insert_to_block(st_root, while_block);
+			
+			ptree_item_t* stmt_tree_ptr = parse_statement(eh_ptr,tok_arr,index,index + offset);
+			
+			if(stmt_tree_ptr == NULL){
+				//Strom neexistuje
+				return;
+			}
+			
+			index += offset;
+			
+			while_block->stmt = stmt_tree_ptr;
+			
+			//printf("\n Breakpoint: %s \n",token_debug_get_string(tok_arr.elems[index].type));
+			index++;
+			if(tok_arr.elems[index].type != LEFT_BRACE){
+				//Chybi oteviraci slozena zavorka
+				return;
+			}
+		
+			index++;
+		
+		
+			offset = get_braces_end_index(tok_arr,index);
+			while_block->level = st_root->level+1;
+			
+			token_array_parser(while_block,eh_ptr,tok_arr,index,index+offset);
+			index+= offset;
+			
+			index++;
+		
+			if (tok_arr.elems[index].type != RIGHT_BRACE){
+				//Chybi uzaviraci slozena zavorka
+				return;
+			}
+		
+		
 		}
 		
 		//Syntax error neocekavany token
@@ -286,7 +396,7 @@ void token_array_parser(stree_item_t* st_root, error_handler_t* eh_ptr, token_ar
  * @returns NULL kdyz je vyraz neplatny jinak ukazatel na korenovy prvek
  * stromu precedence
  */
-void parse_token_array(error_handler_t* eh_ptr, token_array_t tok_arr){
+stree_item_t* parse_token_array(error_handler_t* eh_ptr, token_array_t tok_arr){
 	stree_item_t* st_root = stree_new_block(0);
 	/*
 	if(tok_arr.elems[0].type != HEADER){
@@ -294,8 +404,20 @@ void parse_token_array(error_handler_t* eh_ptr, token_array_t tok_arr){
 		return;
 	}
 	*/
+	if(!(
+		tok_arr.elems[0].type == HEADER &&
+		tok_arr.elems[1].type == IDENTIFIER &&
+		tok_arr.elems[2].type == LEFT_PAREN &&
+		tok_arr.elems[3].type == IDENTIFIER &&
+		tok_arr.elems[4].type == ASSIGN &&
+		tok_arr.elems[5].type == NUMBER &&
+		tok_arr.elems[6].type == RIGHT_PAREN &&
+		tok_arr.elems[7].type == SEMICOLON
+	)){
+		register_syntax_error(eh_ptr,tok_arr.elems[0].line,tok_arr.elems[0].column);
+		return NULL;
+	}
 	
-	//index 0 by mel vzdy byt header
-	token_array_parser(st_root,eh_ptr,tok_arr,1,tok_arr.len-1);
-	stree_json_debug_print(st_root);
+	token_array_parser(st_root,eh_ptr,tok_arr,7,tok_arr.len-1);
+	return st_root;
 }

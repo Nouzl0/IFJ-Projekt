@@ -21,11 +21,12 @@ int main(){
 	token_array_debug_print(token_array);
 	
 
-	parse_token_array(&error_handler,token_array);
+	stree_item_t* ast = parse_token_array(&error_handler,token_array);
 	handle_syntax_error(error_handler);
 	
+	stree_json_debug_print(ast);
 	
-	
+	stree_dtor(&ast);
 	token_array_dtor(&token_array);
 	
 	

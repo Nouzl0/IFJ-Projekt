@@ -52,7 +52,7 @@ int get_count_of_commas(token_array_t tok_arr, int start_index){
 	while (tok_arr.len > index){
 		token_t tok = tok_arr.elems[index];
 		//Detekuje carku
-		if (tok.type == COMMA){
+		if (tok.type == COMMA && !parens){
 			count++;
 		//Detekuje ukonceni vyrazu budto zadanym tokenem nebo carkou
 		} else if (tok.type == RIGHT_PAREN && !parens){	
@@ -178,21 +178,24 @@ ptree_item_t* parse_statement(error_handler_t* eh_ptr, token_array_t tok_arr, in
 				
 				index += 2;
 				int commas = get_count_of_commas(tok_arr,index);
+				ptree_item_ptr->params_len = 0;
+				
 				
 				if(commas){
 					ptree_item_ptr->params_len = commas + 1;
 					ptree_item_ptr->params = malloc(sizeof(ptree_item_t*) * ptree_item_ptr->params_len); 
 				}
 				
-				for (int i = 0; i < commas; i++){
+				int count = 0;
+				for (; count < commas; count++){
 					int end_offset = get_stmt_end_index(eh_ptr, tok_arr, index, COMMA, 0);
 					
 					if (!end_offset){
 						//Syntax error jeliko mezi carkami neni vyraz
-						//return NULL;
+						return NULL;
 					}
-					
-					ptree_item_ptr->params[i] = parse_statement(eh_ptr,tok_arr,index,index+end_offset);
+						
+					ptree_item_ptr->params[count] = parse_statement(eh_ptr,tok_arr,index,index+end_offset);
 					
 					//printf("Zacatek: %s\n",token_debug_get_string(tok_arr.elems[index].type));
 					//printf("Konec: %s\n",token_debug_get_string(tok_arr.elems[index+end_offset].type));
@@ -204,15 +207,19 @@ ptree_item_t* parse_statement(error_handler_t* eh_ptr, token_array_t tok_arr, in
 				int end_offset = get_stmt_end_index(eh_ptr, tok_arr, index, RIGHT_PAREN, 0);
 				
 				if (!end_offset && commas){
+					return NULL;
 					//Syntax error, jsou zaznamenany carky ale posledni vyraz je prazdny
 				}
-				
-				if (end_offset && !commas){
-					ptree_item_ptr->params_len = commas + 1;
-					ptree_item_ptr->params = malloc(sizeof(ptree_item_t*));
-					ptree_item_ptr->params[0] = parse_statement(eh_ptr,tok_arr,index,index+end_offset);
+
+				if (end_offset){
+					
+					if(!commas){
+						ptree_item_ptr->params_len = 1;
+						ptree_item_ptr->params = malloc(sizeof(ptree_item_t*));
+					}
+					
+					ptree_item_ptr->params[count] = parse_statement(eh_ptr,tok_arr,index,index+end_offset);
 				}
-				
 				
 				
 				//printf("Zacatek: %s\n",token_debug_get_string(tok_arr.elems[index].type));

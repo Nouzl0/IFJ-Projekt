@@ -7,5 +7,5 @@
 #include "statement_parser.h"
 #include "syntax_tree.h"
 
-void parse_token_array(error_handler_t* eh_ptr, token_array_t tok_arr);
+stree_item_t* parse_token_array(error_handler_t* eh_ptr, token_array_t tok_arr);
 

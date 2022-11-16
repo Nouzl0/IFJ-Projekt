@@ -47,11 +47,31 @@ void stree_insert_stmt(stree_item_t* st_block, ptree_item_t* prec_tree){
 }
 
 
+void stree_dtor(stree_item_t** stree){
+	if(!(*stree)){
+		return;
+	}
+	
+	if((*stree)->stmt){
+		ptree_dtor((*stree)->stmt);
+	}
+	if((*stree)->items){
+		for (int i = 0; i < (*stree)->items_len; i++){
+			stree_dtor(&(*stree)->items[i]);
+		}
+		free((*stree)->items);
+		(*stree)->items = NULL;
+	}
+	free((*stree));
+	(*stree) = NULL;
+}
+
 
 char* stree_item_type_to_string(item_type type){
 	static char *ITEM_ENUM_STRINGS[] = {
 		"BLOCK",       // Blok kodu
 		"FUNCBLOCK",   // Deklarace funkce
+		"FUNCNAME",    //
 		"FUNCPARAMS",  // 
 		"PARAMTYPE",   //
 		"PARAM",       //

@@ -8,6 +8,7 @@
 typedef enum {
 	BLOCK,       // Blok kodu
 	FUNCBLOCK,   // Deklarace funkce
+	FUNCNAME,    //
 	FUNCPARAMS,  // 
 	PARAMTYPE,   //
 	PARAM,       //
@@ -39,5 +40,6 @@ void stree_insert_to_block(stree_item_t* st_block, stree_item_t* new_st_item);
 
 void stree_insert_stmt(stree_item_t* st_block, ptree_item_t* prec_tree);
 
+void stree_dtor(stree_item_t** stree);
 
 void stree_json_debug_print(stree_item_t*);

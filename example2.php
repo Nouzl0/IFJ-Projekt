@@ -1,20 +1,31 @@
 <?php
-//$x * -$c + -$x - -$y;
-//--20 + 30;
-//((fun1 + 1) > (fun2 + 2)) == ((fuN3 + 3 ) * (--+++-fun4 + 4) );
-//$a;
-//$x + $y;
+//komentar
+/*
+dalsi komentar
+*/
+declare(strict_types=1);
 
-//$a * $b + funkce(c + 20,funkce($x * $c),10,20 * $b) + 100;
+fun1(fun2(),fun3(func4(),func5())); 
 
-function concat(string $x, string $y): string {
-	$x = $x . $y;
-	return $x . " " . $y;
+((fun1() + 1) > (fun2() + 2)) == ((fun3() + 3 ) * (--+++-fun4() + 4) );
+
+function getMax(int $x, int $y): int {
+	if($x > $y){
+		return $x;
+	} else {
+		return $y;
+	}
 }
 
-concat($lol);
-4 * (5 + 2);
+$a = 4 * (5 + 2);
 
-$a = 45 * 5;
+$b = (4.5 - 3.20) * (4.1 + 2.5);
+
+$a = $a + getMax($a,20);
+
+while($a > 5){
+	$b = 5 + 3 / 4;
+}
+
 
 ?>
