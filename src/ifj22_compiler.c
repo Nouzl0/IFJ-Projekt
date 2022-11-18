@@ -3,7 +3,7 @@
 #include "error_handler.h"
 #include "lex.h"
 #include "parser.h"
-
+#include "semantic_analyzer.h"
 
 int main(){
 
@@ -25,6 +25,12 @@ int main(){
 	handle_syntax_error(error_handler);
 	
 	stree_json_debug_print(ast);
+	
+	
+	
+	//analyze_ast(ast);
+	
+	
 	
 	stree_dtor(&ast);
 	token_array_dtor(&token_array);

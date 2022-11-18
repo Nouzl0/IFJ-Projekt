@@ -69,22 +69,22 @@ void stree_dtor(stree_item_t** stree){
 
 char* stree_item_type_to_string(item_type type){
 	static char *ITEM_ENUM_STRINGS[] = {
-		"BLOCK",       // Blok kodu
-		"FUNCBLOCK",   // Deklarace funkce
-		"FUNCNAME",    //
-		"FUNCPARAMS",  // 
-		"PARAMTYPE",   //
-		"PARAM",       //
 		"ASSIGNSTMT",  // Prirazeni vyrazu do promene
 		"STMT",        // Samotny vyraz
 		"RETSTMT",     // Return s vyrazem
 		"IFELSE",      // Vetveni pomoci IF a ELSE ktere je brano jako celek
-		"WHILEBLOCK"   // Obash while blocku i s podminkou
+		"WHILEBLOCK",  // Obash while blocku i s podminkou
+		"BLOCK",       // Blok kodu
+		"FUNCBLOCK",   // Deklarace funkce
+		"FUNCNAME",    // Uchovava jmeno funkce
+		"FUNCPARAMS",  // Uchovava ukazatele na vsehcny parametry
+		"PARAMTYPE",   // Samotny typ parametru
+		"PARAM"        // Samotne jmeno parametru
 	};
 	return ITEM_ENUM_STRINGS[type];
 }
 
-void stree_json_debug_print(stree_item_t* st_item){
+void stree_json_rec_print(stree_item_t* st_item){
 	
 	if(!st_item){
 		printf("null");
@@ -97,10 +97,10 @@ void stree_json_debug_print(stree_item_t* st_item){
 	
 	if(st_item->token){
 		printf(",\"token\":{");
-		printf("\"type\": \"%s\"", token_debug_get_string(st_item->token->type));
+		printf("\"type\": \"%s\"", token_enum_to_string(st_item->token->type));
 		
 		if(st_item->token->content){
-			printf(",\"content\": \"%s\"", st_item->token->content->content);
+			printf(",\"content\": \"%s\"", st_item->token->content);
 		}
 		
 		printf("}");
@@ -112,7 +112,7 @@ void stree_json_debug_print(stree_item_t* st_item){
 		printf(",\"items\": [");
 		for (int i = 0; i < st_item->items_len; i++){
 			//printf("\n --- %d --- \n",i);
-			stree_json_debug_print(st_item->items[i]);
+			stree_json_rec_print(st_item->items[i]);
 			if(i != st_item->items_len-1){
 				printf(",");
 			}
@@ -129,4 +129,10 @@ void stree_json_debug_print(stree_item_t* st_item){
 	printf("}");
 	
 	
+}
+
+void stree_json_debug_print(stree_item_t* st_item){
+	printf("\n---------------------\n");
+	stree_json_rec_print(st_item);
+	printf("\n------------------\n");
 }

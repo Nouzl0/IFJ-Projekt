@@ -2,6 +2,8 @@
 /*
 	TODO:
 	
+	cele prepsat !
+	
 	Kazde pravidlo by melo mit definovanou svoji funkci
 
 
@@ -48,14 +50,6 @@ S -> WHILE, LEFT_PAREN, {STATEMENT}, RIGHT_PAREN, LEFT_BRACE, {PARSER}, RIGHT_BR
 
 */
 
-/*
-
-
-function concat(string $x, string $y): string {
-		$x = $x . $y;
-		return $x . " " . $y;
-	}
-*/
 
 int get_braces_end_index(token_array_t tok_arr,int index){
 	int offset = 0;
@@ -79,7 +73,7 @@ int get_braces_end_index(token_array_t tok_arr,int index){
 }
 
 
-void token_array_parser(stree_item_t* st_root, error_handler_t* eh_ptr, token_array_t tok_arr, int start, int end){
+void recursive_parser(stree_item_t* st_root, error_handler_t* eh_ptr, token_array_t tok_arr, int start, int end){
 	
 	int index = start;
 	while(index < end){
@@ -129,7 +123,7 @@ void token_array_parser(stree_item_t* st_root, error_handler_t* eh_ptr, token_ar
 					break;
 				}
 				
-				//printf("konec: %s\n",token_debug_get_string(tok.type));
+				//printf("konec: %s\n",token_enum_to_string(tok.type));
 				
 				register_syntax_error(eh_ptr,tok.line,tok.column);
 				return;
@@ -161,7 +155,7 @@ void token_array_parser(stree_item_t* st_root, error_handler_t* eh_ptr, token_ar
 			
 			stree_item_t* function_body = stree_new_block(1);
 			
-			token_array_parser(function_body,eh_ptr,tok_arr,index,index+offset);
+			recursive_parser(function_body,eh_ptr,tok_arr,index,index+offset);
 			
 			stree_insert_to_block(function_item,function_body);
 			
@@ -177,7 +171,7 @@ void token_array_parser(stree_item_t* st_root, error_handler_t* eh_ptr, token_ar
 			if (tok.type == VARIABLE && tok_arr.elems[index + 1].type == ASSIGN){
 				
 				index += 2;
-				//printf("debug: %s\n",token_debug_get_string(tpl.type));
+				//printf("debug: %s\n",token_enum_to_string(tpl.type));
 				int offset = get_stmt_end_index(eh_ptr,tok_arr,index,SEMICOLON,0);
 				
 				if (!offset || eh_ptr->syntax){
@@ -293,7 +287,7 @@ void token_array_parser(stree_item_t* st_root, error_handler_t* eh_ptr, token_ar
 			
 			stree_item_t* if_body = stree_new_block(st_root->level+1);
 			
-			token_array_parser(if_body,eh_ptr,tok_arr,index,index+offset);
+			recursive_parser(if_body,eh_ptr,tok_arr,index,index+offset);
 			
 			stree_insert_to_block(ifelse_item,if_body);
 			
@@ -319,7 +313,7 @@ void token_array_parser(stree_item_t* st_root, error_handler_t* eh_ptr, token_ar
 				
 				offset = get_braces_end_index(tok_arr,index);
 				stree_item_t* else_body = stree_new_block(st_root->level+1);
-				token_array_parser(else_body,eh_ptr,tok_arr,index,index+offset);
+				recursive_parser(else_body,eh_ptr,tok_arr,index,index+offset);
 				stree_insert_to_block(ifelse_item,else_body);
 				index += offset;
 			}
@@ -351,7 +345,7 @@ void token_array_parser(stree_item_t* st_root, error_handler_t* eh_ptr, token_ar
 			
 			while_block->stmt = stmt_tree_ptr;
 			
-			//printf("\n Breakpoint: %s \n",token_debug_get_string(tok_arr.elems[index].type));
+			//printf("\n Breakpoint: %s \n",token_enum_to_string(tok_arr.elems[index].type));
 			index++;
 			if(tok_arr.elems[index].type != LEFT_BRACE){
 				//Chybi oteviraci slozena zavorka
@@ -364,7 +358,7 @@ void token_array_parser(stree_item_t* st_root, error_handler_t* eh_ptr, token_ar
 			offset = get_braces_end_index(tok_arr,index);
 			while_block->level = st_root->level+1;
 			
-			token_array_parser(while_block,eh_ptr,tok_arr,index,index+offset);
+			recursive_parser(while_block,eh_ptr,tok_arr,index,index+offset);
 			index+= offset;
 			
 			index++;
@@ -398,12 +392,6 @@ void token_array_parser(stree_item_t* st_root, error_handler_t* eh_ptr, token_ar
  */
 stree_item_t* parse_token_array(error_handler_t* eh_ptr, token_array_t tok_arr){
 	stree_item_t* st_root = stree_new_block(0);
-	/*
-	if(tok_arr.elems[0].type != HEADER){
-		register_syntax_error(eh_ptr,tok_arr.elems[0].line,tok_arr.elems[0].column);
-		return;
-	}
-	*/
 	if(!(
 		tok_arr.elems[0].type == HEADER &&
 		tok_arr.elems[1].type == IDENTIFIER &&
@@ -418,6 +406,6 @@ stree_item_t* parse_token_array(error_handler_t* eh_ptr, token_array_t tok_arr){
 		return NULL;
 	}
 	
-	token_array_parser(st_root,eh_ptr,tok_arr,7,tok_arr.len-1);
+	recursive_parser(st_root,eh_ptr,tok_arr,7,tok_arr.len-1);
 	return st_root;
 }

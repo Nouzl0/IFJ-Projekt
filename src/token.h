@@ -1,5 +1,6 @@
 #pragma once
 #include <stdlib.h>
+#include <string.h>
 
 #include "error_handler.h"
 #include "cstring.h"
@@ -38,6 +39,8 @@ typedef enum {
 	SLASH,          // /
 	DOT,            // .
 	//Porovnavace
+	TYPE_EQUAL,     // ===
+	TYPE_NOT_EQUAL, // !==
 	EQUAL,          // ==
 	NOT_EQUAL,      // !=
 	GREATER_EQUAL,  // >=
@@ -81,7 +84,7 @@ typedef struct {
 	token_type type;
 	int line;
 	int column;
-    cstring_t* content;
+    char* content;
 } token_t;
 
 //Pole tokenu
@@ -98,10 +101,10 @@ int token_compare_symbol(char* str_ptr, int* ttype_ptr);
 
 int token_array_ctor(token_array_t* token_array);
 
-void token_array_add(token_array_t* ta_ptr, token_type type, int line, int colum, cstring_t* str_ptr);
+void token_array_add(token_array_t* ta_ptr, token_type type, int line, int colum, char* str_ptr);
 
 void token_array_dtor(token_array_t* token_array);
 
-char* token_debug_get_string(token_type type);
+char* token_enum_to_string(token_type type);
 
 void token_array_debug_print(token_array_t token_array);

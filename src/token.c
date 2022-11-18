@@ -1,5 +1,6 @@
 #include "token.h"
 
+
 #define KEYWORD_REGISTER_LENGTH 12
 trecord_t keyword_register[KEYWORD_REGISTER_LENGTH] = {
 	{"and", AND}, 
@@ -16,10 +17,12 @@ trecord_t keyword_register[KEYWORD_REGISTER_LENGTH] = {
 	{"void", VOID}
 };
 
-#define SYMBOL_REGISTER_LENGTH 22
+#define SYMBOL_REGISTER_LENGTH 24
 trecord_t symbol_register[SYMBOL_REGISTER_LENGTH] = {
 	{"<?php", HEADER},
 	{"?>", FOOTER},
+	{"===", TYPE_EQUAL},
+	{"!==", TYPE_NOT_EQUAL},
 	{"==", EQUAL},
 	{"!=", NOT_EQUAL},
 	{">=", GREATER_EQUAL},
@@ -54,11 +57,10 @@ trecord_t symbol_register[SYMBOL_REGISTER_LENGTH] = {
  * @returns 0 kdyz retezec nebylo nalezeno jinak delku nalezeneho retezce
  */
 int token_compare(trecord_t* reg, int reg_len, char* str_ptr, int* ttype_ptr){
-	
 	for (int i = 0; i < reg_len; i++){
 		if(cstring_compare(reg[i].match,str_ptr)){
 			*ttype_ptr = reg[i].type;
-			return cstring_get_length(reg[i].match); 
+			return strlen(reg[i].match); 
 		}
 	}
 	return 0;	
@@ -118,7 +120,7 @@ int token_array_ctor(token_array_t* ta_ptr){
  * @param token_type Typ tokenu
  * @param str_ptr Ukazatel na obash tokenu je li potreba jinak null
  */
-void token_array_add(token_array_t* ta_ptr, token_type type, int line, int column, cstring_t* str_ptr){
+void token_array_add(token_array_t* ta_ptr, token_type type, int line, int column, char* str_ptr){
 	
 	if(ta_ptr->len >= ta_ptr->size){
 		ta_ptr->elems = realloc(ta_ptr->elems, ta_ptr->size * 2 * sizeof(token_t));
@@ -151,7 +153,8 @@ void token_array_dtor(token_array_t* ta_ptr){
 	for (int i = 0; i < ta_ptr->len; i++){
 		if(ta_ptr->elems[i].content != NULL){
 			//Maze obsah tokenu kdyz nejaky obsah ma
-			cstring_dtor(ta_ptr->elems[i].content);
+			free(ta_ptr->elems[i].content);
+			ta_ptr->elems[i].content = NULL;
 		}
 	
 	}
@@ -159,7 +162,7 @@ void token_array_dtor(token_array_t* ta_ptr){
 }
 
 
-char* token_debug_get_string(token_type type){
+char* token_enum_to_string(token_type type){
 	static char *TOKEN_ENUM_STRINGS[] = {
 		//Data types
 		"VOID",
@@ -184,6 +187,8 @@ char* token_debug_get_string(token_type type){
 		"SLASH",
 		"DOT",
 		//Porovnavace
+		"TYPE_EQUAL",
+		"TYPE_NOT_EQUAL",
 		"EQUAL",
 		"NOT_EQUAL",
 		"GREATER_EQUAL",
@@ -230,9 +235,9 @@ void token_array_debug_print(token_array_t ta_ptr){
 		}
 		
 		if (ta_ptr.elems[i].content == NULL){
-			printf("[%s,-,%d,%d]", token_debug_get_string(ta_ptr.elems[i].type),ta_ptr.elems[i].column,ta_ptr.elems[i].line);
+			printf("[%s,-,%d,%d]", token_enum_to_string(ta_ptr.elems[i].type),ta_ptr.elems[i].column,ta_ptr.elems[i].line);
 		} else {
-			printf("[%s,%s,%d,%d]", token_debug_get_string(ta_ptr.elems[i].type), ta_ptr.elems[i].content->content,ta_ptr.elems[i].column,ta_ptr.elems[i].line);
+			printf("[%s,%s,%d,%d]", token_enum_to_string(ta_ptr.elems[i].type), ta_ptr.elems[i].content,ta_ptr.elems[i].column,ta_ptr.elems[i].line);
 		}
 		
 	}
