@@ -16,6 +16,11 @@
 /* - - - - - - - - - - - -*/
 
 /**
+ * Maximal size of a string/name/key
+ */
+#define MAX_STRING_SIZE 1000
+
+/**
  * Enum definition od element's (data slots) in symbol table.
  * These enums are used in function which access or insert data
  * 
@@ -61,7 +66,7 @@ typedef struct STElementData {
  */
 typedef struct STElement {
     // the key/name data of an element - can become dynamically alocated in the future
-    char name[BC_STRING_MAX];
+    char name[MAX_STRING_SIZE];
     // pointer to elements's data
     struct STElementData *data;
     // pointer pointing to next element, (cause of possible collision in symtable)

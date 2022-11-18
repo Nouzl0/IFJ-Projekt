@@ -15,7 +15,7 @@
  */
 extern unsigned int ST_Hash(char *name, size_t table_size) {
     
-    register int length = strnlen(name, BC_STRING_MAX);
+    register int length = strnlen(name, MAX_STRING_SIZE);
     register unsigned int hash_value = 0;
 
     for (register int i = 0; i < length; i++) {
