@@ -9,20 +9,8 @@ typedef struct {
 	char* content;
 } cstring_t;
 
-cstring_t* cstring_ctor();
-
-void cstring_dtor(cstring_t* cs_ptr);
+void cstring_ctor(cstring_t* cs_ptr);
 
 void cstring_add_char(cstring_t* cs_ptr, char c);
-
-void cstring_debug_print(cstring_t* cs_ptr);
-
-cstring_t* cstring_import(char* str_ptr, int len);
-
-void cstring_debug_import_print(char* str_ptr, int len);
-
-int cstring_get_length(char* str_ptr);
-
-cstring_t* cstring_new(char* str_ptr);
 
 int cstring_compare(char* str_ptr1, char* str_ptr2);

@@ -16,14 +16,14 @@ TODO:
 
 /**
  *
- *   Mozna predelat
+ *
  */
 int get_precedence_by_type(token_type type){
 	token_type arr1[] = {
 		NEG,
 		STAR, SLASH,
 		PLUS, MINUS, DOT,
-		GREATER, LESS, EQUAL, GREATER_EQUAL, LESS_EQUAL,
+		GREATER, LESS, TYPE_EQUAL,TYPE_NOT_EQUAL, EQUAL, GREATER_EQUAL, LESS_EQUAL,
 		AND, OR
 		};
 	
@@ -31,7 +31,7 @@ int get_precedence_by_type(token_type type){
 		1,
 		2, 2,
 		3, 3, 3,
-		4, 4, 4, 4, 4,
+		4, 4, 4, 4, 4, 4, 4,
 		5, 5
 	};
 	
@@ -239,9 +239,9 @@ void recursive_print(ptree_item_t* pt_item_ptr){
 	}
 	printf("{");
 	
-	printf("\"type\": \"%s\",",token_debug_get_string(pt_item_ptr->token.type));
+	printf("\"type\": \"%s\",",token_enum_to_string(pt_item_ptr->token.type));
 	if(pt_item_ptr->token.content != NULL){
-		printf("\"content\": \"%s\",",pt_item_ptr->token.content->content);
+		printf("\"content\": \"%s\",",pt_item_ptr->token.content);
 	}
 	printf("\"precedence\": \"%d\",",pt_item_ptr->precedence);
 	if(pt_item_ptr->is_terminal){
@@ -251,6 +251,7 @@ void recursive_print(ptree_item_t* pt_item_ptr){
 	}
 	printf("\"line\": %d,",pt_item_ptr->token.line);
 	printf("\"column\": %d,",pt_item_ptr->token.column);
+	printf("\"params_len\": %d,",pt_item_ptr->params_len);
 	
 	if(pt_item_ptr->params_len){
 		printf("\"params\":[");

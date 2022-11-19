@@ -197,8 +197,8 @@ ptree_item_t* parse_statement(error_handler_t* eh_ptr, token_array_t tok_arr, in
 						
 					ptree_item_ptr->params[count] = parse_statement(eh_ptr,tok_arr,index,index+end_offset);
 					
-					//printf("Zacatek: %s\n",token_debug_get_string(tok_arr.elems[index].type));
-					//printf("Konec: %s\n",token_debug_get_string(tok_arr.elems[index+end_offset].type));
+					//printf("Zacatek: %s\n",token_enum_to_string(tok_arr.elems[index].type));
+					//printf("Konec: %s\n",token_enum_to_string(tok_arr.elems[index+end_offset].type));
 					
 					index += end_offset;
 					index++; //Preskakuje ,
@@ -222,8 +222,8 @@ ptree_item_t* parse_statement(error_handler_t* eh_ptr, token_array_t tok_arr, in
 				}
 				
 				
-				//printf("Zacatek: %s\n",token_debug_get_string(tok_arr.elems[index].type));
-				//printf("Konec: %s\n",token_debug_get_string(tok_arr.elems[index+end_offset].type));
+				//printf("Zacatek: %s\n",token_enum_to_string(tok_arr.elems[index].type));
+				//printf("Konec: %s\n",token_enum_to_string(tok_arr.elems[index+end_offset].type));
 				
 				index += end_offset;
 				

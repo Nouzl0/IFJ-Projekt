@@ -1,12 +1,15 @@
 #include "lex.h"
 /*
 	TODO:
-	Parsovani cisel s desetinou carkou
-	Pocitani otevrenych a uzavrenych zavorek
+	
+	Pridat vice povolenych znaku pro promene a identifikatory 
+	jako cisla a _
+	
+	Mohlo by se hodit pocitani otevrenych a uzavrenych zavorek
 	Nektere funkce by mozna sly implementovat pomoci jedne
 	
-	Nastavit limit velikosti u stringu a cisel
-	Limit velikosti nazvu funkci a promenych
+	Bylo by dobre nastavit limit velikosti nazvu promnenych
+	ale stejne to nebude asi testovane takze tak
 */
 
 
@@ -21,13 +24,14 @@ void handle_variable(sbuffer_t* sb_ptr){
 	
 	sbuffer_shift(sb_ptr);
 	
-	cstring_t* cs_ptr = cstring_ctor();
+	cstring_t cs_ptr;
+	cstring_ctor(&cs_ptr);
 	while(is_char_variable_name(sb_ptr->buffer[0])){
-		cstring_add_char(cs_ptr, sb_ptr->buffer[0]);
+		cstring_add_char(&cs_ptr, sb_ptr->buffer[0]);
 		sbuffer_shift(sb_ptr);
 	}
 	
-	token_array_add(sb_ptr->ta_ptr, VARIABLE, line, column, cs_ptr);
+	token_array_add(sb_ptr->ta_ptr, VARIABLE, line, column, cs_ptr.content);
 }
 
 
@@ -41,27 +45,28 @@ void handle_number(sbuffer_t* sb_ptr){
 	int column = sb_ptr->column;
 	token_type type = NUMBER;
 	
-	cstring_t* cs_ptr = cstring_ctor();
+	cstring_t cs_ptr;
+	cstring_ctor(&cs_ptr);
 	
 	if (sb_ptr->buffer[0] == '-'){
-		cstring_add_char(cs_ptr, sb_ptr->buffer[0]);
+		cstring_add_char(&cs_ptr, sb_ptr->buffer[0]);
 		sbuffer_shift(sb_ptr);
 	}
 	
 	while(is_char_number(sb_ptr->buffer[0])){
-		cstring_add_char(cs_ptr, sb_ptr->buffer[0]);
+		cstring_add_char(&cs_ptr, sb_ptr->buffer[0]);
 		sbuffer_shift(sb_ptr);
 		
 		//Desetina tecka musi byt vzdy mezi cisly (.5 a 1. nejsou validni)
 		if (sb_ptr->buffer[0] == '.' && is_char_number(sb_ptr->buffer[1]) ){
-			cstring_add_char(cs_ptr, sb_ptr->buffer[0]);
+			cstring_add_char(&cs_ptr, sb_ptr->buffer[0]);
 			sbuffer_shift(sb_ptr);
 			type = FRACTION;
 		}
 		
 	}
 
-	token_array_add(sb_ptr->ta_ptr, type, line, column, cs_ptr);
+	token_array_add(sb_ptr->ta_ptr, type, line, column, cs_ptr.content);
 }
 
 
@@ -74,13 +79,14 @@ void handle_identifier(sbuffer_t* sb_ptr){
 	int line = sb_ptr->line;
 	int column = sb_ptr->column;
 	
-	cstring_t* cs_ptr = cstring_ctor();
+	cstring_t cs_ptr;
+	cstring_ctor(&cs_ptr);
 	while(is_char_variable_name(sb_ptr->buffer[0])){
-		cstring_add_char(cs_ptr, sb_ptr->buffer[0]);
+		cstring_add_char(&cs_ptr, sb_ptr->buffer[0]);
 		sbuffer_shift(sb_ptr);
 	}
 
-	token_array_add(sb_ptr->ta_ptr, IDENTIFIER, line, column, cs_ptr);
+	token_array_add(sb_ptr->ta_ptr, IDENTIFIER, line, column, cs_ptr.content);
 }
 
 
@@ -134,13 +140,14 @@ void handle_block_comment(error_handler_t* eh_ptr, sbuffer_t *sb_ptr){
  */
 void handle_text(error_handler_t* eh_ptr, sbuffer_t* sb_ptr){
 	char term_char = sb_ptr->buffer[0];
-	cstring_t* cs_ptr = cstring_ctor();
+	cstring_t cs_ptr;
+	cstring_ctor(&cs_ptr);
 	sbuffer_shift(sb_ptr);
 	int line = sb_ptr->line;
 	int column = sb_ptr->column;
 	while(1){
 		if(sb_ptr->buffer[0] == term_char){
-			token_array_add(sb_ptr->ta_ptr, TEXT, line, column, cs_ptr);
+			token_array_add(sb_ptr->ta_ptr, TEXT, line, column, cs_ptr.content);
 			sbuffer_shift(sb_ptr);
 			return;
 		}
@@ -149,7 +156,7 @@ void handle_text(error_handler_t* eh_ptr, sbuffer_t* sb_ptr){
 			register_lex_error(eh_ptr, sb_ptr->line, "Missing string ending");
 			return;
 		}
-		cstring_add_char(cs_ptr,sb_ptr->buffer[0]);
+		cstring_add_char(&cs_ptr,sb_ptr->buffer[0]);
 		sbuffer_shift(sb_ptr);
 	}
 	
@@ -173,7 +180,6 @@ void lex_tokenize(error_handler_t* eh_ptr, token_array_t* ta_ptr, FILE* source){
 			handle_variable(sb);
 			continue;
 		}
-
 		//Cislo nebo zaporne cislo
 		if( (is_char_number(sb->buffer[0])) || (sb->buffer[0] =='-' && is_char_number(sb->buffer[1])) ){
 			handle_number(sb);
