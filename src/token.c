@@ -126,7 +126,7 @@ void token_array_add(token_array_t* ta_ptr, token_type type, int line, int colum
 		ta_ptr->elems = realloc(ta_ptr->elems, ta_ptr->size * 2 * sizeof(token_t));
 		
 		if (ta_ptr->elems == NULL){
-			handle_program_error();
+			return;
 		}
 		
 		ta_ptr->size =  ta_ptr->size * 2;

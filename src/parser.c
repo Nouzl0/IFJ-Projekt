@@ -174,7 +174,7 @@ void recursive_parser(stree_item_t* st_root, error_handler_t* eh_ptr, token_arra
 				//printf("debug: %s\n",token_enum_to_string(tpl.type));
 				int offset = get_stmt_end_index(eh_ptr,tok_arr,index,SEMICOLON,0);
 				
-				if (!offset || eh_ptr->syntax){
+				if (!offset || eh_ptr->error){
 					//Vyraz je prazdny nebo je jeho zadani neplatne
 					register_syntax_error(eh_ptr,tok.line,tok.column);
 					return;
@@ -204,7 +204,7 @@ void recursive_parser(stree_item_t* st_root, error_handler_t* eh_ptr, token_arra
 			} else {
 				
 				int offset = get_stmt_end_index(eh_ptr,tok_arr,index,SEMICOLON,0);
-				if (!offset || eh_ptr->syntax){
+				if (!offset || eh_ptr->error){
 					//Vyraz je prazdny nebo je jeho zadani neplatne
 					return;
 				}
@@ -230,7 +230,7 @@ void recursive_parser(stree_item_t* st_root, error_handler_t* eh_ptr, token_arra
 			tok = tok_arr.elems[index];
 			
 			int offset = get_stmt_end_index(eh_ptr,tok_arr,index,SEMICOLON,0);
-			if (!offset || eh_ptr->syntax){
+			if (!offset || eh_ptr->error){
 				//Vyraz je prazdny nebo je jeho zadani neplatne
 				return;
 			}
@@ -253,7 +253,7 @@ void recursive_parser(stree_item_t* st_root, error_handler_t* eh_ptr, token_arra
 		if(tok.type == IF && tok_arr.elems[index + 1].type == LEFT_PAREN){
 			index += 2;
 			int offset = get_stmt_end_index(eh_ptr,tok_arr,index,RIGHT_PAREN,0);
-			if (!offset || eh_ptr->syntax){
+			if (!offset || eh_ptr->error){
 				//Vyraz je prazdny nebo je jeho zadani neplatne
 				return;
 			}
@@ -326,7 +326,7 @@ void recursive_parser(stree_item_t* st_root, error_handler_t* eh_ptr, token_arra
 			
 			index += 2;
 			int offset = get_stmt_end_index(eh_ptr,tok_arr,index,RIGHT_PAREN,0);
-			if (!offset || eh_ptr->syntax){
+			if (!offset || eh_ptr->error){
 				//Vyraz je prazdny nebo je jeho zadani neplatne
 				return;
 			}

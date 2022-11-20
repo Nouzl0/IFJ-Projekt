@@ -14,9 +14,11 @@
 
 
 /**
- * 
- * 
- * @param sb_ptr Ukazatel na posuvny buffer
+ * Shifts buffer and saves characters for variable name
+ * When shifts to invalid character saves token to array
+ * (Valid variable characters defined in lex_string_helper.c) 
+ *
+ * @param sb_ptr Shift buffer pointer (defined in lex_string_helper.h)
  */
 void handle_variable(sbuffer_t* sb_ptr){
 	int line = sb_ptr->line;
@@ -36,9 +38,11 @@ void handle_variable(sbuffer_t* sb_ptr){
 
 
 /**
- * 
- * 
- * @param sb_ptr Ukazatel na posuvny buffer
+ * Shifts buffer and saves characters for numeral constant
+ * When shifts to end of number saves token to array
+ * (Valid number characters defined in lex_string_helper.c) 
+ *
+ * @param sb_ptr Shift buffer pointer (defined in lex_string_helper.h)
  */
 void handle_number(sbuffer_t* sb_ptr){
 	int line = sb_ptr->line;
@@ -48,6 +52,7 @@ void handle_number(sbuffer_t* sb_ptr){
 	cstring_t cs_ptr;
 	cstring_ctor(&cs_ptr);
 	
+	// Checks for negative numeral
 	if (sb_ptr->buffer[0] == '-'){
 		cstring_add_char(&cs_ptr, sb_ptr->buffer[0]);
 		sbuffer_shift(sb_ptr);
@@ -57,7 +62,10 @@ void handle_number(sbuffer_t* sb_ptr){
 		cstring_add_char(&cs_ptr, sb_ptr->buffer[0]);
 		sbuffer_shift(sb_ptr);
 		
-		//Desetina tecka musi byt vzdy mezi cisly (.5 a 1. nejsou validni)
+		/*
+			Decimal point is only valid in between of valid numeral characters
+			(.5 and 1. is NOT valid)
+		*/
 		if (sb_ptr->buffer[0] == '.' && is_char_number(sb_ptr->buffer[1]) ){
 			cstring_add_char(&cs_ptr, sb_ptr->buffer[0]);
 			sbuffer_shift(sb_ptr);
@@ -71,9 +79,11 @@ void handle_number(sbuffer_t* sb_ptr){
 
 
 /**
- * 
- * 
- * @param sb_ptr Ukazatel na posuvny buffer
+ * Shifts buffer and saves characters for identifier name
+ * When shifts to invalid character saves token to array
+ * (Valid name characters defined in lex_string_helper.c) 
+ *
+ * @param sb_ptr Shift buffer pointer (defined in lex_string_helper.h)
  */
 void handle_identifier(sbuffer_t* sb_ptr){
 	int line = sb_ptr->line;
@@ -91,10 +101,10 @@ void handle_identifier(sbuffer_t* sb_ptr){
 
 
 /**
- * Posunuje buffer do te doby nez narazi na novy radek
- * nebo konec souboru
- * 
- * @param sb_ptr Ukazatel na posuvny buffer
+ * Shifts buffer until it arrives to newline character
+ * Ignoring all characters when shifting
+ *
+ * @param sb_ptr Shift buffer pointer (defined in lex_string_helper.h)
  */
 void handle_line_comment(sbuffer_t *sb_ptr){
 	int line = sb_ptr->line; 
@@ -108,38 +118,39 @@ void handle_line_comment(sbuffer_t *sb_ptr){
 
 
 /**
- * Posunuje buffer do te doby nez narazi na konec blokoveho
- * komentare nebo konec souboru pri kterem zaznamena chybu
+ * Shifts buffer until it arrives to block comment end (star+slash)
+ * Ignoring all characters when shifting
+ * When shifts to EOF registers error
  *
- * @param eh_ptr Ukazatel na zaznam chyb
- * @param sb_ptr Ukazatel na posuvny buffer
+ * @param sb_ptr Shift buffer pointer (defined in lex_string_helper.h)
  */
-void handle_block_comment(error_handler_t* eh_ptr, sbuffer_t *sb_ptr){
+void handle_block_comment(sbuffer_t *sb_ptr){
 	while(1){
 		if(sb_ptr->buffer[0] == '*' && sb_ptr->buffer[1] == '/'){
 			sbuffer_skip(sb_ptr,2);
 			return;
 		}
-		//Detekuje nekonecny komentar
+		// Checks for EOF
 		if(sb_ptr->end_index < 1){
-			register_lex_error(eh_ptr, sb_ptr->line, "Missing comment ending");
+			lex_error(global_err_ptr,sb_ptr->line, "Missing comment ending");
 			return;
 		}
 		
 		sbuffer_shift(sb_ptr);
 	}
 }
+
+
 /**
- * Posunuje buffer do te doby nez narazi na konec retezce
- * nebo ukonceni souboru pri kterem zaznamena chybu
- * Kazdy posunuty znak uklada do instance cstring
- * a ukazatel na ni pridava do tokenu
+ * Shifts buffer until it arrives to end of string character (") or (')
+ * then saves token to array
+ * All characters shifted upon are saved to cstring (defined in lex_string_helper.h)
+ * When shifts to EOF registers error
  *
- * @param eh_ptr Ukazatel na zaznam chyb
- * @param sb_ptr Ukazatel na posuvny buffer
+ * @param sb_ptr Shift buffer pointer (defined in lex_string_helper.h)
  */
-void handle_text(error_handler_t* eh_ptr, sbuffer_t* sb_ptr){
-	char term_char = sb_ptr->buffer[0];
+void handle_text(sbuffer_t* sb_ptr){
+	char term_char = sb_ptr->buffer[0]; //Storing which character started the string
 	cstring_t cs_ptr;
 	cstring_ctor(&cs_ptr);
 	sbuffer_shift(sb_ptr);
@@ -151,9 +162,9 @@ void handle_text(error_handler_t* eh_ptr, sbuffer_t* sb_ptr){
 			sbuffer_shift(sb_ptr);
 			return;
 		}
-		//Detekuje chybejici ukoceni 
+		// Checks for EOF
 		if(sb_ptr->end_index < 1){
-			register_lex_error(eh_ptr, sb_ptr->line, "Missing string ending");
+			lex_error(global_err_ptr,sb_ptr->line, "Missing string ending");
 			return;
 		}
 		cstring_add_char(&cs_ptr,sb_ptr->buffer[0]);
@@ -161,82 +172,94 @@ void handle_text(error_handler_t* eh_ptr, sbuffer_t* sb_ptr){
 	}
 	
 }
+
+
 /**
- * Znak po znaku prochazi zadany soubor a vytvari tokeny
- * ktere pote vklada do pole tokenu
+ * Defines rules for calling functions that shift buffer and save tokens
+ * with corresponding content
+ * Looping through rules until shift buffer shifts upon EOF or 
+ * there is forbidden character
  *
- * @param eh_ptr Ukazatel na zaznam chyb
- * @param ta_ptr Ukazatel na pole tokenu
- * @param source Ukazatel na zdroj ze ktereho se maji cist znaky
+ * @param ta_ptr token array pointer that stores saved tokens
+ * @param source file pointer which is read from
  */
-void lex_tokenize(error_handler_t* eh_ptr, token_array_t* ta_ptr, FILE* source){
+void lex_tokenize(token_array_t* ta_ptr, FILE* source){
 	sbuffer_t* sb = sbuffer_init(source);
-	
 	sb->ta_ptr = ta_ptr;
 	
 	while(sb->end_index > 0){
-		//Jmeno promene
+		// Variable name
 		if(sb->buffer[0] == '$' &&  is_char_variable_name(sb->buffer[1])){
 			handle_variable(sb);
 			continue;
 		}
-		//Cislo nebo zaporne cislo
+		// Any numeral constant
 		if( (is_char_number(sb->buffer[0])) || (sb->buffer[0] =='-' && is_char_number(sb->buffer[1])) ){
 			handle_number(sb);
 			continue;
 		}
 		
-		//Klicove slovo a identifikator
+		// Keyword or identifier
 		if(is_char_letter(sb->buffer[0])){
 			int token_type = 0;
 			int to_skip = token_compare_keywords(sb->buffer,&token_type);
 			if(to_skip){
+				/*	
+				  If there are more then zero characters to skip
+				  it means that there was a keyword match 
+				*/
 				char next = sb->buffer[to_skip];
 				if(!is_char_variable_name(next)){
+					/*	
+					  There should NOT be any valid name characters after matched keyword
+					  otherwise it means that matched keyword is part of name
+					*/
 					token_array_add(sb->ta_ptr, token_type, sb->line, sb->column, NULL);
 					sbuffer_skip(sb,to_skip);
 					continue;
 				}
-			} 
+			}
+			// Keyword was not found in current content of shift buffer
 			handle_identifier(sb);
 			continue;
 		}
 		
-		//Komentare
+		// Multi-line and single-line comments
 		if(sb->buffer[0] == '/'){
 			if(sb->buffer[1] == '/'){
 				handle_line_comment(sb);
 				continue;
 			}
 			if(sb->buffer[1] == '*'){
-				handle_block_comment(eh_ptr,sb);
+				handle_block_comment(sb);
 				continue;
 			}
 		}
 		
-		//Obsah retezcu
+		// String constant content
 		if(sb->buffer[0] == '"' || sb->buffer[0] == '\''){
-			handle_text(eh_ptr,sb);
+			handle_text(sb);
 			continue;
 		}
 		
-		//Operatory a symboly + php header a footer
+		// Operators and other permited symbols, php header and footer
 		int token_type = 0;
 		int to_skip = token_compare_symbol(sb->buffer, &token_type);
 		if(to_skip){
+			// If there are characters to skip it matched with valid symbol
 			token_array_add(sb->ta_ptr, token_type, sb->line, sb->column, NULL);
 			sbuffer_skip(sb,to_skip);
 			continue;
 		}
 		
-		//Ostatni povolene znaky
+		// Other permited characters (defined in lex_string_helper)
 		if(is_char_permited(sb->buffer[0])){
 			sbuffer_shift(sb);
 			continue;
 		}
 		
-		//Chyba nepovoleny znak
-		register_lex_error(eh_ptr, sb->line, sb->buffer);
+		// Non of the rules above can be applied
+		lex_error(global_err_ptr,sb->line,sb->buffer);
 		free(sb);
 		return;
 	} 
@@ -246,14 +269,14 @@ void lex_tokenize(error_handler_t* eh_ptr, token_array_t* ta_ptr, FILE* source){
 }
 
 /**
- * Pomocna funkce ktere vola lex_tokenize ale zarucuje
- * otevreni potrebneho souboru podle nazvu
+ * Helper function for calling lex_tokenize
+ * Opens and closes file with given file name
+ * and feeds it to lex_tokenize
  *
- * @param eh_ptr Ukazatel na zaznam chyb
- * @param ta_ptr Ukazatel na pole tokenu
- * @param file_name Ukazatel na retezec s nazvem souboru
+ * @param ta_ptr token array pointer that stores saved tokens
+ * @param file_name string that stores given file name
  */
-void lex_tokenize_file(error_handler_t* eh_ptr, token_array_t* ta_ptr, char* file_name){
+void lex_tokenize_file(token_array_t* ta_ptr, char* file_name){
 	
 	FILE* f = fopen(file_name,"r");
 
@@ -262,7 +285,7 @@ void lex_tokenize_file(error_handler_t* eh_ptr, token_array_t* ta_ptr, char* fil
 		return;
 	}
 
-	lex_tokenize(eh_ptr,ta_ptr,f);
+	lex_tokenize(ta_ptr,f);
 	fclose(f);
 	
 }

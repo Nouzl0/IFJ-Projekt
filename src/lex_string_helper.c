@@ -1,4 +1,4 @@
-#include "shift_buffer.h"
+#include "lex_string_helper.h"
 /* Zjistuje jestli je znak cislo */
 int is_char_number(char c){
 	return c >= '0' && c <= '9';

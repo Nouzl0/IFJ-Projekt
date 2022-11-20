@@ -2,9 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "error_handler.h"
 #include "cstring.h"
-#include "shift_buffer.h"
 
 #define TOKEN_ARRAY_BASE_SIZE 20
 

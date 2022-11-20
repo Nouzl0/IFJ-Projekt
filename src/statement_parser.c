@@ -143,7 +143,7 @@ ptree_item_t* parse_statement(error_handler_t* eh_ptr, token_array_t tok_arr, in
 			index++; //Preskoceni LEFT_PAREN (
 			int end_offset = get_stmt_end_index(eh_ptr, tok_arr, index, RIGHT_PAREN, 0);
 			
-			if (eh_ptr->syntax){
+			if (eh_ptr->error){
 				//Syntax error pri hledani zavorek a povolenych znaku
 				return NULL;
 			}
