@@ -20,18 +20,16 @@ TODO:
  */
 int get_precedence_by_type(token_type type){
 	token_type arr1[] = {
-		NEG,
 		STAR, SLASH,
 		PLUS, MINUS, DOT,
-		GREATER, LESS, TYPE_EQUAL,TYPE_NOT_EQUAL, EQUAL, GREATER_EQUAL, LESS_EQUAL,
-		AND, OR
+		GREATER, LESS, EQUAL, GREATER_EQUAL, LESS_EQUAL,
+		TYPE_EQUAL, TYPE_NOT_EQUAL
 		};
 	
 	int arr2[] = {
-		1,
 		2, 2,
 		3, 3, 3,
-		4, 4, 4, 4, 4, 4, 4,
+		4, 4, 4, 4, 4,
 		5, 5
 	};
 	

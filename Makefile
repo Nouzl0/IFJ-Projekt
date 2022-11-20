@@ -1,4 +1,5 @@
-EXE=ifj22_compiler_executable
+MAINNAME=ifj22_compiler
+EXE=$(MAINNAME)_executable
 
 DBGDIR=debug_build
 BLDDIR=build
@@ -10,19 +11,19 @@ all: build
 
 # Pomocne 
 createdirs:
-	@mkdir -p $(DBGDIR) $(BLDDIR)
+	@mkdir -p $(DBGDIR) $(BLDDIR) ./tests/build
 
 clean:
-	rm -rf build debug_build
+	rm -rf build debug_build ./tests/build ./tests/lex/*.out
 
 clearterminal:
 	@clear
 	
 debug: createdirs
-	@cd src && $(MAKE) debug EXE="$(EXE)" DBGDIR="$(DBGDIR)"
+	@cd src && $(MAKE) -s debug EXE="$(EXE)" DBGDIR="$(DBGDIR)"
 
 build: createdirs
-	@cd src && $(MAKE) build EXE="$(EXE)" BLDDIR="$(BLDDIR)"
+	@cd src && $(MAKE) -s build EXE="$(EXE)" BLDDIR="$(BLDDIR)"
 
 run: debug
 	./$(DBGDIR)/$(EXE)
@@ -35,3 +36,14 @@ valgrind: debug
 	
 valgrindf: debug
 	valgrind --leak-check=full ./$(DBGDIR)/$(EXE)
+
+test-lex-build: createdirs
+	@cd src && $(MAKE) -s build-for-tests
+	@cd tests/lex && $(MAKE) -s build-for-tests
+	@cd tests/lex && $(MAKE) -s link-lex-tester MAINNAME="$(MAINNAME)"
+
+test-lex: test-lex-build
+	@cd tests/build && ./lex_tester_executable
+
+test-lex-valgrind: test-lex-build
+	@cd tests/build && valgrind ./lex_tester_executable

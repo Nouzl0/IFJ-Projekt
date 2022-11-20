@@ -1,6 +1,7 @@
 #pragma once
 #include <stdlib.h>
 #include <stdio.h>
+#include <stdbool.h>
 
 #define LEX_ERROR 1
 
@@ -20,9 +21,8 @@
 
 #define PROGRAM_ERROR 99
 
-
-//Token
 typedef struct {
+	bool quiet_errors;
 	int lex;
 	int syntax;
     int semantic;

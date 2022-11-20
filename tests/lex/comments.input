@@ -1,0 +1,9 @@
+$a
+//single line comment
+$b
+/*
+	multi
+	line
+	comment
+*/
+$c

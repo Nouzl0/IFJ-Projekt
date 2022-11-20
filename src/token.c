@@ -222,7 +222,7 @@ char* token_enum_to_string(token_type type){
 	return TOKEN_ENUM_STRINGS[type];
 }
 
-void token_array_debug_print(token_array_t ta_ptr){
+void token_array_debug_pretty_print(token_array_t ta_ptr){
 	
 	printf("Vypisuju tokeny ve formatu [typ,obsah,sloupec,radek]\n");
 	int line = 0;
@@ -243,3 +243,5 @@ void token_array_debug_print(token_array_t ta_ptr){
 	}
 	printf("\n");
 }
+
+

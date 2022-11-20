@@ -1,6 +1,7 @@
 build
 debug_build
-
+tests/build
+*.out
 
 # Prerequisites
 *.d
