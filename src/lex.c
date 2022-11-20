@@ -174,7 +174,7 @@ void lex_tokenize(error_handler_t* eh_ptr, token_array_t* ta_ptr, FILE* source){
 	
 	sb->ta_ptr = ta_ptr;
 	
-	while(sb->end_index > 1){
+	while(sb->end_index > 0){
 		//Jmeno promene
 		if(sb->buffer[0] == '$' &&  is_char_variable_name(sb->buffer[1])){
 			handle_variable(sb);
@@ -258,7 +258,7 @@ void lex_tokenize_file(error_handler_t* eh_ptr, token_array_t* ta_ptr, char* fil
 	FILE* f = fopen(file_name,"r");
 
 	if (f == NULL){
-		printf("Source file not found");
+		printf("Source file not found\n");
 		return;
 	}
 

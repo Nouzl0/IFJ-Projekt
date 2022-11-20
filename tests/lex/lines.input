@@ -1,0 +1,10 @@
+//skippin line
+if ($x){
+/*
+
+	skipping some more lines
+
+*/
+
+write($x)
+}

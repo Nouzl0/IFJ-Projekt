@@ -107,4 +107,4 @@ void token_array_dtor(token_array_t* token_array);
 
 char* token_enum_to_string(token_type type);
 
-void token_array_debug_print(token_array_t token_array);
+void token_array_debug_pretty_print(token_array_t token_array);

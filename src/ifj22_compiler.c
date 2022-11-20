@@ -18,7 +18,7 @@ int main(){
 	handle_lex_error(error_handler);
 	
 	
-	token_array_debug_print(token_array);
+	token_array_debug_pretty_print(token_array);
 	
 
 	stree_item_t* ast = parse_token_array(&error_handler,token_array);

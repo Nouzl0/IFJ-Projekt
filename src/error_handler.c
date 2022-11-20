@@ -7,6 +7,7 @@ void handle_program_error(){
 
 
 void error_handler_ctor(error_handler_t* eh_ptr){
+	eh_ptr->quiet_errors = 0;
 	eh_ptr->lex = 0;
 	eh_ptr->syntax = 0;
 	eh_ptr->semantic = 0;
@@ -15,7 +16,9 @@ void error_handler_ctor(error_handler_t* eh_ptr){
 
 void register_lex_error(error_handler_t* eh_ptr, int line, char* buffer){
 	eh_ptr->lex++;
-	fprintf(stderr, "Invalid character on line: %d in: %s\n", line, buffer);
+	if(!eh_ptr->quiet_errors){
+		fprintf(stderr, "Invalid character on line: %d in: %s\n", line, buffer);
+	}
 }
 
 
@@ -28,9 +31,11 @@ void handle_lex_error(error_handler_t eh){
 
 void register_syntax_error(error_handler_t* eh_ptr, int line, int column){
 	eh_ptr->syntax++;
-	fprintf(stderr, "Unexpected token on line: %d column: %d\n", line, column);
+	if(!eh_ptr->quiet_errors){
+		fprintf(stderr, "Unexpected token on line: %d column: %d\n", line, column);
+	}
 }
-
+	
 void handle_syntax_error(error_handler_t eh){
 	if (eh.syntax){
 		exit(SYNTAX_ERROR);
