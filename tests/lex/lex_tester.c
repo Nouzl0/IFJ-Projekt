@@ -5,7 +5,15 @@
 #include "../../src/error_handler.h"
 #include "../../src/lex.h"
 
-void token_array_to_file(char* filename, token_array_t ta_ptr, int info_level){
+/*
+
+TODO:
+	Přidat testy na ?int ?float ?string
+	testy na stringy podle "'
+	pokrocile testy nazvy promenych a identifikatoru hlavne cisla a _
+*/
+
+void token_array_to_file(char* filename, tok_arr_t ta_ptr, int info_level){
 	
 	FILE* file = fopen(filename,"w");
 
@@ -97,17 +105,19 @@ void print_file(char* file_name){
 
 
 void test_case(char* test_name, bool should_fail, int info_level, char* input_file, char* ref_file, char* output_file){
-	error_handler_t error_handler;
-	error_handler_ctor(&error_handler);
-	error_handler.quiet_errors = true;
-	token_array_t token_array;
-	token_array_ctor(&token_array);
 	
-	lex_tokenize_file(&error_handler, &token_array, input_file);
+	errors_ctor(global_err_ptr);
+	global_err_ptr->quiet_errors = true;
+	
+	
+	tok_arr_t token_array;
+	tok_arr_ctor(&token_array);
+	
+	lex_tokenize_file(&token_array, input_file);
 	
 	if(should_fail){
 		
-		if(error_handler.lex){
+		if(global_err_ptr->error){
 			printf("[\033[0;32mOK\033[0;37m] %s\n",test_name);
 		} else {
 			printf("[\033[0;31mERROR\033[0;37m] %s: should fail but it didn't\n",test_name);
@@ -115,7 +125,7 @@ void test_case(char* test_name, bool should_fail, int info_level, char* input_fi
 	
 	} else {
 		
-		if(error_handler.lex){
+		if(global_err_ptr->error){
 			printf("[\033[0;31mERROR\033[0;37m] %s: should not fail but it did\n",test_name);
 		} else {
 			
@@ -135,10 +145,12 @@ void test_case(char* test_name, bool should_fail, int info_level, char* input_fi
 		
 	}
 	
-	token_array_dtor(&token_array);
+	tok_arr_dtor(&token_array);
 	
 }
 
+errors_t global_err;
+errors_t* global_err_ptr = &global_err;
 
 int main(){
 	

@@ -45,7 +45,7 @@ F -> F DOT F                  // F . F
  * @returns 0 kdyz vyraz neni platny nebo index konce vyrazu
  */
  
-int get_count_of_commas(token_array_t tok_arr, int start_index){
+int get_count_of_commas(tok_arr_t tok_arr, int start_index){
 	int index = start_index;
 	int parens = 0;
 	int count = 0;
@@ -81,7 +81,7 @@ int get_count_of_commas(token_array_t tok_arr, int start_index){
  * @param ending Typ tokenu kterym ma vyraz koncit
  * @returns 0 kdyz vyraz neni platny nebo index konce vyrazu
  */
-int get_stmt_end_index(error_handler_t* eh_ptr, token_array_t tok_arr, int start_index, token_type ending, int delimiter){
+int get_stmt_end_index(error_handler_t* eh_ptr, tok_arr_t tok_arr, int start_index, token_type ending, int delimiter){
 	int index = start_index;
 	int offset = 0;
 	int parens = 0;
@@ -126,7 +126,7 @@ int get_stmt_end_index(error_handler_t* eh_ptr, token_array_t tok_arr, int start
  * @returns NULL kdyz je vyraz neplatny jinak ukazatel na korenovy prvek
  * stromu precedence
  */
-ptree_item_t* parse_statement(error_handler_t* eh_ptr, token_array_t tok_arr, int start_index, int end_index){
+ptree_item_t* parse_statement(error_handler_t* eh_ptr, tok_arr_t tok_arr, int start_index, int end_index){
 	
 	ptree_t btree;
 	ptree_t* btree_ptr = &btree;
@@ -143,7 +143,7 @@ ptree_item_t* parse_statement(error_handler_t* eh_ptr, token_array_t tok_arr, in
 			index++; //Preskoceni LEFT_PAREN (
 			int end_offset = get_stmt_end_index(eh_ptr, tok_arr, index, RIGHT_PAREN, 0);
 			
-			if (eh_ptr->syntax){
+			if (eh_ptr->error){
 				//Syntax error pri hledani zavorek a povolenych znaku
 				return NULL;
 			}
@@ -236,26 +236,6 @@ ptree_item_t* parse_statement(error_handler_t* eh_ptr, token_array_t tok_arr, in
 			}
 		}
 		
-		//Unary Non-Terminal
-		if (tok.type == NEG && !terminal){
-			ptree_add_branch_prec(btree_ptr, 1, 0, tok);
-			continue;
-		}
-		
-		//Binary-Unary Non-Terminal
-		if (tok.type == PLUS || tok.type == MINUS){
-			if (terminal){
-				//Binarni operace
-				terminal = 0;
-				ptree_add_branch(btree_ptr, tok);
-			} else {
-				//Unarni operace
-				ptree_add_branch_prec(btree_ptr, 0, 1, tok);
-			}
-			
-			continue;
-		}
-		
 		//Binary Non-Terminal
 		if (terminal){
 			//non_terminal = 1;
@@ -278,4 +258,51 @@ ptree_item_t* parse_statement(error_handler_t* eh_ptr, token_array_t tok_arr, in
 	
 	return btree_ptr->root;
 	
+}
+
+//NEW
+ptree_item_t* expr_parse(tok_arr_t* ta_ptr, token_type expr_end_type){
+	// Empty expression
+	if(tok_arr_cmp(ta_ptr,expr_end_type)){
+		return NULL;
+	}
+	
+	//syntax_error(global_err_ptr,token_struct, "Chyba toho a toho");
+	
+	
+	int parens = 0;
+	ptree_t btree;
+	ptree_t* btree_ptr = &btree;
+	ptree_ctor(btree_ptr);
+	
+	int terminal = 0;
+	while (!tok_arr_on_end(ta_ptr) && !tok_arr_cmp(ta_ptr,expr_end_type)){
+		
+		// Terminals
+		if (tok_arr_cmp_range(ta_ptr,IDENTIFIER,NIL) && !terminal){
+			//Pridat funkci
+			prec_tree_add_leaf(btree_ptr, *tok_arr_get_next(ta_ptr));
+			terminal = 1;
+			continue;
+		}
+		
+		// Non-Terminal
+		if (tok_arr_cmp_range(ta_ptr,MINUS,LESS)){
+			
+			if(!terminal){
+				//Operace nema 2 operandy
+				//Uvolnit strom vratit null
+				//Zaregistrova chybu
+			}
+			
+			terminal = 0;
+			ptree_add_branch(btree_ptr, *tok_arr_get_next(ta_ptr));
+			continue;
+		}
+		
+	}
+	
+	
+	
+	return btree.root;
 }

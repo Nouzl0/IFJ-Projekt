@@ -51,7 +51,7 @@ S -> WHILE, LEFT_PAREN, {STATEMENT}, RIGHT_PAREN, LEFT_BRACE, {PARSER}, RIGHT_BR
 */
 
 
-int get_braces_end_index(token_array_t tok_arr,int index){
+int get_braces_end_index(tok_arr_t tok_arr,int index){
 	int offset = 0;
 	int braces = 0;
 	while(1){
@@ -73,7 +73,7 @@ int get_braces_end_index(token_array_t tok_arr,int index){
 }
 
 
-void recursive_parser(stree_item_t* st_root, error_handler_t* eh_ptr, token_array_t tok_arr, int start, int end){
+void recursive_parser(stree_item_t* st_root, error_handler_t* eh_ptr, tok_arr_t tok_arr, int start, int end){
 	
 	int index = start;
 	while(index < end){
@@ -174,7 +174,7 @@ void recursive_parser(stree_item_t* st_root, error_handler_t* eh_ptr, token_arra
 				//printf("debug: %s\n",token_enum_to_string(tpl.type));
 				int offset = get_stmt_end_index(eh_ptr,tok_arr,index,SEMICOLON,0);
 				
-				if (!offset || eh_ptr->syntax){
+				if (!offset || eh_ptr->error){
 					//Vyraz je prazdny nebo je jeho zadani neplatne
 					register_syntax_error(eh_ptr,tok.line,tok.column);
 					return;
@@ -204,7 +204,7 @@ void recursive_parser(stree_item_t* st_root, error_handler_t* eh_ptr, token_arra
 			} else {
 				
 				int offset = get_stmt_end_index(eh_ptr,tok_arr,index,SEMICOLON,0);
-				if (!offset || eh_ptr->syntax){
+				if (!offset || eh_ptr->error){
 					//Vyraz je prazdny nebo je jeho zadani neplatne
 					return;
 				}
@@ -230,7 +230,7 @@ void recursive_parser(stree_item_t* st_root, error_handler_t* eh_ptr, token_arra
 			tok = tok_arr.elems[index];
 			
 			int offset = get_stmt_end_index(eh_ptr,tok_arr,index,SEMICOLON,0);
-			if (!offset || eh_ptr->syntax){
+			if (!offset || eh_ptr->error){
 				//Vyraz je prazdny nebo je jeho zadani neplatne
 				return;
 			}
@@ -253,7 +253,7 @@ void recursive_parser(stree_item_t* st_root, error_handler_t* eh_ptr, token_arra
 		if(tok.type == IF && tok_arr.elems[index + 1].type == LEFT_PAREN){
 			index += 2;
 			int offset = get_stmt_end_index(eh_ptr,tok_arr,index,RIGHT_PAREN,0);
-			if (!offset || eh_ptr->syntax){
+			if (!offset || eh_ptr->error){
 				//Vyraz je prazdny nebo je jeho zadani neplatne
 				return;
 			}
@@ -326,7 +326,7 @@ void recursive_parser(stree_item_t* st_root, error_handler_t* eh_ptr, token_arra
 			
 			index += 2;
 			int offset = get_stmt_end_index(eh_ptr,tok_arr,index,RIGHT_PAREN,0);
-			if (!offset || eh_ptr->syntax){
+			if (!offset || eh_ptr->error){
 				//Vyraz je prazdny nebo je jeho zadani neplatne
 				return;
 			}
@@ -390,7 +390,7 @@ void recursive_parser(stree_item_t* st_root, error_handler_t* eh_ptr, token_arra
  * @returns NULL kdyz je vyraz neplatny jinak ukazatel na korenovy prvek
  * stromu precedence
  */
-stree_item_t* parse_token_array(error_handler_t* eh_ptr, token_array_t tok_arr){
+stree_item_t* parse_token_array(error_handler_t* eh_ptr, tok_arr_t tok_arr){
 	stree_item_t* st_root = stree_new_block(0);
 	if(!(
 		tok_arr.elems[0].type == HEADER &&

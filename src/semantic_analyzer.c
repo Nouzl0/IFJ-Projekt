@@ -1,5 +1,7 @@
 #include "semantic_analyzer.h"
 
+//void semantic_error(int error_code, token_t token, char* info);
+
 void register_function(stree_item_t* func_item){
 	//Tyto udaje pridat do tabulky funkci
 	printf("Nazev funkce: %s\n", func_item->items[0]->token->content);

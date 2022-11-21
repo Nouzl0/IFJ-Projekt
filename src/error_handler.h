@@ -3,6 +3,8 @@
 #include <stdio.h>
 #include <stdbool.h>
 
+#include "tokens_lib.h"
+
 #define LEX_ERROR 1
 
 #define SYNTAX_ERROR 2
@@ -23,9 +25,8 @@
 
 typedef struct {
 	bool quiet_errors;
-	int lex;
-	int syntax;
-    int semantic;
+	bool error;
+	int semantic_code;
 } error_handler_t;
 
 void handle_program_error();
@@ -39,3 +40,22 @@ void handle_lex_error(error_handler_t eh);
 void register_syntax_error(error_handler_t* eh_ptr, int line, int column);
 
 void handle_syntax_error(error_handler_t eh);
+
+//NEW
+typedef struct {
+    bool quiet_errors;
+	int error;
+	int semantic_code;
+} errors_t;
+
+extern errors_t* global_err_ptr;
+
+void errors_ctor();
+
+void alloc_error();
+
+void lex_error(int line, char* buffer);
+
+void syntax_error(token_t token, char* info);
+
+void semantic_error(int error_code, token_t token, char* info);
