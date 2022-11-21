@@ -1,7 +1,7 @@
 #pragma once
 
 #include "error_handler.h"
-#include "token.h"
+#include "tokens_lib.h"
 
 typedef struct ptree_item_t ptree_item_t;
 

@@ -7,7 +7,12 @@ errors_t* global_err_ptr = &global_err;
 #include "lex.h"
 #include "parser.h"
 #include "semantic_analyzer.h"
+/*
+TODO:
+	vytvorit soubor rozdeleni.txt a pouzit
+	odradkovani LF ne CR LF
 
+*/
 
 int main(){
 	errors_ctor(global_err_ptr);
@@ -21,8 +26,13 @@ int main(){
 		tok_arr_dtor(&token_array);
 		return global_err_ptr->error;
 	}
+	/*
+	ptree_item_t* tree = expr_parse(&token_array, SEMICOLON);
 	
-	
+	ptree_debug_to_json(tree);
+	*/
+
+
 	//replace in nearest future
 	error_handler_t error_handler;
 	error_handler_ctor(&error_handler);

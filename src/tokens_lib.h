@@ -81,6 +81,7 @@ typedef struct {
 typedef struct {
     int size;
     int len;
+	int index;
     token_t *elems;
 } tok_arr_t;
 
@@ -94,6 +95,22 @@ int tok_arr_ctor(tok_arr_t* token_array);
 void tok_arr_insert(tok_arr_t* ta_ptr, token_type type, int line, int colum, char* str_ptr);
 
 void tok_arr_dtor(tok_arr_t* token_array);
+
+bool tok_arr_on_end(tok_arr_t* ta_ptr);
+
+bool tok_arr_cmp(tok_arr_t* ta_ptr, token_type type);
+
+bool tok_arr_cmp_range(tok_arr_t* ta_ptr, token_type start_type, token_type end_type);
+
+bool tok_arr_cmp_offset(tok_arr_t* ta_ptr, token_type type, int offset);
+
+bool tok_arr_cmp_skip(tok_arr_t* ta_ptr, token_type type);
+
+void tok_arr_inc(tok_arr_t* ta_ptr, int value);
+
+token_t* tok_arr_get(tok_arr_t* ta_ptr);
+
+token_t* tok_arr_get_next(tok_arr_t* ta_ptr);
 
 char* token_enum_to_string(token_type type);
 

@@ -4,9 +4,7 @@
 
 #include "error_handler.h"
 #include "strings_lib.h"
-#include "token.h"
-
-extern errors_t* global_err_ptr;
+#include "tokens_lib.h"
 
 void lex_tokenize(tok_arr_t* ta_ptr, FILE* source);
 

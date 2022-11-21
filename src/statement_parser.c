@@ -259,3 +259,50 @@ ptree_item_t* parse_statement(error_handler_t* eh_ptr, tok_arr_t tok_arr, int st
 	return btree_ptr->root;
 	
 }
+
+//NEW
+ptree_item_t* expr_parse(tok_arr_t* ta_ptr, token_type expr_end_type){
+	// Empty expression
+	if(tok_arr_cmp(ta_ptr,expr_end_type)){
+		return NULL;
+	}
+	
+	//syntax_error(global_err_ptr,token_struct, "Chyba toho a toho");
+	
+	
+	int parens = 0;
+	ptree_t btree;
+	ptree_t* btree_ptr = &btree;
+	ptree_ctor(btree_ptr);
+	
+	int terminal = 0;
+	while (!tok_arr_on_end(ta_ptr) && !tok_arr_cmp(ta_ptr,expr_end_type)){
+		
+		// Terminals
+		if (tok_arr_cmp_range(ta_ptr,IDENTIFIER,NIL) && !terminal){
+			//Pridat funkci
+			prec_tree_add_leaf(btree_ptr, *tok_arr_get_next(ta_ptr));
+			terminal = 1;
+			continue;
+		}
+		
+		// Non-Terminal
+		if (tok_arr_cmp_range(ta_ptr,MINUS,LESS)){
+			
+			if(!terminal){
+				//Operace nema 2 operandy
+				//Uvolnit strom vratit null
+				//Zaregistrova chybu
+			}
+			
+			terminal = 0;
+			ptree_add_branch(btree_ptr, *tok_arr_get_next(ta_ptr));
+			continue;
+		}
+		
+	}
+	
+	
+	
+	return btree.root;
+}

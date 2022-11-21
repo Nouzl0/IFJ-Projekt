@@ -3,7 +3,7 @@
 #include <stdlib.h>
 
 #include "error_handler.h"
-#include "token.h"
+#include "tokens_lib.h"
 #include "statement_parser.h"
 #include "syntax_tree.h"
 

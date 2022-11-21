@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <stdbool.h>
 
-#include "token.h"
+#include "tokens_lib.h"
 
 #define LEX_ERROR 1
 
@@ -48,8 +48,14 @@ typedef struct {
 	int semantic_code;
 } errors_t;
 
-void errors_ctor(errors_t* err_ptr);
+extern errors_t* global_err_ptr;
 
-void alloc_error(errors_t* err_ptr);
+void errors_ctor();
 
-void lex_error(errors_t* err_ptr, int line, char* buffer);
+void alloc_error();
+
+void lex_error(int line, char* buffer);
+
+void syntax_error(token_t token, char* info);
+
+void semantic_error(int error_code, token_t token, char* info);

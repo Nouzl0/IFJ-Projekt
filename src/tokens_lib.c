@@ -1,10 +1,8 @@
-#include "token.h"
+#include "tokens_lib.h"
 
 /*
-
-TODO: Pridat relativni a absolutni adresovani a pomocne funkce v poli tokenu
-at je mozne s nim mnohem jednodusej pracova v parserech
-
+TODO:
+	Pridat komentaro pro pomocne funkce pro pruchod pole tokenu
 */
 
 #define KEYWORD_REGISTER_LENGTH 10
@@ -74,6 +72,7 @@ int token_compare(trecord_t* reg, int reg_len, char* str_ptr, int* ttype_ptr){
 	return 0;	
 }
 
+
 /**
  * Searches if given string is valid keyword
  * 
@@ -85,6 +84,7 @@ int token_compare(trecord_t* reg, int reg_len, char* str_ptr, int* ttype_ptr){
 int token_compare_keywords(char* str_ptr, int* ttype_ptr){
 	return token_compare(keyword_register,KEYWORD_REGISTER_LENGTH,str_ptr,ttype_ptr);
 }
+
 
 /**
  * Searches if given string is in symbol register
@@ -98,78 +98,6 @@ int token_compare_symbol(char* str_ptr, int* ttype_ptr){
 	return token_compare(symbol_register,SYMBOL_REGISTER_LENGTH,str_ptr,ttype_ptr);
 }
 
-
-/**
- * Inits token array structure and allocates space for tokens
- * 
- * @param ta_ptr Pointer to given token array ready for init
- * 
- * @returns 1 if allocates successfuly otherwise 0
- */
-int tok_arr_ctor(tok_arr_t* ta_ptr){
-	
-	token_t* tokens = malloc(sizeof(token_t) * TOKEN_ARRAY_BASE_SIZE); 
-	
-	if(tokens == NULL){
-		return 1;
-	}
-	
-	ta_ptr->size = TOKEN_ARRAY_BASE_SIZE;
-	ta_ptr->len = 0;
-	ta_ptr->elems = tokens;
-	return 0;	
-}
-
-
-/**
- * Inserts new token to token array
- * 
- * @param token_type Type of inserted token
- * @param line Line where the token was read
- * @param column Column where the token was read
- * @param str_ptr Pointer to string that is content of token if needed otherwise NULL
- */
-void tok_arr_insert(tok_arr_t* ta_ptr, token_type type, int line, int column, char* str_ptr){
-	
-	if(ta_ptr->len >= ta_ptr->size){
-		// Grows array
-		ta_ptr->elems = realloc(ta_ptr->elems, ta_ptr->size * 2 * sizeof(token_t));
-		
-		if (ta_ptr->elems == NULL){
-			return;
-		}
-		
-		ta_ptr->size =  ta_ptr->size * 2;
-	}
-	
-	token_t token = {
-		.type = type,
-		.line = line,
-		.column = column,
-		.content = str_ptr
-	};
-	
-	ta_ptr->elems[ta_ptr->len] = token;
-	ta_ptr->len++;
-	
-}
-
-/**
- * Frees memory allocated by given token array
- * 
- * @param ta_ptr Pointer to token array 
- */
-void tok_arr_dtor(tok_arr_t* ta_ptr){
-	for (int i = 0; i < ta_ptr->len; i++){
-		if(ta_ptr->elems[i].content != NULL){
-			// Frees the token content if there is some
-			free(ta_ptr->elems[i].content);
-			ta_ptr->elems[i].content = NULL;
-		}
-	
-	}
-	free(ta_ptr->elems);
-}
 
 /**
  * Returns string form for corresponding enum of token type
@@ -241,6 +169,136 @@ char* token_enum_to_string(token_type type){
 	};
 	return TOKEN_ENUM_STRINGS[type];
 }
+
+
+/**
+ * Inits token array structure and allocates space for tokens
+ * 
+ * @param ta_ptr Pointer to given token array ready for init
+ * 
+ * @returns 1 if allocates successfuly otherwise 0
+ */
+int tok_arr_ctor(tok_arr_t* ta_ptr){
+	
+	token_t* tokens = malloc(sizeof(token_t) * TOKEN_ARRAY_BASE_SIZE); 
+	
+	if(tokens == NULL){
+		return 1;
+	}
+	
+	ta_ptr->size = TOKEN_ARRAY_BASE_SIZE;
+	ta_ptr->len = 0;
+	ta_ptr->index = 0;
+	ta_ptr->elems = tokens;
+	return 0;	
+}
+
+
+/**
+ * Inserts new token to token array
+ * 
+ * @param token_type Type of inserted token
+ * @param line Line where the token was read
+ * @param column Column where the token was read
+ * @param str_ptr Pointer to string that is content of token if needed otherwise NULL
+ */
+void tok_arr_insert(tok_arr_t* ta_ptr, token_type type, int line, int column, char* str_ptr){
+	
+	if(ta_ptr->len >= ta_ptr->size){
+		// Grows array
+		ta_ptr->elems = realloc(ta_ptr->elems, ta_ptr->size * 2 * sizeof(token_t));
+		
+		if (ta_ptr->elems == NULL){
+			return;
+		}
+		
+		ta_ptr->size =  ta_ptr->size * 2;
+	}
+	
+	token_t token = {
+		.type = type,
+		.line = line,
+		.column = column,
+		.content = str_ptr
+	};
+	
+	ta_ptr->elems[ta_ptr->len] = token;
+	ta_ptr->len++;
+	
+}
+
+bool tok_arr_on_end(tok_arr_t* ta_ptr){
+	return ta_ptr->index >= ta_ptr->len;
+}
+
+bool tok_arr_cmp(tok_arr_t* ta_ptr, token_type type){
+	if(ta_ptr->index < ta_ptr->len){
+		return ta_ptr->elems[ta_ptr->index].type == type;
+	}
+	return false;
+}
+
+
+bool tok_arr_cmp_range(tok_arr_t* ta_ptr, token_type start_type, token_type end_type){
+	if(ta_ptr->index < ta_ptr->len){
+		token_t tok = ta_ptr->elems[ta_ptr->index];
+		return tok.type >= start_type && tok.type <= end_type;
+	}
+	return false;
+}
+
+
+bool tok_arr_cmp_offset(tok_arr_t* ta_ptr, token_type type, int offset){
+	int index = ta_ptr->index + offset;
+	if(index > ta_ptr->len - 1 || index < 0){
+		return false;
+	}
+	return ta_ptr->elems[ta_ptr->index + offset].type == type;
+}
+
+
+bool tok_arr_cmp_skip(tok_arr_t* ta_ptr, token_type type){
+	bool result = tok_arr_cmp(ta_ptr,type);
+	ta_ptr->index++;
+	return result;
+}
+
+void tok_arr_inc(tok_arr_t* ta_ptr, int value){
+	ta_ptr->index += value;
+}
+
+token_t* tok_arr_get(tok_arr_t* ta_ptr){
+	if(ta_ptr->len > ta_ptr->index){
+		return &ta_ptr->elems[ta_ptr->index];
+	} else {
+		return NULL;
+	}
+}
+
+token_t* tok_arr_get_next(tok_arr_t* ta_ptr){
+	token_t* next_tok_ptr = tok_arr_get(ta_ptr);
+	ta_ptr->index++;
+	return next_tok_ptr;
+}
+
+
+/**
+ * Frees memory allocated by given token array
+ * 
+ * @param ta_ptr Pointer to token array 
+ */
+void tok_arr_dtor(tok_arr_t* ta_ptr){
+	for (int i = 0; i < ta_ptr->len; i++){
+		if(ta_ptr->elems[i].content != NULL){
+			// Frees the token content if there is some
+			free(ta_ptr->elems[i].content);
+			ta_ptr->elems[i].content = NULL;
+		}
+	
+	}
+	free(ta_ptr->elems);
+}
+
 
 /**
  * Prints out all tokens in array formated by lines

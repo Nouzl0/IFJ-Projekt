@@ -132,7 +132,7 @@ void handle_block_comment(sbuffer_t *sb_ptr){
 		}
 		// Checks for EOF
 		if(sb_ptr->end_index < 1){
-			lex_error(global_err_ptr,sb_ptr->line, "Missing comment ending");
+			lex_error(sb_ptr->line, "Missing comment ending");
 			return;
 		}
 		
@@ -164,7 +164,7 @@ void handle_text(sbuffer_t* sb_ptr){
 		}
 		// Checks for EOF
 		if(sb_ptr->end_index < 1){
-			lex_error(global_err_ptr,sb_ptr->line, "Missing string ending");
+			lex_error(sb_ptr->line, "Missing string ending");
 			return;
 		}
 		str_builder_append(&cs_ptr,sb_ptr->buffer[0]);
@@ -259,7 +259,7 @@ void lex_tokenize(tok_arr_t* ta_ptr, FILE* source){
 		}
 		
 		// Non of the rules above can be applied
-		lex_error(global_err_ptr,sb->line,sb->buffer);
+		lex_error(sb->line,sb->buffer);
 		free(sb);
 		return;
 	} 
