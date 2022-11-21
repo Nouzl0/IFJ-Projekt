@@ -61,7 +61,7 @@ void handle_semantic_error(error_handler_t eh){
 
 //NEW
 
-void errors_t_ctor(errors_t* err_ptr){
+void errors_ctor(errors_t* err_ptr){
 	err_ptr->quiet_errors = false;
 	err_ptr->error = 0;
 }

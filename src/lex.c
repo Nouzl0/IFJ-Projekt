@@ -16,9 +16,9 @@
 /**
  * Shifts buffer and saves characters for variable name
  * When shifts to invalid character saves token to array
- * (Valid variable characters defined in lex_string_helper.c) 
+ * (Valid variable characters defined in strings_lib.c) 
  *
- * @param sb_ptr Shift buffer pointer (defined in lex_string_helper.h)
+ * @param sb_ptr Shift buffer pointer (defined in strings_lib.h)
  */
 void handle_variable(sbuffer_t* sb_ptr){
 	int line = sb_ptr->line;
@@ -26,40 +26,40 @@ void handle_variable(sbuffer_t* sb_ptr){
 	
 	sbuffer_shift(sb_ptr);
 	
-	cstring_t cs_ptr;
-	cstring_ctor(&cs_ptr);
+	str_builder_t cs_ptr;
+	str_builder_ctor(&cs_ptr);
 	while(is_char_variable_name(sb_ptr->buffer[0])){
-		cstring_add_char(&cs_ptr, sb_ptr->buffer[0]);
+		str_builder_append(&cs_ptr, sb_ptr->buffer[0]);
 		sbuffer_shift(sb_ptr);
 	}
 	
-	token_array_add(sb_ptr->ta_ptr, VARIABLE, line, column, cs_ptr.content);
+	tok_arr_insert(sb_ptr->ta_ptr, VARIABLE, line, column, cs_ptr.content);
 }
 
 
 /**
  * Shifts buffer and saves characters for numeral constant
  * When shifts to end of number saves token to array
- * (Valid number characters defined in lex_string_helper.c) 
+ * (Valid number characters defined in strings_lib.c) 
  *
- * @param sb_ptr Shift buffer pointer (defined in lex_string_helper.h)
+ * @param sb_ptr Shift buffer pointer (defined in strings_lib.h)
  */
 void handle_number(sbuffer_t* sb_ptr){
 	int line = sb_ptr->line;
 	int column = sb_ptr->column;
 	token_type type = NUMBER;
 	
-	cstring_t cs_ptr;
-	cstring_ctor(&cs_ptr);
+	str_builder_t cs_ptr;
+	str_builder_ctor(&cs_ptr);
 	
 	// Checks for negative numeral
 	if (sb_ptr->buffer[0] == '-'){
-		cstring_add_char(&cs_ptr, sb_ptr->buffer[0]);
+		str_builder_append(&cs_ptr, sb_ptr->buffer[0]);
 		sbuffer_shift(sb_ptr);
 	}
 	
 	while(is_char_number(sb_ptr->buffer[0])){
-		cstring_add_char(&cs_ptr, sb_ptr->buffer[0]);
+		str_builder_append(&cs_ptr, sb_ptr->buffer[0]);
 		sbuffer_shift(sb_ptr);
 		
 		/*
@@ -67,36 +67,36 @@ void handle_number(sbuffer_t* sb_ptr){
 			(.5 and 1. is NOT valid)
 		*/
 		if (sb_ptr->buffer[0] == '.' && is_char_number(sb_ptr->buffer[1]) ){
-			cstring_add_char(&cs_ptr, sb_ptr->buffer[0]);
+			str_builder_append(&cs_ptr, sb_ptr->buffer[0]);
 			sbuffer_shift(sb_ptr);
 			type = FRACTION;
 		}
 		
 	}
 
-	token_array_add(sb_ptr->ta_ptr, type, line, column, cs_ptr.content);
+	tok_arr_insert(sb_ptr->ta_ptr, type, line, column, cs_ptr.content);
 }
 
 
 /**
  * Shifts buffer and saves characters for identifier name
  * When shifts to invalid character saves token to array
- * (Valid name characters defined in lex_string_helper.c) 
+ * (Valid name characters defined in strings_lib.c) 
  *
- * @param sb_ptr Shift buffer pointer (defined in lex_string_helper.h)
+ * @param sb_ptr Shift buffer pointer (defined in strings_lib.h)
  */
 void handle_identifier(sbuffer_t* sb_ptr){
 	int line = sb_ptr->line;
 	int column = sb_ptr->column;
 	
-	cstring_t cs_ptr;
-	cstring_ctor(&cs_ptr);
+	str_builder_t cs_ptr;
+	str_builder_ctor(&cs_ptr);
 	while(is_char_variable_name(sb_ptr->buffer[0])){
-		cstring_add_char(&cs_ptr, sb_ptr->buffer[0]);
+		str_builder_append(&cs_ptr, sb_ptr->buffer[0]);
 		sbuffer_shift(sb_ptr);
 	}
 
-	token_array_add(sb_ptr->ta_ptr, IDENTIFIER, line, column, cs_ptr.content);
+	tok_arr_insert(sb_ptr->ta_ptr, IDENTIFIER, line, column, cs_ptr.content);
 }
 
 
@@ -104,7 +104,7 @@ void handle_identifier(sbuffer_t* sb_ptr){
  * Shifts buffer until it arrives to newline character
  * Ignoring all characters when shifting
  *
- * @param sb_ptr Shift buffer pointer (defined in lex_string_helper.h)
+ * @param sb_ptr Shift buffer pointer (defined in strings_lib.h)
  */
 void handle_line_comment(sbuffer_t *sb_ptr){
 	int line = sb_ptr->line; 
@@ -122,7 +122,7 @@ void handle_line_comment(sbuffer_t *sb_ptr){
  * Ignoring all characters when shifting
  * When shifts to EOF registers error
  *
- * @param sb_ptr Shift buffer pointer (defined in lex_string_helper.h)
+ * @param sb_ptr Shift buffer pointer (defined in strings_lib.h)
  */
 void handle_block_comment(sbuffer_t *sb_ptr){
 	while(1){
@@ -144,21 +144,21 @@ void handle_block_comment(sbuffer_t *sb_ptr){
 /**
  * Shifts buffer until it arrives to end of string character (") or (')
  * then saves token to array
- * All characters shifted upon are saved to cstring (defined in lex_string_helper.h)
+ * All characters shifted upon are saved to cstring (defined in strings_lib.h)
  * When shifts to EOF registers error
  *
- * @param sb_ptr Shift buffer pointer (defined in lex_string_helper.h)
+ * @param sb_ptr Shift buffer pointer (defined in strings_lib.h)
  */
 void handle_text(sbuffer_t* sb_ptr){
 	char term_char = sb_ptr->buffer[0]; //Storing which character started the string
-	cstring_t cs_ptr;
-	cstring_ctor(&cs_ptr);
+	str_builder_t cs_ptr;
+	str_builder_ctor(&cs_ptr);
 	sbuffer_shift(sb_ptr);
 	int line = sb_ptr->line;
 	int column = sb_ptr->column;
 	while(1){
 		if(sb_ptr->buffer[0] == term_char){
-			token_array_add(sb_ptr->ta_ptr, TEXT, line, column, cs_ptr.content);
+			tok_arr_insert(sb_ptr->ta_ptr, TEXT, line, column, cs_ptr.content);
 			sbuffer_shift(sb_ptr);
 			return;
 		}
@@ -167,7 +167,7 @@ void handle_text(sbuffer_t* sb_ptr){
 			lex_error(global_err_ptr,sb_ptr->line, "Missing string ending");
 			return;
 		}
-		cstring_add_char(&cs_ptr,sb_ptr->buffer[0]);
+		str_builder_append(&cs_ptr,sb_ptr->buffer[0]);
 		sbuffer_shift(sb_ptr);
 	}
 	
@@ -183,7 +183,7 @@ void handle_text(sbuffer_t* sb_ptr){
  * @param ta_ptr token array pointer that stores saved tokens
  * @param source file pointer which is read from
  */
-void lex_tokenize(token_array_t* ta_ptr, FILE* source){
+void lex_tokenize(tok_arr_t* ta_ptr, FILE* source){
 	sbuffer_t* sb = sbuffer_init(source);
 	sb->ta_ptr = ta_ptr;
 	
@@ -214,7 +214,7 @@ void lex_tokenize(token_array_t* ta_ptr, FILE* source){
 					  There should NOT be any valid name characters after matched keyword
 					  otherwise it means that matched keyword is part of name
 					*/
-					token_array_add(sb->ta_ptr, token_type, sb->line, sb->column, NULL);
+					tok_arr_insert(sb->ta_ptr, token_type, sb->line, sb->column, NULL);
 					sbuffer_skip(sb,to_skip);
 					continue;
 				}
@@ -247,12 +247,12 @@ void lex_tokenize(token_array_t* ta_ptr, FILE* source){
 		int to_skip = token_compare_symbol(sb->buffer, &token_type);
 		if(to_skip){
 			// If there are characters to skip it matched with valid symbol
-			token_array_add(sb->ta_ptr, token_type, sb->line, sb->column, NULL);
+			tok_arr_insert(sb->ta_ptr, token_type, sb->line, sb->column, NULL);
 			sbuffer_skip(sb,to_skip);
 			continue;
 		}
 		
-		// Other permited characters (defined in lex_string_helper)
+		// Other permited characters (defined in strings_lib.c)
 		if(is_char_permited(sb->buffer[0])){
 			sbuffer_shift(sb);
 			continue;
@@ -276,7 +276,7 @@ void lex_tokenize(token_array_t* ta_ptr, FILE* source){
  * @param ta_ptr token array pointer that stores saved tokens
  * @param file_name string that stores given file name
  */
-void lex_tokenize_file(token_array_t* ta_ptr, char* file_name){
+void lex_tokenize_file(tok_arr_t* ta_ptr, char* file_name){
 	
 	FILE* f = fopen(file_name,"r");
 

@@ -48,7 +48,7 @@ typedef struct {
 	int semantic_code;
 } errors_t;
 
-void errors_t_ctor(errors_t* err_ptr);
+void errors_ctor(errors_t* err_ptr);
 
 void alloc_error(errors_t* err_ptr);
 

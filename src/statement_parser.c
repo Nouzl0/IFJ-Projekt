@@ -45,7 +45,7 @@ F -> F DOT F                  // F . F
  * @returns 0 kdyz vyraz neni platny nebo index konce vyrazu
  */
  
-int get_count_of_commas(token_array_t tok_arr, int start_index){
+int get_count_of_commas(tok_arr_t tok_arr, int start_index){
 	int index = start_index;
 	int parens = 0;
 	int count = 0;
@@ -81,7 +81,7 @@ int get_count_of_commas(token_array_t tok_arr, int start_index){
  * @param ending Typ tokenu kterym ma vyraz koncit
  * @returns 0 kdyz vyraz neni platny nebo index konce vyrazu
  */
-int get_stmt_end_index(error_handler_t* eh_ptr, token_array_t tok_arr, int start_index, token_type ending, int delimiter){
+int get_stmt_end_index(error_handler_t* eh_ptr, tok_arr_t tok_arr, int start_index, token_type ending, int delimiter){
 	int index = start_index;
 	int offset = 0;
 	int parens = 0;
@@ -126,7 +126,7 @@ int get_stmt_end_index(error_handler_t* eh_ptr, token_array_t tok_arr, int start
  * @returns NULL kdyz je vyraz neplatny jinak ukazatel na korenovy prvek
  * stromu precedence
  */
-ptree_item_t* parse_statement(error_handler_t* eh_ptr, token_array_t tok_arr, int start_index, int end_index){
+ptree_item_t* parse_statement(error_handler_t* eh_ptr, tok_arr_t tok_arr, int start_index, int end_index){
 	
 	ptree_t btree;
 	ptree_t* btree_ptr = &btree;
@@ -234,26 +234,6 @@ ptree_item_t* parse_statement(error_handler_t* eh_ptr, token_array_t tok_arr, in
 				terminal = 1;
 				continue;
 			}
-		}
-		
-		//Unary Non-Terminal
-		if (tok.type == NEG && !terminal){
-			ptree_add_branch_prec(btree_ptr, 1, 0, tok);
-			continue;
-		}
-		
-		//Binary-Unary Non-Terminal
-		if (tok.type == PLUS || tok.type == MINUS){
-			if (terminal){
-				//Binarni operace
-				terminal = 0;
-				ptree_add_branch(btree_ptr, tok);
-			} else {
-				//Unarni operace
-				ptree_add_branch_prec(btree_ptr, 0, 1, tok);
-			}
-			
-			continue;
 		}
 		
 		//Binary Non-Terminal

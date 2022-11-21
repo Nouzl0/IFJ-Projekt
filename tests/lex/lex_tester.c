@@ -5,7 +5,15 @@
 #include "../../src/error_handler.h"
 #include "../../src/lex.h"
 
-void token_array_to_file(char* filename, token_array_t ta_ptr, int info_level){
+/*
+
+TODO:
+	Přidat testy na ?int ?float ?string
+	testy na stringy podle "'
+	pokrocile testy nazvy promenych a identifikatoru hlavne cisla a _
+*/
+
+void token_array_to_file(char* filename, tok_arr_t ta_ptr, int info_level){
 	
 	FILE* file = fopen(filename,"w");
 
@@ -98,12 +106,12 @@ void print_file(char* file_name){
 
 void test_case(char* test_name, bool should_fail, int info_level, char* input_file, char* ref_file, char* output_file){
 	
-	errors_t_ctor(global_err_ptr);
+	errors_ctor(global_err_ptr);
 	global_err_ptr->quiet_errors = true;
 	
 	
-	token_array_t token_array;
-	token_array_ctor(&token_array);
+	tok_arr_t token_array;
+	tok_arr_ctor(&token_array);
 	
 	lex_tokenize_file(&token_array, input_file);
 	
@@ -137,7 +145,7 @@ void test_case(char* test_name, bool should_fail, int info_level, char* input_fi
 		
 	}
 	
-	token_array_dtor(&token_array);
+	tok_arr_dtor(&token_array);
 	
 }
 

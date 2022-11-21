@@ -1,10 +1,14 @@
 #include "token.h"
 
+/*
 
-#define KEYWORD_REGISTER_LENGTH 12
-trecord_t keyword_register[KEYWORD_REGISTER_LENGTH] = {
-	{"and", AND}, 
-	{"or", OR},
+TODO: Pridat relativni a absolutni adresovani a pomocne funkce v poli tokenu
+at je mozne s nim mnohem jednodusej pracova v parserech
+
+*/
+
+#define KEYWORD_REGISTER_LENGTH 10
+static trecord_t keyword_register[KEYWORD_REGISTER_LENGTH] = {
 	{"null", NIL},
 	{"if", IF},
 	{"else", ELSE},
@@ -17,8 +21,11 @@ trecord_t keyword_register[KEYWORD_REGISTER_LENGTH] = {
 	{"void", VOID}
 };
 
-#define SYMBOL_REGISTER_LENGTH 24
-trecord_t symbol_register[SYMBOL_REGISTER_LENGTH] = {
+#define SYMBOL_REGISTER_LENGTH 26
+static trecord_t symbol_register[SYMBOL_REGISTER_LENGTH] = {
+	{"?int", NIL_INT},
+	{"?float", NIL_FLOAT},
+	{"?string", NIL_STRING},
 	{"<?php", HEADER},
 	{"?>", FOOTER},
 	{"===", TYPE_EQUAL},
@@ -30,7 +37,6 @@ trecord_t symbol_register[SYMBOL_REGISTER_LENGTH] = {
 	{">", GREATER},
 	{"<", LESS},
 	{"=", ASSIGN},
-	{"!", NEG},
 	{"(", LEFT_PAREN},
 	{")", RIGHT_PAREN},
 	{"{", LEFT_BRACE},
@@ -47,18 +53,20 @@ trecord_t symbol_register[SYMBOL_REGISTER_LENGTH] = {
 
 
 /**
- * Slouzi k porovnani retezce s nejakym registrem
+ * Searches given string in token strings stored in register
+ * Goes through whole register comparing one by one
+ * Uses str_builder_cmp defined in strings_lib.h
+ *
+ * @param reg Pointer to register which stores strings for search
+ * @param reg_len Register length
+ * @param str_ptr String that is compared by
+ * @param ttype_ptr Pointer to index in register for found string
  * 
- * @param reg Registr ve kterem se ma porovnavat
- * @param reg_len Delak registru ve kterem se ma porovnavat
- * @param str_ptr Ukazatel na retezec ktery se ma porovnat
- * @param ttype_ptr Ukazatel do ktereho se zapise index nalezeneho retezce v registru
- * 
- * @returns 0 kdyz retezec nebylo nalezeno jinak delku nalezeneho retezce
+ * @returns string length if found otherwise 0
  */
 int token_compare(trecord_t* reg, int reg_len, char* str_ptr, int* ttype_ptr){
 	for (int i = 0; i < reg_len; i++){
-		if(cstring_compare(reg[i].match,str_ptr)){
+		if(str_builder_cmp(reg[i].match,str_ptr)){
 			*ttype_ptr = reg[i].type;
 			return strlen(reg[i].match); 
 		}
@@ -67,24 +75,24 @@ int token_compare(trecord_t* reg, int reg_len, char* str_ptr, int* ttype_ptr){
 }
 
 /**
- * Slouzi k zjisteni jestli je retezec klicove slovo nebo ne
+ * Searches if given string is valid keyword
  * 
- * @param str_ptr Ukazatel na retezec ktery se ma porovnat
- * @param ttype_ptr Ukazatel do ktereho se zapise index nalezeneho klicoveho slova v registru
+ * @param str_ptr String that is searched
+ * @param ttype_ptr Pointer to index in register for found string
  * 
- * @returns 0 kdyz klicove slovo nebylo nalezeno jinak delku klicoveho slova
+ * @returns keyword length if found otherwise 0
  */
 int token_compare_keywords(char* str_ptr, int* ttype_ptr){
 	return token_compare(keyword_register,KEYWORD_REGISTER_LENGTH,str_ptr,ttype_ptr);
 }
 
 /**
- * Slouzi k zjisteni jestli je retezec symbol nebo ne
+ * Searches if given string is in symbol register
  * 
- * @param str_ptr Ukazatel na retezec ktery se ma porovnat
- * @param ttype_ptr Ukazatel do ktereho se zapise index nalezeneho symbolu v registru
+ * @param str_ptr String that is searched
+ * @param ttype_ptr Pointer to index in register for found string
  * 
- * @returns 0 kdyz symbol nebyl nalezen jinak delku symbolu
+ * @returns found symbol length if found otherwise 0
  */
 int token_compare_symbol(char* str_ptr, int* ttype_ptr){
 	return token_compare(symbol_register,SYMBOL_REGISTER_LENGTH,str_ptr,ttype_ptr);
@@ -92,13 +100,13 @@ int token_compare_symbol(char* str_ptr, int* ttype_ptr){
 
 
 /**
- * Inicializuje nove pole tokenu
+ * Inits token array structure and allocates space for tokens
  * 
- * @param ta_ptr Ukazatel na prave vytvorene pole tokenu
+ * @param ta_ptr Pointer to given token array ready for init
  * 
- * @returns 1 kdyz se nepovede alokace jinak 0
+ * @returns 1 if allocates successfuly otherwise 0
  */
-int token_array_ctor(token_array_t* ta_ptr){
+int tok_arr_ctor(tok_arr_t* ta_ptr){
 	
 	token_t* tokens = malloc(sizeof(token_t) * TOKEN_ARRAY_BASE_SIZE); 
 	
@@ -114,15 +122,17 @@ int token_array_ctor(token_array_t* ta_ptr){
 
 
 /**
- * Pridava do pole tokenu novy token
+ * Inserts new token to token array
  * 
- * @param sb_ptr Ukazatel na posuvny buffer ktery uchovava zbytek dalsi potrebne data
- * @param token_type Typ tokenu
- * @param str_ptr Ukazatel na obash tokenu je li potreba jinak null
+ * @param token_type Type of inserted token
+ * @param line Line where the token was read
+ * @param column Column where the token was read
+ * @param str_ptr Pointer to string that is content of token if needed otherwise NULL
  */
-void token_array_add(token_array_t* ta_ptr, token_type type, int line, int column, char* str_ptr){
+void tok_arr_insert(tok_arr_t* ta_ptr, token_type type, int line, int column, char* str_ptr){
 	
 	if(ta_ptr->len >= ta_ptr->size){
+		// Grows array
 		ta_ptr->elems = realloc(ta_ptr->elems, ta_ptr->size * 2 * sizeof(token_t));
 		
 		if (ta_ptr->elems == NULL){
@@ -145,14 +155,14 @@ void token_array_add(token_array_t* ta_ptr, token_type type, int line, int colum
 }
 
 /**
- * Uvolnuje pamet zabranou polem tokenu
+ * Frees memory allocated by given token array
  * 
- * @param ta_ptr Ukazatel na pole tokenu
+ * @param ta_ptr Pointer to token array 
  */
-void token_array_dtor(token_array_t* ta_ptr){
+void tok_arr_dtor(tok_arr_t* ta_ptr){
 	for (int i = 0; i < ta_ptr->len; i++){
 		if(ta_ptr->elems[i].content != NULL){
-			//Maze obsah tokenu kdyz nejaky obsah ma
+			// Frees the token content if there is some
 			free(ta_ptr->elems[i].content);
 			ta_ptr->elems[i].content = NULL;
 		}
@@ -161,16 +171,27 @@ void token_array_dtor(token_array_t* ta_ptr){
 	free(ta_ptr->elems);
 }
 
-
+/**
+ * Returns string form for corresponding enum of token type
+ * 
+ * @param type Given type in enum form 
+ *
+ * @returns string Representation of token type
+ */
 char* token_enum_to_string(token_type type){
 	static char *TOKEN_ENUM_STRINGS[] = {
-		//Data types
+		// Nullable Data types
+		"NIL_INT",
+		"NIL_FLOAT",
+		"NIL_STRING",
+		
+		// Data types
 		"VOID",
 		"INT",
 		"FLOAT",
 		"STRING",
 		
-		//Terminals
+	// Terminals
 		"IDENTIFIER",
 		"VARIABLE",
 		"NUMBER",
@@ -178,15 +199,16 @@ char* token_enum_to_string(token_type type){
 		"TEXT",
 		"NIL",
 		
-		//Non-Terminals
-		"NEG",
-		//Matika
+	// Non-Terminals
+		
+		// Basic math
 		"MINUS",
 		"PLUS",
 		"STAR",
 		"SLASH",
 		"DOT",
-		//Porovnavace
+		
+		// Comparators
 		"TYPE_EQUAL",
 		"TYPE_NOT_EQUAL",
 		"EQUAL",
@@ -195,10 +217,8 @@ char* token_enum_to_string(token_type type){
 		"LESS_EQUAL",
 		"GREATER",
 		"LESS",
-		"AND",
-		"OR",
 		
-		//Specialni znaky
+		// Other symbols
 		"COMMA",
 		"ASSIGN",
 		"LEFT_PAREN",
@@ -208,23 +228,30 @@ char* token_enum_to_string(token_type type){
 		"SEMICOLON",
 		"DDOT",
 		
-		//Klicove slova
+		// Keywords
 		"IF",
 		"ELSE",
 		"WHILE",
 		"FUNC",
 		"RETURN",
 		
-		//Zbytek
+		// Others
 		"HEADER",
 		"FOOTER"
 	};
 	return TOKEN_ENUM_STRINGS[type];
 }
 
-void token_array_debug_pretty_print(token_array_t ta_ptr){
+/**
+ * Prints out all tokens in array formated by lines
+ * Every token is printed out in exact format: [type,content,column,line]
+ * 
+ * @param ta_ptr Pointer to token array that is printed
+ */
+
+void tok_arr_debug_print(tok_arr_t ta_ptr){
 	
-	printf("Vypisuju tokeny ve formatu [typ,obsah,sloupec,radek]\n");
+	printf("Printing tokens in format: [typ,obsah,sloupec,radek]\n");
 	int line = 0;
 	for (int i = 0; i < ta_ptr.len; i++){
 		
@@ -235,9 +262,9 @@ void token_array_debug_pretty_print(token_array_t ta_ptr){
 		}
 		
 		if (ta_ptr.elems[i].content == NULL){
-			printf("[%s,-,%d,%d]", token_enum_to_string(ta_ptr.elems[i].type),ta_ptr.elems[i].column,ta_ptr.elems[i].line);
+			printf("[%s,-,%d,%d]", token_enum_to_string(ta_ptr.elems[i].type),ta_ptr.elems[i].line,ta_ptr.elems[i].column);
 		} else {
-			printf("[%s,%s,%d,%d]", token_enum_to_string(ta_ptr.elems[i].type), ta_ptr.elems[i].content,ta_ptr.elems[i].column,ta_ptr.elems[i].line);
+			printf("[%s,%s,%d,%d]", token_enum_to_string(ta_ptr.elems[i].type), ta_ptr.elems[i].content,ta_ptr.elems[i].line,ta_ptr.elems[i].column);
 		}
 		
 	}
