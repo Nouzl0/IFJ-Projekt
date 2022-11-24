@@ -5,6 +5,8 @@ TODO:
 	Asi by bylo dobre vytvorit strukturu stmt parseru a do ni
 	vlozit promene ktere jsou potreba v kazde funkci
 	
+	statement prejmenovat na expression
+	stmt na expr
 	
 	Mozna by bylo dobre aby kazde pravidlo melo definovanou svoji funkci
 
@@ -261,48 +263,88 @@ ptree_item_t* parse_statement(error_handler_t* eh_ptr, tok_arr_t tok_arr, int st
 }
 
 //NEW
-ptree_item_t* expr_parse(tok_arr_t* ta_ptr, token_type expr_end_type){
+int expr_rec_parser(ptree_item_t** root_ptr, tok_arr_t* ta_ptr, token_type* expr_end_types, int types_len){	
 	// Empty expression
-	if(tok_arr_cmp(ta_ptr,expr_end_type)){
-		return NULL;
+	if(tok_arr_cmp(ta_ptr,expr_end_types[0])){
+		return 0;
 	}
 	
-	//syntax_error(global_err_ptr,token_struct, "Chyba toho a toho");
+	ptree_t etree;
+	ptree_t* etree_ptr = &etree;
+	ptree_ctor(etree_ptr);
 	
 	
-	int parens = 0;
-	ptree_t btree;
-	ptree_t* btree_ptr = &btree;
-	ptree_ctor(btree_ptr);
 	
 	int terminal = 0;
-	while (!tok_arr_on_end(ta_ptr) && !tok_arr_cmp(ta_ptr,expr_end_type)){
+	while (!tok_arr_on_end(ta_ptr) && !tok_arr_cmp_arr(ta_ptr,expr_end_types,types_len)){
+		
+		if (tok_arr_cmp(ta_ptr,LEFT_PAREN)){
+			// Skips left paren
+			tok_arr_inc(ta_ptr,1);
+			
+			printf("Debug: %s\n",token_enum_to_string(tok_arr_get(ta_ptr)->type));
+			
+			ptree_item_t* expr_ptr = NULL;
+			
+			token_type paren_end[] = {RIGHT_PAREN};
+			
+			// Invalid expression in parens 
+			if(expr_rec_parser(&expr_ptr, ta_ptr,paren_end,1)){
+				ptree_dtor(expr_ptr);
+				return 1;
+			}
+			
+			// Non empty parens
+			if(expr_ptr){
+				expr_ptr->precedence = -1;
+				ptree_extend(etree_ptr, -1, expr_ptr);
+				terminal = 1;
+			}
+			
+			// Skips right paren
+			tok_arr_inc(ta_ptr,1);
+		}
 		
 		// Terminals
 		if (tok_arr_cmp_range(ta_ptr,IDENTIFIER,NIL) && !terminal){
-			//Pridat funkci
-			prec_tree_add_leaf(btree_ptr, *tok_arr_get_next(ta_ptr));
+			prec_tree_add_leaf(etree_ptr, *tok_arr_get_next(ta_ptr));
 			terminal = 1;
 			continue;
 		}
 		
 		// Non-Terminal
-		if (tok_arr_cmp_range(ta_ptr,MINUS,LESS)){
-			
-			if(!terminal){
-				//Operace nema 2 operandy
-				//Uvolnit strom vratit null
-				//Zaregistrova chybu
-			}
-			
+		if (tok_arr_cmp_range(ta_ptr,MINUS,LESS) && terminal){
+			ptree_add_branch(etree_ptr, *tok_arr_get_next(ta_ptr));
 			terminal = 0;
-			ptree_add_branch(btree_ptr, *tok_arr_get_next(ta_ptr));
 			continue;
 		}
 		
+		syntax_error(*tok_arr_get_offset(ta_ptr,-1), "Unexpected token in expression");
+		return 1;
+		
 	}
 	
+	// Every non empty expression have to end with terminal
+	if(etree_ptr->root && !terminal){
+		syntax_error(*tok_arr_get_offset(ta_ptr,-1), "Unexpected expression ending");
+		return 1;
+	}
 	
+	(*root_ptr) = etree_ptr->root;
 	
-	return btree.root;
+	return 0;
+}
+
+
+ptree_item_t* expr_parse(tok_arr_t* ta_ptr, token_type expr_end_type){
+	
+	ptree_item_t* expr_ptr = NULL;
+	
+	token_type end_types[] = {expr_end_type};
+	if(expr_rec_parser(&expr_ptr, ta_ptr, end_types, 1)){
+		ptree_dtor(expr_ptr);
+		return NULL;
+	}
+	
+	return expr_ptr;
 }

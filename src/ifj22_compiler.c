@@ -20,17 +20,23 @@ int main(){
 	tok_arr_t token_array;
 	tok_arr_ctor(&token_array);
 		
-	lex_tokenize_file(&token_array,"./example2.php");
+	lex_tokenize_file(&token_array,"./stmt_example.php");
+	
+	tok_arr_debug_print(token_array);
 	
 	if(global_err_ptr->error){
 		tok_arr_dtor(&token_array);
 		return global_err_ptr->error;
 	}
-	/*
+	
+	
 	ptree_item_t* tree = expr_parse(&token_array, SEMICOLON);
 	
+	
 	ptree_debug_to_json(tree);
-	*/
+	
+	
+	return 0;
 
 
 	//replace in nearest future

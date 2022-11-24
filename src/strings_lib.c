@@ -42,6 +42,7 @@ bool is_char_permited(char c){
  * 
  */
 void sbuffer_shift(sbuffer_t* sb_ptr){
+	
 	sb_ptr->column++;	
 	
 	for (int i = 0; i < BUFFER_SIZE - 1; i++){

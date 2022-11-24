@@ -1,5 +1,11 @@
 #include "error_handler.h"
 
+/*
+TODO:
+	Odstranit tyto funkce a použivat jenom ty od //NEW
+	ktere vyuzivaji globali promene
+
+*/
 void handle_program_error(){
 	fprintf(stderr, "Unrecognized internal program error, try to compile again!");
 	exit(PROGRAM_ERROR);
@@ -63,13 +69,13 @@ void lex_error(int line, char* buffer){
 void syntax_error(token_t token, char* info){
 	global_err_ptr->error = SYNTAX_ERROR;
 	if(!global_err_ptr->quiet_errors){
-		fprintf(stderr, "Syntax error on line: %d, column: %d, reason: %s", token.line, token.column, info);
+		fprintf(stderr, "Syntax error on line: %d, column: %d, reason: %s\n", token.line, token.column, info);
 	}
 }
 
 void semantic_error(int error_code, token_t token, char* info){
 	global_err_ptr->error = error_code;
 	if(!global_err_ptr->quiet_errors){
-		fprintf(stderr, "Semantic error on line: %d, column: %d, reason: %s", token.line, token.column, info);
+		fprintf(stderr, "Semantic error on line: %d, column: %d, reason: %s\n", token.line, token.column, info);
 	}
 }

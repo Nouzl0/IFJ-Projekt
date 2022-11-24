@@ -100,6 +100,8 @@ bool tok_arr_on_end(tok_arr_t* ta_ptr);
 
 bool tok_arr_cmp(tok_arr_t* ta_ptr, token_type type);
 
+bool tok_arr_cmp_arr(tok_arr_t* ta_ptr, token_type* types, int types_len);
+
 bool tok_arr_cmp_range(tok_arr_t* ta_ptr, token_type start_type, token_type end_type);
 
 bool tok_arr_cmp_offset(tok_arr_t* ta_ptr, token_type type, int offset);
@@ -111,6 +113,8 @@ void tok_arr_inc(tok_arr_t* ta_ptr, int value);
 token_t* tok_arr_get(tok_arr_t* ta_ptr);
 
 token_t* tok_arr_get_next(tok_arr_t* ta_ptr);
+
+token_t* tok_arr_get_offset(tok_arr_t* ta_ptr, int offset);
 
 char* token_enum_to_string(token_type type);
 

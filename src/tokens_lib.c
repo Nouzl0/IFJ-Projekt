@@ -238,6 +238,17 @@ bool tok_arr_cmp(tok_arr_t* ta_ptr, token_type type){
 	return false;
 }
 
+bool tok_arr_cmp_arr(tok_arr_t* ta_ptr, token_type* types, int types_len){
+	if(ta_ptr->index < ta_ptr->len){
+		for (int i = 0; i < types_len; i++){
+			token_t tok = ta_ptr->elems[ta_ptr->index];
+			if(tok.type == types[i]){
+				return true;
+			}
+		}
+	}
+	return false;
+}
 
 bool tok_arr_cmp_range(tok_arr_t* ta_ptr, token_type start_type, token_type end_type){
 	if(ta_ptr->index < ta_ptr->len){
@@ -279,6 +290,14 @@ token_t* tok_arr_get_next(tok_arr_t* ta_ptr){
 	token_t* next_tok_ptr = tok_arr_get(ta_ptr);
 	ta_ptr->index++;
 	return next_tok_ptr;
+}
+
+token_t* tok_arr_get_offset(tok_arr_t* ta_ptr, int offset){
+	int index = ta_ptr->index + offset;
+	if(index > ta_ptr->len - 1 || index < 0){
+		return NULL;
+	}
+	return &ta_ptr->elems[ta_ptr->index + offset];
 }
 
 
