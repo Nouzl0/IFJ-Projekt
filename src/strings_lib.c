@@ -42,10 +42,9 @@ bool is_char_permited(char c){
  * 
  */
 void sbuffer_shift(sbuffer_t* sb_ptr){
-	
 	sb_ptr->column++;	
 	
-	for (int i = 0; i < BUFFER_SIZE - 1; i++){
+	for(int i = 0; i < BUFFER_SIZE - 1; i++){
 		sb_ptr->buffer[i] = sb_ptr->buffer[i+1];
 	}
 	
@@ -80,7 +79,7 @@ sbuffer_t* sbuffer_init(FILE* source){
 	
 	sbuffer_t* sb = malloc(sizeof(sbuffer_t));
 	
-	if (sb == NULL){
+	if(sb == NULL){
 		return NULL;
 	}
 
@@ -91,17 +90,9 @@ sbuffer_t* sbuffer_init(FILE* source){
 	sb->column = 1;
 	
 	for(int i = 0; i < BUFFER_SIZE; i++){
-		sb->buffer[i] = 0;
-	}
-	
-	for (int i = 0; i < BUFFER_SIZE; i++){
 
 		sbuffer_shift(sb);
-		
-		if(sb->found_end){
-			sb->end_index = i;
-			break;
-		}	
+
 	}
 	
 	sb->column = 1;
@@ -115,7 +106,7 @@ sbuffer_t* sbuffer_init(FILE* source){
  * @param to_skip Given number of needed shifts
  */
 void sbuffer_skip(sbuffer_t* sb_ptr, int to_skip){
-	for (int i = 0; i < to_skip; i++){
+	for(int i = 0; i < to_skip; i++){
 		sbuffer_shift(sb_ptr);
 	}
 }
@@ -134,7 +125,7 @@ void sbuffer_skip(sbuffer_t* sb_ptr, int to_skip){
 void str_builder_ctor(str_builder_t* cs_ptr){
 	char* str_ptr = malloc(sizeof(char) *STRING_BASE_SIZE );
 
-	if (str_ptr == NULL){
+	if(str_ptr == NULL){
 		cs_ptr = NULL;
 		return;
 	}
@@ -156,7 +147,7 @@ void str_builder_append(str_builder_t* cs_ptr, char c){
 		// Grows character array
 		cs_ptr->content = realloc(cs_ptr->content, cs_ptr->size * 2 * sizeof(char));
 		
-		if (cs_ptr->content == NULL){
+		if(cs_ptr->content == NULL){
 			return;
 		}
 		

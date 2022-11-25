@@ -11,32 +11,33 @@ TODO:
 	Přidat testy na ?int ?float ?string
 	testy na stringy podle "'
 	pokrocile testy nazvy promenych a identifikatoru hlavne cisla a _
+	pridat testy na maly pocet kratych tokenu idealne mensich nez BUFFER_SIZE
 */
 
 void token_array_to_file(char* filename, tok_arr_t ta_ptr, int info_level){
 	
 	FILE* file = fopen(filename,"w");
 
-	if (file == NULL){
+	if(file == NULL){
 		printf("Can't create test output files\n");
 		return;
 	}
 	
 	switch(info_level){
 		case 1:
-			for (int i = 0; i < ta_ptr.len; i++){		
+			for(int i = 0; i < ta_ptr.len; i++){		
 				fprintf(file, "[%s]", token_enum_to_string(ta_ptr.elems[i].type));
 			}
 			break;
 			
 		case 2:
-			for (int i = 0; i < ta_ptr.len; i++){		
+			for(int i = 0; i < ta_ptr.len; i++){		
 				fprintf(file, "[%s,%d,%d]", token_enum_to_string(ta_ptr.elems[i].type),ta_ptr.elems[i].line,ta_ptr.elems[i].column);
 			}
 			break;
 		
 		case 3:
-			for (int i = 0; i < ta_ptr.len; i++){		
+			for(int i = 0; i < ta_ptr.len; i++){		
 				if (ta_ptr.elems[i].content == NULL){
 					fprintf(file, "[%s,-]", token_enum_to_string(ta_ptr.elems[i].type));
 				} else {
@@ -45,7 +46,7 @@ void token_array_to_file(char* filename, tok_arr_t ta_ptr, int info_level){
 			}
 			break;
 		default:
-			for (int i = 0; i < ta_ptr.len; i++){		
+			for(int i = 0; i < ta_ptr.len; i++){		
 				if (ta_ptr.elems[i].content == NULL){
 					fprintf(file, "[%s,-,%d,%d]", token_enum_to_string(ta_ptr.elems[i].type),ta_ptr.elems[i].column,ta_ptr.elems[i].line);
 				} else {

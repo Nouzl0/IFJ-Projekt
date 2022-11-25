@@ -262,59 +262,196 @@ ptree_item_t* parse_statement(error_handler_t* eh_ptr, tok_arr_t tok_arr, int st
 	
 }
 
+
+
 //NEW
-int expr_rec_parser(ptree_item_t** root_ptr, tok_arr_t* ta_ptr, token_type* expr_end_types, int types_len){	
-	// Empty expression
-	if(tok_arr_cmp(ta_ptr,expr_end_types[0])){
-		return 0;
+
+// Label
+bool expr_recursive_parser(ptree_item_t** root_ptr, tok_arr_t* ta_ptr, token_type expr_end_type);
+
+
+/**
+ * Calls expr_recursive_parser on tokens in given token array
+ * that represents function call in expression
+ * Given token array should have index pointing to name of the function
+ * After calling this function the index of token array 
+ * should point to next token after right parenthesis
+ * Inserts returned subtree from expr_recursive_parser to given super tree
+ * 
+ * @param tok_arr Token array with given expression tokens
+ * @param et_ptr expression tree pointer to given super tree
+ * @returns 1 if there is an error otherwise 0
+ */
+bool expr_function_parser(tok_arr_t* ta_ptr, ptree_t* et_ptr){
+	// Saves current token that stores function name
+	token_t func_tok = *tok_arr_get(ta_ptr);
+	// Skips identifier and left parenthesis token
+	tok_arr_inc(ta_ptr,2);
+	
+	int commas = tok_arr_get_commas(ta_ptr);
+	// Error while searching for commas in function parameters
+	if(commas == -1){
+		syntax_error(*tok_arr_get_offset(ta_ptr,-1), "Invalid function parameters format");
+		return 1;
 	}
 	
-	ptree_t etree;
-	ptree_t* etree_ptr = &etree;
-	ptree_ctor(etree_ptr);
-	
-	
-	
-	int terminal = 0;
-	while (!tok_arr_on_end(ta_ptr) && !tok_arr_cmp_arr(ta_ptr,expr_end_types,types_len)){
+	// Only one parameter given or empty
+	if(commas == 0){
+		ptree_item_t* param_expr_ptr = NULL;
+		if (expr_recursive_parser(&param_expr_ptr, ta_ptr, RIGHT_PAREN)){
+			ptree_dtor(param_expr_ptr);
+			return 1;
+		}
 		
-		if (tok_arr_cmp(ta_ptr,LEFT_PAREN)){
-			// Skips left paren
-			tok_arr_inc(ta_ptr,1);
+		// Checks if function has parameter
+		if(param_expr_ptr){
+			ptree_item_t* et_item_ptr = prec_tree_add_leaf(et_ptr, func_tok);
+			et_item_ptr->params_len = 1;
+			et_item_ptr->params = malloc(sizeof(ptree_item_t*));
+			et_item_ptr->params[0] = param_expr_ptr;
+		}
+		tok_arr_inc(ta_ptr,1);
+	} else {
+	// Two or more parameters given
+		ptree_item_t* et_item_ptr = prec_tree_add_leaf(et_ptr, func_tok);
+		et_item_ptr->params_len = commas + 1;
+		et_item_ptr->params = malloc(sizeof(ptree_item_t*) * (commas + 1));
+		
+		//Looping through all parameters
+		for(int i = 0; i < commas + 1; i++){
+			ptree_item_t* param_expr_ptr = NULL;
+			int err = 0;
+			// Last parameter is terminated by right parenthesis others by comma
+			if(i == commas){
+				err = expr_recursive_parser(&param_expr_ptr, ta_ptr, RIGHT_PAREN);
+			} else {
+				err = expr_recursive_parser(&param_expr_ptr, ta_ptr, COMMA);
+			}
 			
-			printf("Debug: %s\n",token_enum_to_string(tok_arr_get(ta_ptr)->type));
-			
-			ptree_item_t* expr_ptr = NULL;
-			
-			token_type paren_end[] = {RIGHT_PAREN};
-			
-			// Invalid expression in parens 
-			if(expr_rec_parser(&expr_ptr, ta_ptr,paren_end,1)){
-				ptree_dtor(expr_ptr);
+			if(err){
+				ptree_dtor(param_expr_ptr);
+				return 1;
+			}
+			// Empty paramater is allowed only if there is no comma
+			if(!param_expr_ptr){
+				syntax_error(*tok_arr_get_offset(ta_ptr,-1), "Empty parameter in function call with multiple parameters");
 				return 1;
 			}
 			
-			// Non empty parens
-			if(expr_ptr){
-				expr_ptr->precedence = -1;
-				ptree_extend(etree_ptr, -1, expr_ptr);
-				terminal = 1;
+			// Skips terminating token
+			tok_arr_inc(ta_ptr,1);
+			
+			et_item_ptr->params[i] = param_expr_ptr;
+		}
+		
+		
+	}
+	return 0;
+}
+
+/**
+ * Calls expr_recursive_parser on tokens in given token array
+ * Given token array should have index pointing to start of the expression
+ * After calling this function the index of token array 
+ * should point to next token after right parenthesis
+ * Inserts returned subtree from expr_recursive_parser to given super tree
+ * 
+ * @param tok_arr Token array with given expression tokens
+ * @param et_ptr expression tree pointer to given super tree
+ * @returns 1 if there is an error otherwise 0
+ */
+bool expr_parens_parser(tok_arr_t* ta_ptr, ptree_t* et_ptr){
+	
+	// Skips left parenthesis
+	tok_arr_inc(ta_ptr,1);
+	
+	ptree_item_t* sub_expr_ptr = NULL;
+	// Invalid expression in parenthesis 
+	if(expr_recursive_parser(&sub_expr_ptr, ta_ptr,RIGHT_PAREN)){
+		ptree_dtor(sub_expr_ptr);
+		return 1;
+	}
+	
+	// There is no expression in parenthesis
+	if(!sub_expr_ptr){
+		return 1;
+		syntax_error(*tok_arr_get_offset(ta_ptr,-1), "Parenthesis are empty");
+	}
+	
+	sub_expr_ptr->precedence = -1;
+	ptree_extend(et_ptr, -1, sub_expr_ptr);
+	
+	// Skips right parenthesis
+	tok_arr_inc(ta_ptr,1);
+	return 0;
+}
+
+bool expr_recursive_parser(ptree_item_t** root_ptr, tok_arr_t* ta_ptr, token_type expr_end_type){	
+	// Empty expression
+	if(tok_arr_cmp(ta_ptr,expr_end_type)){
+		return 0;
+	}
+	
+	ptree_t et;
+	ptree_t* et_ptr = &et;
+	ptree_ctor(et_ptr);
+	int terminal = 0;
+	
+	// Loops until terminating token is found
+	while(!tok_arr_cmp(ta_ptr,expr_end_type)){
+		
+		//Checks if there are more tokens
+		if(tok_arr_on_end(ta_ptr)){
+			syntax_error(*tok_arr_get_offset(ta_ptr,-1), "Unexpected expression ending");
+			return 1;
+		}
+		
+		// Function call
+		if(tok_arr_cmp(ta_ptr,IDENTIFIER) && tok_arr_cmp_offset(ta_ptr, LEFT_PAREN, 1)){
+			if(terminal){
+				syntax_error(*tok_arr_get_offset(ta_ptr,-1), "Two or more operands without operator");
+				return 1;
 			}
 			
-			// Skips right paren
-			tok_arr_inc(ta_ptr,1);
+			if(expr_function_parser(ta_ptr,et_ptr)){
+				return 1;
+			}
+			terminal = 1;
+			continue;
+		}
+		
+		// Parenthesis
+		if(tok_arr_cmp(ta_ptr,LEFT_PAREN)){
+			if(terminal){
+				syntax_error(*tok_arr_get_offset(ta_ptr,-1), "There can't be parenthesis after non terminal");
+				return 1;
+			}
+			
+			if(expr_parens_parser(ta_ptr,et_ptr)){
+				return 1;
+			};
+			terminal = 1;
+			continue;
 		}
 		
 		// Terminals
-		if (tok_arr_cmp_range(ta_ptr,IDENTIFIER,NIL) && !terminal){
-			prec_tree_add_leaf(etree_ptr, *tok_arr_get_next(ta_ptr));
+		if(tok_arr_cmp_range(ta_ptr,VARIABLE,NIL)){
+			if(terminal){
+				syntax_error(*tok_arr_get_offset(ta_ptr,-1), "Two or more operands without operator");
+				return 1;
+			}
+			prec_tree_add_leaf(et_ptr, *tok_arr_get_next(ta_ptr));
 			terminal = 1;
 			continue;
 		}
 		
 		// Non-Terminal
-		if (tok_arr_cmp_range(ta_ptr,MINUS,LESS) && terminal){
-			ptree_add_branch(etree_ptr, *tok_arr_get_next(ta_ptr));
+		if(tok_arr_cmp_range(ta_ptr,MINUS,LESS)){
+			if(!terminal){
+				syntax_error(*tok_arr_get_offset(ta_ptr,-1), "Operator missing one or both operands");
+				return 1;
+			}
+			ptree_add_branch(et_ptr, *tok_arr_get_next(ta_ptr));
 			terminal = 0;
 			continue;
 		}
@@ -324,24 +461,23 @@ int expr_rec_parser(ptree_item_t** root_ptr, tok_arr_t* ta_ptr, token_type* expr
 		
 	}
 	
-	// Every non empty expression have to end with terminal
-	if(etree_ptr->root && !terminal){
-		syntax_error(*tok_arr_get_offset(ta_ptr,-1), "Unexpected expression ending");
+	// Non empty expression should end by terminal
+	if(!terminal){
+		syntax_error(*tok_arr_get_offset(ta_ptr,-1), "Expression ends with operator");
 		return 1;
 	}
 	
-	(*root_ptr) = etree_ptr->root;
-	
+	(*root_ptr) = et_ptr->root;
 	return 0;
 }
 
-
+// Overlooking function for expr_recursive_parser fucntion 
+// that frees memory if there is an error when parsing or creating tree
 ptree_item_t* expr_parse(tok_arr_t* ta_ptr, token_type expr_end_type){
 	
 	ptree_item_t* expr_ptr = NULL;
 	
-	token_type end_types[] = {expr_end_type};
-	if(expr_rec_parser(&expr_ptr, ta_ptr, end_types, 1)){
+	if(expr_recursive_parser(&expr_ptr, ta_ptr, expr_end_type)){
 		ptree_dtor(expr_ptr);
 		return NULL;
 	}

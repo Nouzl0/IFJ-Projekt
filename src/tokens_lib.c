@@ -64,7 +64,7 @@ static trecord_t symbol_register[SYMBOL_REGISTER_LENGTH] = {
  */
 int token_compare(trecord_t* reg, int reg_len, char* str_ptr, int* ttype_ptr){
 	for (int i = 0; i < reg_len; i++){
-		if(str_builder_cmp(reg[i].match,str_ptr)){
+		if (str_builder_cmp(reg[i].match,str_ptr)){
 			*ttype_ptr = reg[i].type;
 			return strlen(reg[i].match); 
 		}
@@ -182,7 +182,7 @@ int tok_arr_ctor(tok_arr_t* ta_ptr){
 	
 	token_t* tokens = malloc(sizeof(token_t) * TOKEN_ARRAY_BASE_SIZE); 
 	
-	if(tokens == NULL){
+	if (tokens == NULL){
 		return 1;
 	}
 	
@@ -204,7 +204,7 @@ int tok_arr_ctor(tok_arr_t* ta_ptr){
  */
 void tok_arr_insert(tok_arr_t* ta_ptr, token_type type, int line, int column, char* str_ptr){
 	
-	if(ta_ptr->len >= ta_ptr->size){
+	if (ta_ptr->len >= ta_ptr->size){
 		// Grows array
 		ta_ptr->elems = realloc(ta_ptr->elems, ta_ptr->size * 2 * sizeof(token_t));
 		
@@ -239,10 +239,10 @@ bool tok_arr_cmp(tok_arr_t* ta_ptr, token_type type){
 }
 
 bool tok_arr_cmp_arr(tok_arr_t* ta_ptr, token_type* types, int types_len){
-	if(ta_ptr->index < ta_ptr->len){
+	if (ta_ptr->index < ta_ptr->len){
 		for (int i = 0; i < types_len; i++){
 			token_t tok = ta_ptr->elems[ta_ptr->index];
-			if(tok.type == types[i]){
+			if (tok.type == types[i]){
 				return true;
 			}
 		}
@@ -251,7 +251,7 @@ bool tok_arr_cmp_arr(tok_arr_t* ta_ptr, token_type* types, int types_len){
 }
 
 bool tok_arr_cmp_range(tok_arr_t* ta_ptr, token_type start_type, token_type end_type){
-	if(ta_ptr->index < ta_ptr->len){
+	if (ta_ptr->index < ta_ptr->len){
 		token_t tok = ta_ptr->elems[ta_ptr->index];
 		return tok.type >= start_type && tok.type <= end_type;
 	}
@@ -261,7 +261,7 @@ bool tok_arr_cmp_range(tok_arr_t* ta_ptr, token_type start_type, token_type end_
 
 bool tok_arr_cmp_offset(tok_arr_t* ta_ptr, token_type type, int offset){
 	int index = ta_ptr->index + offset;
-	if(index > ta_ptr->len - 1 || index < 0){
+	if (index > ta_ptr->len - 1 || index < 0){
 		return false;
 	}
 	return ta_ptr->elems[ta_ptr->index + offset].type == type;
@@ -279,7 +279,7 @@ void tok_arr_inc(tok_arr_t* ta_ptr, int value){
 }
 
 token_t* tok_arr_get(tok_arr_t* ta_ptr){
-	if(ta_ptr->len > ta_ptr->index){
+	if (ta_ptr->len > ta_ptr->index){
 		return &ta_ptr->elems[ta_ptr->index];
 	} else {
 		return NULL;
@@ -294,12 +294,31 @@ token_t* tok_arr_get_next(tok_arr_t* ta_ptr){
 
 token_t* tok_arr_get_offset(tok_arr_t* ta_ptr, int offset){
 	int index = ta_ptr->index + offset;
-	if(index > ta_ptr->len - 1 || index < 0){
+	if (index > ta_ptr->len - 1 || index < 0){
 		return NULL;
 	}
 	return &ta_ptr->elems[ta_ptr->index + offset];
 }
 
+int tok_arr_get_commas(tok_arr_t* ta_ptr){
+	int index = ta_ptr->index;
+	int parens = 0;
+	int commas = 0;
+	while (index < ta_ptr->len){		
+		if(!parens && ta_ptr->elems[index].type == COMMA){
+			commas++;
+		} else if(ta_ptr->elems[index].type == LEFT_PAREN){
+			parens++;
+		} else if(ta_ptr->elems[index].type == RIGHT_PAREN){
+			if(!parens){
+				return commas;
+			}
+			parens--;
+		}
+		index++;
+	}
+	return -1;
+}
 
 /**
  * Frees memory allocated by given token array
@@ -308,7 +327,7 @@ token_t* tok_arr_get_offset(tok_arr_t* ta_ptr, int offset){
  */
 void tok_arr_dtor(tok_arr_t* ta_ptr){
 	for (int i = 0; i < ta_ptr->len; i++){
-		if(ta_ptr->elems[i].content != NULL){
+		if (ta_ptr->elems[i].content != NULL){
 			// Frees the token content if there is some
 			free(ta_ptr->elems[i].content);
 			ta_ptr->elems[i].content = NULL;
@@ -332,7 +351,7 @@ void tok_arr_debug_print(tok_arr_t ta_ptr){
 	int line = 0;
 	for (int i = 0; i < ta_ptr.len; i++){
 		
-		if(line != ta_ptr.elems[i].line){
+		if (line != ta_ptr.elems[i].line){
 			printf("\n");
 			line = ta_ptr.elems[i].line;
 			printf("%d\t|",line);

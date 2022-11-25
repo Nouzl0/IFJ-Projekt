@@ -28,7 +28,7 @@ void register_lex_error(error_handler_t* eh_ptr, int line, char* buffer){
 
 
 void handle_lex_error(error_handler_t eh){
-	if (eh.error){
+	if(eh.error){
 		exit(LEX_ERROR);
 	}
 }
@@ -42,7 +42,7 @@ void register_syntax_error(error_handler_t* eh_ptr, int line, int column){
 }
 	
 void handle_syntax_error(error_handler_t eh){
-	if (eh.error){
+	if(eh.error){
 		exit(SYNTAX_ERROR);
 	}
 }

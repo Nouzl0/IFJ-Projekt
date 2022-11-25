@@ -110,6 +110,8 @@ bool tok_arr_cmp_skip(tok_arr_t* ta_ptr, token_type type);
 
 void tok_arr_inc(tok_arr_t* ta_ptr, int value);
 
+int tok_arr_get_commas(tok_arr_t* ta_ptr);
+
 token_t* tok_arr_get(tok_arr_t* ta_ptr);
 
 token_t* tok_arr_get_next(tok_arr_t* ta_ptr);
