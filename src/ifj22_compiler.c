@@ -48,7 +48,7 @@ int main(){
 	
 	
 	
-	//analyze_ast(ast);
+	analyze_ast(ast);
 	
 	
 	

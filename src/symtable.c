@@ -239,7 +239,7 @@ extern STElementPtr ST_ElementSearch(STList *list, char *string)
         element_p = element_p->nextElement;
     }
     
-    fprintf(stderr, "ERROR - ST_Search, %s doesnt't exist\n", string);
+    //fprintf(stderr, "ERROR - ST_Search, %s doesnt't exist\n", string);
     return element_p;
 }
 
@@ -412,6 +412,11 @@ extern void ST_DeleteAll(STList *list)
     		element_p = list->array[i]->nextElement;
     		
             // deleting data
+			
+			if(list->array[i]->data->params){
+				free(list->array[i]->data->params);
+			}
+			
             free(list->array[i]->data);
             free(list->array[i]);
     		
@@ -442,7 +447,6 @@ extern STElementDataPtr ST_DataGet(STList *list, char *string)
     STElementPtr element_p = ST_ElementSearch(list, string);
     
     if (element_p == NULL) {
-        fprintf(stderr,"ERROR - ST_DataGet, %s doesn't exists or list is empty\n", string);
         return NULL;
     }
 
@@ -487,7 +491,7 @@ extern void ST_DataClear(STList *list, char *string)
  */
 extern void ST_PrintList(STList *list)
 {   
-
+/*
     if (list == NULL) {
         return;
     }
@@ -521,4 +525,5 @@ extern void ST_PrintList(STList *list)
         printf("NULL\n");
     }
     printf("- - - - \n\n");
+	*/
 }
