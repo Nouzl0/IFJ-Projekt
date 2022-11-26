@@ -177,94 +177,94 @@ void handle_text(sbuffer_t* sb_ptr){
 /**
  * Defines rules for calling functions that shift buffer and save tokens
  * with corresponding content
- * Looping through rules until shift buffer shifts upon EOF or 
+ * Loops through rules until shift buffer shifts upon EOF or 
  * there is forbidden character
  *
- * @param ta_ptr token array pointer that stores saved tokens
- * @param source file pointer which is read from
+ * @param ta_ptr Token array pointer that stores saved tokens
+ * @param source File pointer which is read from
  */
 void lex_tokenize(tok_arr_t* ta_ptr, FILE* source){
-	sbuffer_t* sb = sbuffer_init(source);
-	sb->ta_ptr = ta_ptr;
+	sbuffer_t sb;
+	sbuffer_t* sb_ptr = &sb;
+	sbuffer_ctor(sb_ptr, source);
+	sb.ta_ptr = ta_ptr;
 	
-	while(sb->end_index > 0){
+	while(sb.end_index > 0){
 		// Variable name
-		if(sb->buffer[0] == '$' &&  is_char_variable_name(sb->buffer[1])){
-			handle_variable(sb);
+		if(sb.buffer[0] == '$' &&  is_char_variable_name(sb.buffer[1])){
+			handle_variable(sb_ptr);
 			continue;
 		}
 		// Any numeral constant
-		if( (is_char_number(sb->buffer[0])) || (sb->buffer[0] =='-' && is_char_number(sb->buffer[1])) ){
-			handle_number(sb);
+		if( (is_char_number(sb.buffer[0])) || (sb.buffer[0] =='-' && is_char_number(sb.buffer[1])) ){
+			handle_number(sb_ptr);
 			continue;
 		}
 		
 		// Keyword or identifier
-		if(is_char_letter(sb->buffer[0])){
+		if(is_char_letter(sb.buffer[0])){
 			int token_type = 0;
-			int to_skip = token_compare_keywords(sb->buffer,&token_type);
+			int to_skip = token_compare_keywords(sb.buffer,&token_type);
 			if(to_skip){
 				/*	
 				  If there are more then zero characters to skip
 				  it means that there was a keyword match 
 				*/
-				char next = sb->buffer[to_skip];
+				char next = sb.buffer[to_skip];
 				if(!is_char_variable_name(next)){
 					/*	
 					  There should NOT be any valid name characters after matched keyword
 					  otherwise it means that matched keyword is part of name
 					*/
-					tok_arr_insert(sb->ta_ptr, token_type, sb->line, sb->column, NULL);
-					sbuffer_skip(sb,to_skip);
+					tok_arr_insert(ta_ptr, token_type, sb.line, sb.column, NULL);
+					sbuffer_skip(sb_ptr,to_skip);
 					continue;
 				}
 			}
 			// Keyword was not found in current content of shift buffer
-			handle_identifier(sb);
+			handle_identifier(sb_ptr);
 			continue;
 		}
 		
 		// Multi-line and single-line comments
-		if(sb->buffer[0] == '/'){
-			if(sb->buffer[1] == '/'){
-				handle_line_comment(sb);
+		if(sb.buffer[0] == '/'){
+			if(sb.buffer[1] == '/'){
+				handle_line_comment(sb_ptr);
 				continue;
 			}
-			if(sb->buffer[1] == '*'){
-				handle_block_comment(sb);
+			if(sb.buffer[1] == '*'){
+				handle_block_comment(sb_ptr);
 				continue;
 			}
 		}
 		
 		// String constant content
-		if(sb->buffer[0] == '"' || sb->buffer[0] == '\''){
-			handle_text(sb);
+		if(sb.buffer[0] == '"' || sb.buffer[0] == '\''){
+			handle_text(sb_ptr);
 			continue;
 		}
 		
 		// Operators and other permited symbols, php header and footer
 		int token_type = 0;
-		int to_skip = token_compare_symbol(sb->buffer, &token_type);
+		int to_skip = token_compare_symbol(sb.buffer, &token_type);
 		if(to_skip){
-			// If there are characters to skip it matched with valid symbol
-			tok_arr_insert(sb->ta_ptr, token_type, sb->line, sb->column, NULL);
-			sbuffer_skip(sb,to_skip);
+			// If there are characters to skip it means match with valid symbol
+			tok_arr_insert(ta_ptr, token_type, sb.line, sb.column, NULL);
+			sbuffer_skip(sb_ptr,to_skip);
 			continue;
 		}
 		
 		// Other permited characters (defined in strings_lib.c)
-		if(is_char_permited(sb->buffer[0])){
-			sbuffer_shift(sb);
+		if(is_char_permited(sb.buffer[0])){
+			sbuffer_shift(sb_ptr);
 			continue;
 		}
 		
 		// Non of the rules above can be applied
-		lex_error(sb->line,sb->buffer);
-		free(sb);
+		lex_error(sb.line,sb.buffer);
 		return;
 	} 
 	
-	free(sb);
 	return;
 }
 
@@ -273,8 +273,8 @@ void lex_tokenize(tok_arr_t* ta_ptr, FILE* source){
  * Opens and closes file with given file name
  * and feeds it to lex_tokenize
  *
- * @param ta_ptr token array pointer that stores saved tokens
- * @param file_name string that stores given file name
+ * @param ta_ptr Token array pointer that stores saved tokens
+ * @param file_name String that stores given file name
  */
 void lex_tokenize_file(tok_arr_t* ta_ptr, char* file_name){
 	

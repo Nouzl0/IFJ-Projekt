@@ -14,7 +14,7 @@ createdirs:
 	@mkdir -p $(DBGDIR) $(BLDDIR) ./tests/build
 
 clean:
-	rm -rf build debug_build ./tests/build ./tests/lex/*.out
+	rm -rf build debug_build ./tests/build ./tests/lex/*.out ./tests/expr/*.out
 
 clearterminal:
 	@clear
@@ -37,7 +37,10 @@ valgrind: debug
 valgrindf: debug
 	valgrind --leak-check=full ./$(DBGDIR)/$(EXE)
 
-test-lex-build: createdirs
+clean-test-build:
+	rm -rf ./tests/build
+
+test-lex-build: clean-test-build createdirs
 	@cd src && $(MAKE) -s build-for-tests
 	@cd tests/lex && $(MAKE) -s build-for-tests
 	@cd tests/lex && $(MAKE) -s link-lex-tester MAINNAME="$(MAINNAME)"
@@ -46,4 +49,21 @@ test-lex: test-lex-build
 	@cd tests/build && ./lex_tester_executable
 
 test-lex-valgrind: test-lex-build
-	@cd tests/build && valgrind ./lex_tester_executable
+	@cd tests/build && valgrind --leak-check=full ./lex_tester_executable
+	
+
+test-expr-build: clean-test-build createdirs
+	@cd src && $(MAKE) -s build-for-tests
+	@cd tests/expr && $(MAKE) -s build-for-tests
+	@cd tests/expr && $(MAKE) -s link-expr-tester MAINNAME="$(MAINNAME)"
+
+test-expr: test-expr-build
+	@cd tests/build && ./expr_tester_executable
+
+test-expr-valgrind: test-expr-build
+	@cd tests/build && valgrind --leak-check=full  ./expr_tester_executable
+	
+test:
+	make -s test-lex
+	make -s test-expr
+	

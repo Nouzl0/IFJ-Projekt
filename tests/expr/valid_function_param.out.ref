@@ -1,0 +1,1 @@
+{"type": "IDENTIFIER","content": "funkce","is_terminal": true,"params":[{"type": "PLUS","is_terminal": false,"left": {"type": "VARIABLE","content": "a","is_terminal": true},"right": {"type": "NUMBER","content": "10","is_terminal": true}}]}

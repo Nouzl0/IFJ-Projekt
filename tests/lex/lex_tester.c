@@ -57,54 +57,6 @@ void token_array_to_file(char* filename, tok_arr_t ta_ptr, int info_level){
 	fclose(file);
 }
 
-bool compare_files(char* file_name1, char* file_name2){
-	FILE* f1 = fopen(file_name1,"r");
-	FILE* f2 = fopen(file_name2,"r");
-	
-	if(!f1 || !f2){
-		return 1; 
-	}
-	
-	while(true){
-		char c1 = fgetc(f1);
-		char c2 = fgetc(f2);
-	
-		if(c1 != c2){
-			fclose(f1);
-			fclose(f2);
-			return 1;
-		}
-		
-		if(c1 == EOF){
-			fclose(f1);
-			fclose(f2);
-			return 0;
-		}
-		
-	}
-}
-
-void print_file(char* file_name){
-	FILE* file = fopen(file_name,"r");
-	printf("---- %s ----\n",file_name);
-	if(!file){
-		printf("File not found!");
-		fclose(file);
-		return;
-	}
-	
-	while(true){
-		char c = fgetc(file);
-		if(c == EOF){
-			break;
-		}
-		printf("%c",c);
-	}
-	fclose(file);
-	printf("\n----------------------------\n");
-}
-
-
 void test_case(char* test_name, bool should_fail, int info_level, char* input_file, char* ref_file, char* output_file){
 	
 	errors_ctor(global_err_ptr);
@@ -121,21 +73,21 @@ void test_case(char* test_name, bool should_fail, int info_level, char* input_fi
 		if(global_err_ptr->error){
 			printf("[\033[0;32mOK\033[0;37m] %s\n",test_name);
 		} else {
-			printf("[\033[0;31mERROR\033[0;37m] %s: should fail but it didn't\n",test_name);
+			printf("[\033[0;31mFAIL\033[0;37m] %s: should fail but it didn't\n",test_name);
 		}
 	
 	} else {
 		
 		if(global_err_ptr->error){
-			printf("[\033[0;31mERROR\033[0;37m] %s: should not fail but it did\n",test_name);
+			printf("[\033[0;31mFAIL\033[0;37m] %s: should not fail but it did\n",test_name);
 		} else {
 			
 			token_array_to_file(output_file, token_array, info_level);
 			
-			if(compare_files(ref_file,output_file)){
-				printf("[\033[0;31mERROR\033[0;37m] %s: reference output and current output differs\n",test_name);
-				print_file(ref_file);
-				print_file(output_file);
+			if(str_cmp_files(ref_file,output_file)){
+				printf("[\033[0;31mFAIL\033[0;37m] %s: reference output and current output differs\n",test_name);
+				str_ptrint_file(ref_file);
+				str_ptrint_file(output_file);
 				
 			} else {
 				printf("[\033[0;32mOK\033[0;37m] %s\n",test_name);

@@ -68,37 +68,8 @@ void sbuffer_shift(sbuffer_t* sb_ptr){
 	}
 	
 }
-/**
- * Creates instance of shift buffer and shifts until array is full
- * 
- * @param source File pointer of opened file ready for reading
- * 
- * @returns Shift buffer pointer if allocates successfuly otherwise NULL
- */
-sbuffer_t* sbuffer_init(FILE* source){
-	
-	sbuffer_t* sb = malloc(sizeof(sbuffer_t));
-	
-	if(sb == NULL){
-		return NULL;
-	}
 
-	sb->found_end = 0;
-	sb->line = 1;
-	sb->end_index = BUFFER_SIZE;
-	sb->source = source;
-	sb->column = 1;
-	
-	for(int i = 0; i < BUFFER_SIZE; i++){
 
-		sbuffer_shift(sb);
-
-	}
-	
-	sb->column = 1;
-	
-	return sb;
-}
 /**
  * Calls sbuffer_shift given number of times
  * 
@@ -109,6 +80,30 @@ void sbuffer_skip(sbuffer_t* sb_ptr, int to_skip){
 	for(int i = 0; i < to_skip; i++){
 		sbuffer_shift(sb_ptr);
 	}
+}
+
+
+/**
+ * Sets necessary values in instance of shift buffer before usage
+ * Fills shift buffer with initial characters from source
+ * 
+ * @param sb_ptr Pointer to given instance of shift buffer
+ * @param source File pointer of opened file ready for reading
+ * @returns Shift buffer pointer if allocates successfuly otherwise NULL
+ */
+void sbuffer_ctor(sbuffer_t* sb_ptr, FILE* source){
+	sb_ptr->found_end = 0;
+	sb_ptr->line = 1;
+	sb_ptr->end_index = BUFFER_SIZE;
+	sb_ptr->source = source;
+	sb_ptr->column = 1;
+	
+	for(int i = 0; i < BUFFER_SIZE; i++){
+		sb_ptr->buffer[i] = 0;
+	}
+	
+	sbuffer_skip(sb_ptr,BUFFER_SIZE);
+	sb_ptr->column = 1;
 }
 
 /****************************************
@@ -178,4 +173,52 @@ bool str_builder_cmp(char* str_ptr1, char* str_ptr2){
 		i++;
 	}
 	return 1;
+}
+
+
+bool str_cmp_files(char* file_name1, char* file_name2){
+	FILE* f1 = fopen(file_name1,"r");
+	FILE* f2 = fopen(file_name2,"r");
+	
+	if(!f1 || !f2){
+		return 1; 
+	}
+	
+	while(true){
+		char c1 = fgetc(f1);
+		char c2 = fgetc(f2);
+	
+		if(c1 != c2){
+			fclose(f1);
+			fclose(f2);
+			return 1;
+		}
+		
+		if(c1 == EOF){
+			fclose(f1);
+			fclose(f2);
+			return 0;
+		}
+		
+	}
+}
+
+void str_ptrint_file(char* file_name){
+	FILE* file = fopen(file_name,"r");
+	printf("---- %s ----\n",file_name);
+	if(!file){
+		printf("File not found!");
+		fclose(file);
+		return;
+	}
+	
+	while(true){
+		char c = fgetc(file);
+		if(c == EOF){
+			break;
+		}
+		printf("%c",c);
+	}
+	fclose(file);
+	printf("\n----------------------------\n");
 }
