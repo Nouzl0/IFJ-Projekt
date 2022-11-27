@@ -1,3 +1,4 @@
+#pragma once
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -12,4 +13,5 @@ void generate_code(stree_item_t *AS_Tree);
 void do_assignstmt(stree_item_t* AS_Tree);
 void assignstmt_print(ptree_item_t* AP_Tree, char* assigned_var);
 
-const char assignstmt_set[5][5] = { "SUB", "ADD", "MUL", "DIV", };
+// if you are working on code_generation.c functions uncomment this
+//const char assignstmt_set[5][5] = { "SUB", "ADD", "MUL", "DIV", };

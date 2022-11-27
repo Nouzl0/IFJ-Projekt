@@ -52,8 +52,7 @@ int main(){
 	
 	
 	// generates code from ast - working on it
-	generate_code(ast);
-	
+	// generate_code(ast);
 	
 	stree_dtor(&ast);
 	tok_arr_dtor(&token_array);
