@@ -20,7 +20,7 @@ int main(){
 	tok_arr_t token_array;
 	tok_arr_ctor(&token_array);
 		
-	lex_tokenize_file(&token_array,"./stmt_example.php");
+	lex_tokenize_file(&token_array,"./example2.php");
 	
 	tok_arr_debug_print(token_array);
 	
@@ -30,11 +30,12 @@ int main(){
 	}
 	
 	
-	ptree_item_t* tree = expr_parse(&token_array, SEMICOLON);
+	//ptree_item_t* tree = expr_parse(&token_array, SEMICOLON);
+	//ptree_debug_to_json(tree);
 	
+	stree_item_t* ast1 = parser_build_all(&token_array);
 	
-	ptree_debug_to_json(tree);
-	
+	stree_json_debug_print(ast1);
 	
 	return 0;
 

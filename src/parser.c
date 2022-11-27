@@ -409,3 +409,173 @@ stree_item_t* parse_token_array(error_handler_t* eh_ptr, tok_arr_t tok_arr){
 	recursive_parser(st_root,eh_ptr,tok_arr,7,tok_arr.len-1);
 	return st_root;
 }
+
+
+
+
+/*
+if(tok.type == FUNC && tok_arr.elems[index + 1].type == IDENTIFIER && tok_arr.elems[index + 2].type == LEFT_PAREN){
+			stree_item_t* function_item = stree_new_item(FUNCBLOCK,3);
+			stree_item_t* name_item = stree_new_item(FUNCNAME,0);
+			name_item->token = &tok_arr.elems[index + 1];
+			
+			stree_insert_to_block(function_item,name_item);
+			stree_item_t* params_item = stree_new_item(FUNCPARAMS,5);
+			stree_insert_to_block(function_item,params_item);
+			
+			stree_insert_to_block(st_root,function_item);
+		
+			index += 3;
+			tok = tok_arr.elems[index];
+		
+			while(1){
+				if(tok.type >= INT && tok.type <= STRING){
+					
+					if(tok_arr.elems[index + 1].type == VARIABLE){
+						
+						stree_item_t* type_item = stree_new_item(PARAMTYPE,1);
+						stree_insert_to_block(params_item,type_item);
+						stree_item_t* param_item = stree_new_item(PARAM,0);
+						stree_insert_to_block(type_item,param_item);
+						type_item->token = &tok_arr.elems[index];
+						param_item->token = &tok_arr.elems[index + 1];
+						index+= 2;
+						tok = tok_arr.elems[index];
+					}
+					
+				}
+				
+				
+				if(tok.type == COMMA){
+					index++;
+					tok = tok_arr.elems[index];
+					continue;
+				}
+				
+				if(tok.type == RIGHT_PAREN){
+					index++;
+					break;
+				}
+				
+				//printf("konec: %s\n",token_enum_to_string(tok.type));
+				
+				register_syntax_error(eh_ptr,tok.line,tok.column);
+				return;
+				
+			}
+			
+			
+			tok = tok_arr.elems[index];
+			if(tok.type != DDOT){
+				register_syntax_error(eh_ptr,tok.line,tok.column);
+				return;
+			}
+			index++;
+			tok = tok_arr.elems[index];
+			
+			
+			if(tok.type >= VOID && tok.type <= STRING){
+				function_item->token = &tok_arr.elems[index];
+			} else {
+				register_syntax_error(eh_ptr,tok.line,tok.column);
+				return;
+			}
+			
+			index += 2;
+			
+			int offset = get_braces_end_index(tok_arr,index);
+			
+			//printf("offset: %d\n",get_braces_end_index(tok_arr,index));
+			
+			stree_item_t* function_body = stree_new_block(1);
+			
+			recursive_parser(function_body,eh_ptr,tok_arr,index,index+offset);
+			
+			stree_insert_to_block(function_item,function_body);
+			
+			index+= offset;
+			
+			
+		}
+
+*/
+
+
+
+//NEW
+
+void parser_build_function(stree_item_t* parent_node, tok_arr_t* ta_ptr){
+	// Creating parent function node and adding to tree
+	stree_item_t* func_node = stree_new_item(FUNCBLOCK,3);
+	stree_insert_to_block(parent_node,func_node);
+	
+	// Creating child node for function name
+	stree_item_t* name_node = stree_new_item(FUNCNAME,0);
+	stree_insert_to_block(func_node,name_node);
+	name_node->token = tok_arr_get_offset(ta_ptr,-2);
+	
+	// Creating parent node for function parameters nodes
+	stree_item_t* params_node = stree_new_item(FUNCPARAMS,5);
+	stree_insert_to_block(func_node,params_node);
+	
+	// Creating parent node for function body code block
+	stree_item_t* body_node = stree_new_block(1);
+	stree_insert_to_block(func_node,body_node);
+	
+	//recursive_parser(function_body,eh_ptr,tok_arr,index,index+offset);
+			
+	
+}
+
+void parser_build_block(stree_item_t* parent_node, tok_arr_t* ta_ptr, bool brace_needed){
+	token_type func_decl_head[] = {
+		FUNC,IDENTIFIER,LEFT_PAREN
+	};
+	
+	while(!tok_arr_on_end(ta_ptr)){
+		
+		if (tok_arr_cmp(ta_ptr,RIGHT_BRACE) && brace_needed){
+			// Skips terminating } 
+			tok_arr_inc(ta_ptr,1);
+			return;
+		}
+		
+		//Function declaration parsing
+		if(tok_arr_cmp_arr(ta_ptr,func_decl_head,3)){
+			tok_arr_inc(ta_ptr,3);
+		
+			parser_build_function(parent_node, ta_ptr);
+			
+		
+		}
+		
+
+		
+		tok_arr_inc(ta_ptr,1);
+	}
+	
+}
+
+
+stree_item_t* parser_build_all(tok_arr_t* ta_ptr){
+
+	token_type header_types[] = {
+		HEADER,IDENTIFIER,LEFT_PAREN,IDENTIFIER,ASSIGN,NUMBER,RIGHT_PAREN,SEMICOLON
+	};
+
+	if(!tok_arr_cmp_arr(ta_ptr,header_types,8)){
+		syntax_error(*tok_arr_get(ta_ptr), "Invalid format of file header");
+		return NULL;
+	}
+	
+	// Skips header
+	tok_arr_inc(ta_ptr, 8);
+
+	stree_item_t* root_node = stree_new_block(0);
+	parser_build_root_block(root_node, ta_ptr);
+
+	return root_node;
+
+}
+
+//stree_item_t* parser()

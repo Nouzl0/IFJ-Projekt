@@ -239,13 +239,14 @@ bool tok_arr_cmp(tok_arr_t* ta_ptr, token_type type){
 }
 
 bool tok_arr_cmp_arr(tok_arr_t* ta_ptr, token_type* types, int types_len){
-	if (ta_ptr->index < ta_ptr->len){
+	if( (ta_ptr->index + types_len-1) < ta_ptr->len){
 		for (int i = 0; i < types_len; i++){
-			token_t tok = ta_ptr->elems[ta_ptr->index];
-			if (tok.type == types[i]){
-				return true;
+			token_t tok = ta_ptr->elems[ta_ptr->index + i];
+			if (tok.type != types[i]){
+				return false;
 			}
 		}
+		return true;
 	}
 	return false;
 }
