@@ -7,6 +7,7 @@ errors_t* global_err_ptr = &global_err;
 #include "lex.h"
 #include "parser.h"
 #include "semantic_analyzer.h"
+#include "code_generation.h"
 /*
 TODO:
 	vytvorit soubor rozdeleni.txt a pouzit
@@ -46,10 +47,12 @@ int main(){
 	
 	stree_json_debug_print(ast);
 	
-	
-	
+
 	analyze_ast(ast);
 	
+	
+	// generates code from ast - working on it
+	generate_code(ast);
 	
 	
 	stree_dtor(&ast);
