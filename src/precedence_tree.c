@@ -174,7 +174,7 @@ ptree_item_t* prec_tree_add_leaf(ptree_t* pt_ptr, token_t tok){
 	pt_item_ptr->right = NULL;
 	
 	if(pt_item_ptr == NULL){
-		handle_program_error();
+		alloc_error();
 		return NULL;
 	}
 	

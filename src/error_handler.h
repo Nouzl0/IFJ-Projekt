@@ -24,25 +24,6 @@
 #define PROGRAM_ERROR 99
 
 typedef struct {
-	bool quiet_errors;
-	bool error;
-	int semantic_code;
-} error_handler_t;
-
-void handle_program_error();
-
-void error_handler_ctor(error_handler_t* eh_ptr);
-
-void register_lex_error(error_handler_t* eh_ptr, int line, char* buffer);
-
-void handle_lex_error(error_handler_t eh);
-
-void register_syntax_error(error_handler_t* eh_ptr, int line, int column);
-
-void handle_syntax_error(error_handler_t eh);
-
-//NEW
-typedef struct {
     bool quiet_errors;
 	int error;
 	int semantic_code;
