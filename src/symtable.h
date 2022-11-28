@@ -10,6 +10,7 @@
 #include <string.h>
 #include <limits.h>
 
+#include "tokens_lib.h"
 
 /* - - - - - - - - - - - -*/
 /*    TYPE DEFINITIONS    */
@@ -40,6 +41,12 @@ typedef enum {
     ADRESS = 4,
 } STDataSlot;
 
+
+typedef struct STDataParam {
+    token_type type;
+	char* param_name;
+} STDataParam;
+
 /**
  * Definition of element's data in symbol table, directly accessed by pointer STElementDataPtr.
  * 
@@ -49,14 +56,8 @@ typedef enum {
 typedef struct STElementData {
     // type of var
     int type;
-    // size of the var in bytes
-    int size;
-    // declaration line of var - can be replaced by file-pointer
-    int decla_line;   
-    // line of usage of var - can be replaced with dynamic-array/static-array of file-pointers
-    int usage_line; 
-    // adress of variable - can be replaced with pointer
-    int adress; 
+    token_t* tok_ptr;
+	STDataParam* params;
 } *STElementDataPtr;
 
 /**
@@ -68,7 +69,7 @@ typedef struct STElement {
     // the key/name data of an element - can become dynamically alocated in the future
     char name[MAX_STRING_SIZE];
     // pointer to elements's data
-    struct STElementData *data;
+    struct STElementData* data;
     // pointer pointing to next element, (cause of possible collision in symtable)
     struct STElement *nextElement;
 } *STElementPtr;

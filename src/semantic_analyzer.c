@@ -2,7 +2,31 @@
 
 //void semantic_error(int error_code, token_t token, char* info);
 
-void register_function(stree_item_t* func_item){
+void register_function(STList* table, stree_item_t* func_item){
+	
+	token_t* name_tok_ptr = func_item->items[0]->token;
+	char* func_name = name_tok_ptr->content;
+	int params_len = func_item->items[1]->items_len;
+	token_type return_type = func_item->token->type;
+	
+	
+	ST_CreateResize(&table, func_name);
+	
+	STElementDataPtr data = ST_DataGet(table, func_name);
+	
+	data->type = return_type;
+	data->tok_ptr = name_tok_ptr;
+	
+	data->params = malloc(sizeof(STDataParam) * params_len);
+	
+	for (int i = 0; i < func_item->items[1]->items_len; i++){
+		stree_item_t* type_item = func_item->items[1]->items[i];
+		data->params[i].type = type_item->token->type;
+		stree_item_t* name_item = type_item->items[0];
+		data->params[i].param_name = name_item->token->content;
+	}
+	
+	/*
 	//Tyto udaje pridat do tabulky funkci
 	printf("Nazev funkce: %s\n", func_item->items[0]->token->content);
 	printf("Vraci: %s\n",token_enum_to_string(func_item->token->type));
@@ -12,9 +36,10 @@ void register_function(stree_item_t* func_item){
 		printf("Typ parametru: %s\n",token_enum_to_string(type_item->token->type));
 		stree_item_t* name_item = type_item->items[0];
 		printf("Jemno parametru: %s\n", name_item->token->content);
-	}	
+	}
+	*/	
 }
-
+/*
 //Rekurzivne volano potreba zjistovat errory
 token_type rec_check_types(ptree_item_t* stmt){
 	if(!stmt){
@@ -114,32 +139,33 @@ void analyze_whileblock(stree_item_t* item){
 	//Vyraz podminky: item->stmt
 	//blok: item->items[0]
 }
-
+*/
 void analyze_item(stree_item_t* item){
 	
 	//item->type
 	switch(item->type){
 		case EXPR:
-			rec_check_types(item->stmt);
+			//rec_check_types(item->stmt);
 			break;
 		
 		case ASSIGNEXPR:
 			//Vsechny prvky ktere jsou pridane do tabulky
 			//jsou na konci bloku zase odebrany
 			//tim zajistim aby promena nemohla byt pouzita z venku
-			analyze_assignstmt(item);
+			//analyze_assignstmt(item);
 			break;
 		
+
 		case RETEXPR:
-			analyze_retstmt(item);
+			//analyze_retstmt(item);
 			break;
 		
 		case IFELSE:
-			analyze_ifelse(item);
+			//analyze_ifelse(item);
 			break;
 		
 		case WHILEBLOCK:
-			analyze_whileblock(item);
+			//analyze_whileblock(item);
 			break;
 			
 		default:
@@ -150,12 +176,13 @@ void analyze_item(stree_item_t* item){
 	
 }
 
+/*
 void analyze_function(stree_item_t* func_item){
 	//bud vytvori novou tabulku nebo bude pouzivat suffix -{nazev_funkce}
 	//analyze_item(func_item->items[2]);
 	
 }
-
+*/
 
 void analyze_ast(stree_item_t* ast_root){
 	
@@ -164,11 +191,13 @@ void analyze_ast(stree_item_t* ast_root){
 		return;
 	}
 	
+	STList* func_table = ST_Init(10);
+	
 	//Prochazi vsechny funkce a bere jenom hlavicku
 	for (int i = 0; i < ast_root->items_len; i++){
 		stree_item_t* item = ast_root->items[i];
 		if (item->type == FUNCBLOCK){
-			register_function(item);
+			register_function(func_table,item);
 		}
 	}
 	
@@ -176,10 +205,24 @@ void analyze_ast(stree_item_t* ast_root){
 	for (int i = 0; i < ast_root->items_len; i++){	
 		stree_item_t* item = ast_root->items[i];
 		if (item->type == FUNCBLOCK){
-			analyze_function(item);
+			//analyze_function(item);
 		} else {
 			analyze_item(item);
 		}
 	}
+	
+	
+	
+	ST_Delete(func_table, "getMax" );
+	
+	STElementDataPtr data = ST_DataGet(func_table, "getMax");
+	
+	if(data){
+		printf("je: %s\n", data->params[0].param_name);
+	} else {
+		printf("neni\n");
+	}
+	
+	ST_Dispose(&func_table);
 	
 }
