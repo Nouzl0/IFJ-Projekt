@@ -56,7 +56,7 @@ WHILEBLOCK->items = {[ASSIGNEXPR|EXPR|RETEXPR|FUNCBLOCK|IFELSE|WHILEBLOCK],...}
 
 
 //Label
-void parser_build_block(stree_item_t* parent_node, tok_arr_t* ta_ptr, bool is_root);
+void parser_build_block(stx_node_t* parent_node, tok_arr_t* ta_ptr, bool is_root);
 
 /**
  * Creates sub trees and insterts data for function name,
@@ -66,23 +66,23 @@ void parser_build_block(stree_item_t* parent_node, tok_arr_t* ta_ptr, bool is_ro
  * @param parent_node Pointer to super tree for appending parsed sub trees
  * @param ta_ptr Pointer to token array
  */
-void parser_build_function(stree_item_t* parent_node, tok_arr_t* ta_ptr){
+void parser_build_function(stx_node_t* parent_node, tok_arr_t* ta_ptr){
 	// Creating parent function node and adding to tree
-	stree_item_t* func_node = stree_new_item(FUNCBLOCK,3);
-	stree_insert_to_block(parent_node,func_node);
+	stx_node_t* func_node = stx_node_new(FUNCBLOCK,3);
+	stx_node_insert_item(parent_node,func_node);
 	
 	// Creating child node for function name
-	stree_item_t* name_node = stree_new_item(FUNCNAME,0);
-	stree_insert_to_block(func_node,name_node);
+	stx_node_t* name_node = stx_node_new(FUNCNAME,0);
+	stx_node_insert_item(func_node,name_node);
 	name_node->token = tok_arr_get_offset(ta_ptr,-2);
 	
 	// Creating parent node for function parameters nodes
-	stree_item_t* params_node = stree_new_item(FUNCPARAMS,5);
-	stree_insert_to_block(func_node,params_node);
+	stx_node_t* params_node = stx_node_new(FUNCPARAMS,5);
+	stx_node_insert_item(func_node,params_node);
 	
 	// Creating parent node for function body code block
-	stree_item_t* body_node = stree_new_block(1);
-	stree_insert_to_block(func_node,body_node);
+	stx_node_t* body_node = stx_node_new_block(1);
+	stx_node_insert_item(func_node,body_node);
 	
 	int separator = 1;
 	// Loops until all parameters are parsed
@@ -91,13 +91,13 @@ void parser_build_function(stree_item_t* parent_node, tok_arr_t* ta_ptr){
 		if(separator && tok_arr_cmp_range(ta_ptr, INT, STRING) && tok_arr_cmp_offset(ta_ptr,VARIABLE,1)){
 			
 			// Creating parent node that stores type
-			stree_item_t* type_node = stree_new_item(PARAMTYPE,1);
-			stree_insert_to_block(params_node,type_node);
+			stx_node_t* type_node = stx_node_new(PARAMTYPE,1);
+			stx_node_insert_item(params_node,type_node);
 			type_node->token = tok_arr_get(ta_ptr);
 			
 			// Creating child node that stores parameter name
-			stree_item_t* param_node = stree_new_item(PARAM,0);
-			stree_insert_to_block(type_node,param_node);
+			stx_node_t* param_node = stx_node_new(PARAM,0);
+			stx_node_insert_item(type_node,param_node);
 			param_node->token = tok_arr_get_offset(ta_ptr,1);
 			
 			tok_arr_inc(ta_ptr,2);
@@ -140,8 +140,8 @@ void parser_build_function(stree_item_t* parent_node, tok_arr_t* ta_ptr){
  * @param parent_node Pointer to super tree for appending parsed sub trees
  * @param ta_ptr Pointer to token array
  */
-void parser_build_ifelse(stree_item_t* parent_node, tok_arr_t* ta_ptr){
-	ptree_item_t* expr_ptr = expr_parse(ta_ptr,RIGHT_PAREN);
+void parser_build_ifelse(stx_node_t* parent_node, tok_arr_t* ta_ptr){
+	expr_node_t* expr_ptr = expr_parse(ta_ptr,RIGHT_PAREN);
 	
 	if(global_err_ptr->error){
 		return;
@@ -153,9 +153,9 @@ void parser_build_ifelse(stree_item_t* parent_node, tok_arr_t* ta_ptr){
 	}
 	
 	// Creating parent node that stores condition expression, if and else code blocks
-	stree_item_t* ifelse_node = stree_new_item(IFELSE,2);
-	stree_insert_to_block(parent_node, ifelse_node);
-	ifelse_node->stmt = expr_ptr;	
+	stx_node_t* ifelse_node = stx_node_new(IFELSE,2);
+	stx_node_insert_item(parent_node, ifelse_node);
+	ifelse_node->expr = expr_ptr;	
 	
 	// Checks expression terminating token and if code block starting token
 	if (!tok_arr_cmp_skip(ta_ptr,RIGHT_PAREN) || !tok_arr_cmp_skip(ta_ptr,LEFT_BRACE)){
@@ -164,8 +164,8 @@ void parser_build_ifelse(stree_item_t* parent_node, tok_arr_t* ta_ptr){
 	}
 	
 	// Creating parent node for if code block
-	stree_item_t* if_body_node = stree_new_block(parent_node->level+1);
-	stree_insert_to_block(ifelse_node,if_body_node);
+	stx_node_t* if_body_node = stx_node_new_block(parent_node->level+1);
+	stx_node_insert_item(ifelse_node,if_body_node);
 	
 	parser_build_block(if_body_node,ta_ptr,0);
 	
@@ -182,8 +182,8 @@ void parser_build_ifelse(stree_item_t* parent_node, tok_arr_t* ta_ptr){
 		
 		tok_arr_inc(ta_ptr,2);
 		// Creating parent node for else code block
-		stree_item_t* else_body_node = stree_new_block(parent_node->level+1);
-		stree_insert_to_block(ifelse_node,else_body_node);
+		stx_node_t* else_body_node = stx_node_new_block(parent_node->level+1);
+		stx_node_insert_item(ifelse_node,else_body_node);
 		
 		parser_build_block(else_body_node,ta_ptr,0);
 		
@@ -199,8 +199,8 @@ void parser_build_ifelse(stree_item_t* parent_node, tok_arr_t* ta_ptr){
  * @param parent_node Pointer to super tree for appending parsed sub trees
  * @param ta_ptr Pointer to token array
  */
-void parser_build_while(stree_item_t* parent_node, tok_arr_t* ta_ptr){
-	ptree_item_t* expr_ptr = expr_parse(ta_ptr,RIGHT_PAREN);
+void parser_build_while(stx_node_t* parent_node, tok_arr_t* ta_ptr){
+	expr_node_t* expr_ptr = expr_parse(ta_ptr,RIGHT_PAREN);
 	
 	if(global_err_ptr->error){
 		return;
@@ -213,9 +213,9 @@ void parser_build_while(stree_item_t* parent_node, tok_arr_t* ta_ptr){
 	
 	
 	// Creating parent node that stores condition expression and while code block
-	stree_item_t* while_node = stree_new_item(WHILEBLOCK,5);
-	stree_insert_to_block(parent_node, while_node);
-	while_node->stmt = expr_ptr;	
+	stx_node_t* while_node = stx_node_new(WHILEBLOCK,5);
+	stx_node_insert_item(parent_node, while_node);
+	while_node->expr = expr_ptr;	
 	
 	// Checks expression terminating token and while code block starting token
 	if (!tok_arr_cmp_skip(ta_ptr,RIGHT_PAREN) || !tok_arr_cmp_skip(ta_ptr,LEFT_BRACE)){
@@ -238,7 +238,7 @@ void parser_build_while(stree_item_t* parent_node, tok_arr_t* ta_ptr){
  * @param ta_ptr Pointer to token array
  * @param is_root Determines if it root block or not
  */
-void parser_build_block(stree_item_t* parent_node, tok_arr_t* ta_ptr, bool is_root){
+void parser_build_block(stx_node_t* parent_node, tok_arr_t* ta_ptr, bool is_root){
 	token_type func_decl_header[] = {
 		FUNC,IDENTIFIER,LEFT_PAREN
 	};
@@ -256,13 +256,13 @@ void parser_build_block(stree_item_t* parent_node, tok_arr_t* ta_ptr, bool is_ro
 		// Assign of expression to variable
 		if(tok_arr_cmp(ta_ptr,VARIABLE) && tok_arr_cmp_offset(ta_ptr,ASSIGN,1)){		
 			// Creating parent node that holds name of variable assigning to
-			stree_item_t* assign_node = stree_new_item(ASSIGNEXPR,0);
-			stree_insert_to_block(parent_node,assign_node);
+			stx_node_t* assign_node = stx_node_new(ASSIGNEXPR,0);
+			stx_node_insert_item(parent_node,assign_node);
 			assign_node->token = tok_arr_get(ta_ptr);
 			tok_arr_inc(ta_ptr,2);
 			
-			ptree_item_t* expr_ptr = expr_parse(ta_ptr,SEMICOLON);
-			assign_node->stmt = expr_ptr;
+			expr_node_t* expr_ptr = expr_parse(ta_ptr,SEMICOLON);
+			assign_node->expr = expr_ptr;
 			
 			if(!expr_ptr){
 				syntax_error(*tok_arr_get(ta_ptr), "Valid expression expected");
@@ -279,8 +279,8 @@ void parser_build_block(stree_item_t* parent_node, tok_arr_t* ta_ptr, bool is_ro
 		// Only expression
 		if(tok_arr_cmp_range(ta_ptr,IDENTIFIER,NIL) || tok_arr_cmp(ta_ptr,LEFT_PAREN)){
 			
-			ptree_item_t* expr_ptr = expr_parse(ta_ptr,SEMICOLON);
-			stree_insert_stmt(parent_node, expr_ptr);
+			expr_node_t* expr_ptr = expr_parse(ta_ptr,SEMICOLON);
+			stx_node_insert_expr(parent_node, expr_ptr);
 			
 			if(!expr_ptr){
 				syntax_error(*tok_arr_get(ta_ptr), "Valid expression expected");
@@ -307,15 +307,15 @@ void parser_build_block(stree_item_t* parent_node, tok_arr_t* ta_ptr, bool is_ro
 		if(tok_arr_cmp(ta_ptr,RETURN)){
 			tok_arr_inc(ta_ptr,1);
 			
-			ptree_item_t* expr_ptr = expr_parse(ta_ptr,SEMICOLON);
+			expr_node_t* expr_ptr = expr_parse(ta_ptr,SEMICOLON);
 			
 			if(global_err_ptr->error){
 				return;
 			}
 			
-			stree_item_t* return_node = stree_new_item(RETEXPR,0);
-			stree_insert_to_block(parent_node, return_node);
-			return_node->stmt = expr_ptr;
+			stx_node_t* return_node = stx_node_new(RETEXPR,0);
+			stx_node_insert_item(parent_node, return_node);
+			return_node->expr = expr_ptr;
 			tok_arr_inc(ta_ptr,1);
 			continue;
 		}
@@ -364,7 +364,7 @@ void parser_build_block(stree_item_t* parent_node, tok_arr_t* ta_ptr, bool is_ro
  * @param ta_ptr Pointer to token array of whole file
  * @returns Pointer to root block representing whole file by syntax tree
  */
-stree_item_t* parser_build_all(tok_arr_t* ta_ptr){
+stx_node_t* parser_build_all(tok_arr_t* ta_ptr){
 
 	token_type header_types[] = {
 		HEADER,IDENTIFIER,LEFT_PAREN,IDENTIFIER,ASSIGN,NUMBER,RIGHT_PAREN,SEMICOLON
@@ -378,7 +378,7 @@ stree_item_t* parser_build_all(tok_arr_t* ta_ptr){
 	// Skips header
 	tok_arr_inc(ta_ptr, 8);
 
-	stree_item_t* root_node = stree_new_block(0);
+	stx_node_t* root_node = stx_node_new_block(0);
 	parser_build_block(root_node, ta_ptr, 1);
 
 	return root_node;

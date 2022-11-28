@@ -7,7 +7,7 @@
 // working on this library 
 
 // generate_code (printf) from syntactic tree
-void generate_code(stree_item_t *AS_Tree) 
+void generate_code(stx_node_t *AS_Tree) 
 {
     printf("\n");
 
@@ -40,13 +40,13 @@ void generate_code(stree_item_t *AS_Tree)
  * 
  * @param AS_Tree 
  */
-void do_assignstmt(stree_item_t* AS_Tree) {
+void do_assignstmt(stx_node_t* AS_Tree) {
     
     // variables
     static bool tmp_var_active = false; 
 
     // check if tree is not empty
-    if ((AS_Tree == NULL) || (AS_Tree->type != ASSIGNSTMT)) {
+    if ((AS_Tree == NULL) || (AS_Tree->type != ASSIGNEXPR)) {
         return;
     }
 
@@ -61,7 +61,7 @@ void do_assignstmt(stree_item_t* AS_Tree) {
     }
 
     // print rest of the tree
-    assignstmt_print(AS_Tree->stmt, AS_Tree->token->content, true);
+    assignstmt_print(AS_Tree->expr, AS_Tree->token->content, true);
 }
 
 
@@ -73,7 +73,7 @@ void do_assignstmt(stree_item_t* AS_Tree) {
  * @param assigned_var Variable, for which are the instructions created
  * @param reset Used to indicate if the funtion is started recursively or not. - (true = start, false = recursive)
  */
-void assignstmt_print(ptree_item_t* AP_Tree , char* assigned_var, bool reset) {
+void assignstmt_print(expr_node_t* AP_Tree , char* assigned_var, bool reset) {
 
     // #0 - variable initialization
     const char instruction_set[6][7] = { "SUB", "ADD", "MUL", "DIV", "CONCAT", };   // instruction set

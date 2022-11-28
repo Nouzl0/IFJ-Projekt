@@ -9,6 +9,6 @@
 // checks if AP_Tree token is number terminal, may be changed
 #define is_assignstmt_terminal(AP_Tree) ((AP_Tree->token.type == NUMBER) || (AP_Tree->token.type == VARIABLE) || (AP_Tree->token.type == FRACTION))
 
-void generate_code(stree_item_t *AS_Tree);
-void do_assignstmt(stree_item_t* AS_Tree);
-void assignstmt_print(ptree_item_t* AP_Tree , char* assigned_var, bool reset);
+void generate_code(stx_node_t *AS_Tree);
+void do_assignstmt(stx_node_t* AS_Tree);
+void assignstmt_print(expr_node_t* AP_Tree , char* assigned_var, bool reset);

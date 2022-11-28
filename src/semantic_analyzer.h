@@ -4,4 +4,4 @@
 #include "syntax_tree.h"
 #include "symtable.h"
 
-void analyze_ast(stree_item_t* ast_root);
+void analyze_ast(stx_node_t* ast_root);

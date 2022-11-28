@@ -2,7 +2,7 @@
 
 //void semantic_error(int error_code, token_t token, char* info);
 
-void register_function(STList* table, stree_item_t* func_item){
+void register_function(STList* table, stx_node_t* func_item){
 	
 	token_t* name_tok_ptr = func_item->items[0]->token;
 	char* func_name = name_tok_ptr->content;
@@ -20,9 +20,9 @@ void register_function(STList* table, stree_item_t* func_item){
 	data->params = malloc(sizeof(STDataParam) * params_len);
 	
 	for (int i = 0; i < func_item->items[1]->items_len; i++){
-		stree_item_t* type_item = func_item->items[1]->items[i];
+		stx_node_t* type_item = func_item->items[1]->items[i];
 		data->params[i].type = type_item->token->type;
-		stree_item_t* name_item = type_item->items[0];
+		stx_node_t* name_item = type_item->items[0];
 		data->params[i].param_name = name_item->token->content;
 	}
 	
@@ -32,16 +32,16 @@ void register_function(STList* table, stree_item_t* func_item){
 	printf("Vraci: %s\n",token_enum_to_string(func_item->token->type));
 	
 	for (int i = 0; i < func_item->items[1]->items_len; i++){
-		stree_item_t* type_item = func_item->items[1]->items[i];
+		stx_node_t* type_item = func_item->items[1]->items[i];
 		printf("Typ parametru: %s\n",token_enum_to_string(type_item->token->type));
-		stree_item_t* name_item = type_item->items[0];
+		stx_node_t* name_item = type_item->items[0];
 		printf("Jemno parametru: %s\n", name_item->token->content);
 	}
 	*/	
 }
 /*
 //Rekurzivne volano potreba zjistovat errory
-token_type rec_check_types(ptree_item_t* stmt){
+token_type rec_check_types(expr_node_t* stmt){
 	if(!stmt){
 		return NIL;
 	}
@@ -120,27 +120,27 @@ token_type rec_check_types(ptree_item_t* stmt){
 	return VOID;
 }
 
-void analyze_assignstmt(stree_item_t* item){
+void analyze_assignstmt(stx_node_t* item){
 	//Nazev promene do ktere se prirazuje: item->token->content;
 	//Vyraz ktery se prirazuje: item->stmt
 }
 
-void analyze_retstmt(stree_item_t* item){
+void analyze_retstmt(stx_node_t* item){
 	//Vyraz ktery se ma vratit: item->stmt
 }
 
-void analyze_ifelse(stree_item_t* item){
+void analyze_ifelse(stx_node_t* item){
 	//Vyraz podminky: item->stmt
 	//if blok: item->items[0] 
 	//else blok: item->items[1] tento blok tam byt nemusi
 }
 
-void analyze_whileblock(stree_item_t* item){
+void analyze_whileblock(stx_node_t* item){
 	//Vyraz podminky: item->stmt
 	//blok: item->items[0]
 }
 */
-void analyze_item(stree_item_t* item){
+void analyze_item(stx_node_t* item){
 	
 	//item->type
 	switch(item->type){
@@ -177,14 +177,14 @@ void analyze_item(stree_item_t* item){
 }
 
 /*
-void analyze_function(stree_item_t* func_item){
+void analyze_function(stx_node_t* func_item){
 	//bud vytvori novou tabulku nebo bude pouzivat suffix -{nazev_funkce}
 	//analyze_item(func_item->items[2]);
 	
 }
 */
 
-void analyze_ast(stree_item_t* ast_root){
+void analyze_ast(stx_node_t* ast_root){
 	
 	if(ast_root->items_len < 1){
 		//Prazdy blok
@@ -195,7 +195,7 @@ void analyze_ast(stree_item_t* ast_root){
 	
 	//Prochazi vsechny funkce a bere jenom hlavicku
 	for (int i = 0; i < ast_root->items_len; i++){
-		stree_item_t* item = ast_root->items[i];
+		stx_node_t* item = ast_root->items[i];
 		if (item->type == FUNCBLOCK){
 			register_function(func_table,item);
 		}
@@ -203,7 +203,7 @@ void analyze_ast(stree_item_t* ast_root){
 	
 	//Prochazi vsechny prvky a anylyzuje je
 	for (int i = 0; i < ast_root->items_len; i++){	
-		stree_item_t* item = ast_root->items[i];
+		stx_node_t* item = ast_root->items[i];
 		if (item->type == FUNCBLOCK){
 			//analyze_function(item);
 		} else {

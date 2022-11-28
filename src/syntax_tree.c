@@ -1,7 +1,12 @@
 #include "syntax_tree.h"
+/*
 
-stree_item_t* stree_new_item(item_type type, int items_count){
-	stree_item_t* new_item = malloc(sizeof(stree_item_t));
+TODO:
+	kometare
+
+*/
+stx_node_t* stx_node_new(item_type type, int items_count){
+	stx_node_t* new_item = malloc(sizeof(stx_node_t));
 	
 	
 	if (new_item == NULL){
@@ -13,51 +18,51 @@ stree_item_t* stree_new_item(item_type type, int items_count){
 	new_item->level = 0;
 	new_item->items_size = items_count;
 	new_item->items_len = 0;
-	new_item->stmt = NULL;
+	new_item->expr = NULL;
 	new_item->items = NULL;
 	if (items_count){
-		new_item->items = malloc(sizeof(stree_item_t*) * new_item->items_size);
+		new_item->items = malloc(sizeof(stx_node_t*) * new_item->items_size);
 	}
 	
 	return new_item;
 }
 
-void stree_insert_to_block(stree_item_t* st_block, stree_item_t* new_st_item){
-	if(st_block->items_len >= st_block->items_size){
-		st_block->items_size = st_block->items_size * 2;
-		st_block->items = realloc(st_block->items, sizeof(stree_item_t*) * st_block->items_size);
+void stx_node_insert_item(stx_node_t* sn_ptr, stx_node_t* new_sn_ptr){
+	if(sn_ptr->items_len >= sn_ptr->items_size){
+		sn_ptr->items_size = sn_ptr->items_size * 2;
+		sn_ptr->items = realloc(sn_ptr->items, sizeof(stx_node_t*) * sn_ptr->items_size);
 	}
 	
-	st_block->items[st_block->items_len] = new_st_item;
-	st_block->items_len++;
+	sn_ptr->items[sn_ptr->items_len] = new_sn_ptr;
+	sn_ptr->items_len++;
 }
 
 
-stree_item_t* stree_new_block(int level){
-	stree_item_t* new_block = stree_new_item(BLOCK, 5);
+stx_node_t* stx_node_new_block(int level){
+	stx_node_t* new_block = stx_node_new(BLOCK, 5);
 	new_block->level = level;
 	return new_block;
 }
 
-void stree_insert_stmt(stree_item_t* st_block, ptree_item_t* prec_tree){
-	stree_item_t* stmt_item = stree_new_item(EXPR,0);
-	stmt_item->level = st_block->level;
-	stmt_item->stmt = prec_tree;
-	stree_insert_to_block(st_block,stmt_item);
+void stx_node_insert_expr(stx_node_t* sn_ptr, expr_node_t* expr_root_node){
+	stx_node_t* stmt_item = stx_node_new(EXPR,0);
+	stmt_item->level = sn_ptr->level;
+	stmt_item->expr = expr_root_node;
+	stx_node_insert_item(sn_ptr,stmt_item);
 }
 
 
-void stree_dtor(stree_item_t** stree){
+void stx_node_dtor(stx_node_t** stree){
 	if(!(*stree)){
 		return;
 	}
 	
-	if((*stree)->stmt){
-		ptree_dtor((*stree)->stmt);
+	if((*stree)->expr){
+		expr_node_dtor((*stree)->expr);
 	}
 	if((*stree)->items){
 		for (int i = 0; i < (*stree)->items_len; i++){
-			stree_dtor(&(*stree)->items[i]);
+			stx_node_dtor(&(*stree)->items[i]);
 		}
 		free((*stree)->items);
 		(*stree)->items = NULL;
@@ -67,63 +72,63 @@ void stree_dtor(stree_item_t** stree){
 }
 
 
-char* stree_item_type_to_string(item_type type){
-	static char *ITEM_ENUM_STRINGS[] = {
-		"ASSIGNEXPR",  // Prirazeni vyrazu do promene
-		"EXPR",        // Samotny vyraz
-		"RETEXPR",     // Return s vyrazem
-		"IFELSE",      // Vetveni pomoci IF a ELSE ktere je brano jako celek
-		"WHILEBLOCK",  // Obash while blocku i s podminkou
-		"BLOCK",       // Blok kodu
-		"FUNCBLOCK",   // Deklarace funkce
-		"FUNCNAME",    // Uchovava jmeno funkce
-		"FUNCPARAMS",  // Uchovava ukazatele na vsehcny parametry
-		"PARAMTYPE",   // Samotny typ parametru
-		"PARAM"        // Samotne jmeno parametru
+char* stx_node_type_to_string(item_type type){
+	static char *NODE_TYPE_ENUM_STRINGS[] = {
+		"ASSIGNEXPR",
+		"EXPR",
+		"RETEXPR",
+		"IFELSE",
+		"WHILEBLOCK",
+		"BLOCK",
+		"FUNCBLOCK",
+		"FUNCNAME",
+		"FUNCPARAMS",
+		"PARAMTYPE",
+		"PARAM"
 	};
-	return ITEM_ENUM_STRINGS[type];
+	return NODE_TYPE_ENUM_STRINGS[type];
 }
 
-void stree_json_rec_print(stree_item_t* st_item){
+void stx_node_print(stx_node_t* sn_ptr){
 	
-	if(!st_item){
+	if(!sn_ptr){
 		printf("null");
 		return;
 	}
 	
 	printf("{");
-	printf("\"type\":\"%s\",", stree_item_type_to_string(st_item->type));
-	printf("\"level\":\"%d\"",st_item->level);
+	printf("\"type\":\"%s\",", stx_node_type_to_string(sn_ptr->type));
+	printf("\"level\":\"%d\"",sn_ptr->level);
 	
-	if(st_item->token){
+	if(sn_ptr->token){
 		printf(",\"token\":{");
-		printf("\"type\": \"%s\"", token_enum_to_string(st_item->token->type));
+		printf("\"type\": \"%s\"", token_enum_to_string(sn_ptr->token->type));
 		
-		if(st_item->token->content){
-			printf(",\"content\": \"%s\"", st_item->token->content);
+		if(sn_ptr->token->content){
+			printf(",\"content\": \"%s\"", sn_ptr->token->content);
 		}
 		
 		printf("}");
 	}
 	
 	
-	printf(",\"items_len\":\"%d\"",st_item->items_len);
-	if(st_item->items_len){
+	printf(",\"items_len\":\"%d\"",sn_ptr->items_len);
+	if(sn_ptr->items_len){
 		printf(",\"items\": [");
-		for (int i = 0; i < st_item->items_len; i++){
+		for (int i = 0; i < sn_ptr->items_len; i++){
 			//printf("\n --- %d --- \n",i);
-			stree_json_rec_print(st_item->items[i]);
-			if(i != st_item->items_len-1){
+			stx_node_print(sn_ptr->items[i]);
+			if(i != sn_ptr->items_len-1){
 				printf(",");
 			}
 		}
 		printf("]");
 	}
 	
-	if(st_item->stmt){
+	if(sn_ptr->expr){
 		printf(",");
-		printf("\"stmt\":");
-		recursive_print(st_item->stmt);
+		printf("\"expr\":");
+		expr_node_print(sn_ptr->expr);
 	}
 	
 	printf("}");
@@ -131,8 +136,8 @@ void stree_json_rec_print(stree_item_t* st_item){
 	
 }
 
-void stree_json_debug_print(stree_item_t* st_item){
+void stx_tree_to_json(stx_node_t* sn_ptr){
 	printf("\n---------------------\n");
-	stree_json_rec_print(st_item);
+	stx_node_print(sn_ptr);
 	printf("\n------------------\n");
 }

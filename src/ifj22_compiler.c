@@ -29,11 +29,11 @@ int main(){
 		return global_err_ptr->error;
 	}
 	
-	stree_item_t* ast = parser_build_all(&token_array);
-	stree_json_debug_print(ast);
+	stx_node_t* ast = parser_build_all(&token_array);
+	stx_tree_to_json(ast);
 	
 	if(global_err_ptr->error){
-		stree_dtor(&ast);
+		stx_node_dtor(&ast);
 		return global_err_ptr->error;
 	}
 	
@@ -44,7 +44,7 @@ int main(){
 	generate_code(ast);
 
 	
-	stree_dtor(&ast);
+	stx_node_dtor(&ast);
 	tok_arr_dtor(&token_array);
 	
 	

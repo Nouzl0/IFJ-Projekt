@@ -3,10 +3,11 @@
 #include <stdlib.h>
 
 #include "error_handler.h"
-#include "precedence_tree.h"
+#include "expr_tree.h"
+	
 
 typedef enum {
-	ASSIGNEXPR,
+	ASSIGNEXPR, 
 	EXPR,
 	RETEXPR,
 	IFELSE,
@@ -20,26 +21,26 @@ typedef enum {
 } item_type;
 
 
-typedef struct stree_item_t stree_item_t;
+typedef struct stx_node_t stx_node_t;
 
-struct stree_item_t {
+struct stx_node_t {
 	item_type type;
 	token_t* token;
 	int level;
 	int items_size;
 	int items_len;
-	stree_item_t** items;
-	ptree_item_t* stmt;
+	stx_node_t** items;
+	expr_node_t* expr;
 };
 
-stree_item_t* stree_new_item(item_type type, int items_count);
+stx_node_t* stx_node_new(item_type type, int items_count);
 
-stree_item_t* stree_new_block(int level);
+stx_node_t* stx_node_new_block(int level);
 
-void stree_insert_to_block(stree_item_t* st_block, stree_item_t* new_st_item);
+void stx_node_insert_item(stx_node_t* sn_ptr, stx_node_t* new_sn_node);
 
-void stree_insert_stmt(stree_item_t* st_block, ptree_item_t* prec_tree);
+void stx_node_insert_expr(stx_node_t* sn_ptr, expr_node_t* expr_root_ptr);
 
-void stree_dtor(stree_item_t** stree);
+void stx_node_dtor(stx_node_t** stree);
 
-void stree_json_debug_print(stree_item_t*);
+void stx_tree_to_json(stx_node_t* sn_ptr);
