@@ -22,37 +22,27 @@ int main(){
 	tok_arr_ctor(&token_array);
 		
 	lex_tokenize_file(&token_array,"./example2.php");
+	tok_arr_debug_print(token_array);
 	
 	if(global_err_ptr->error){
 		tok_arr_dtor(&token_array);
 		return global_err_ptr->error;
 	}
-	/*
-	ptree_item_t* tree = expr_parse(&token_array, SEMICOLON);
 	
-	ptree_debug_to_json(tree);
-	*/
-
-
-	//replace in nearest future
-	error_handler_t error_handler;
-	error_handler_ctor(&error_handler);
-	
-	
-	tok_arr_debug_print(token_array);
-	
-
-	stree_item_t* ast = parse_token_array(&error_handler,token_array);
-	handle_syntax_error(error_handler);
-	
+	stree_item_t* ast = parser_build_all(&token_array);
 	stree_json_debug_print(ast);
 	
-
-	analyze_ast(ast);
+	if(global_err_ptr->error){
+		stree_dtor(&ast);
+		return global_err_ptr->error;
+	}
 	
+	
+	//analyze_ast(ast);
 	
 	// generates code from ast - working on it
 	generate_code(ast);
+
 	
 	stree_dtor(&ast);
 	tok_arr_dtor(&token_array);

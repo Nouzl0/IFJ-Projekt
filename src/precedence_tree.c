@@ -2,14 +2,11 @@
 
 /*
 TODO:
-
-	Pridat Uvolneni pameti
+	
+	Upravit komentare a uklidit
 
 	Zkusit vytvorit lepsi algoritmus na zjisteni
 	urovne precedene podle tokenu
-
-
-	Upravit komentare
 	
 */
 
@@ -177,7 +174,7 @@ ptree_item_t* prec_tree_add_leaf(ptree_t* pt_ptr, token_t tok){
 	pt_item_ptr->right = NULL;
 	
 	if(pt_item_ptr == NULL){
-		handle_program_error();
+		alloc_error();
 		return NULL;
 	}
 	
@@ -205,7 +202,7 @@ ptree_item_t* prec_tree_add_leaf(ptree_t* pt_ptr, token_t tok){
  * @param pt_item_ptr Ukazatel na korenovy prvek stromu precedence
  */
 void ptree_dtor(ptree_item_t* pt_item_ptr){
-	if (pt_item_ptr == NULL){
+	if (!pt_item_ptr){
 		return;
 	}
 	

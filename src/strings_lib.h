@@ -31,6 +31,8 @@ typedef struct {
 
 sbuffer_t* sbuffer_init(FILE* source);
 
+void sbuffer_ctor(sbuffer_t* sb_ptr, FILE* source);
+
 void sbuffer_shift(sbuffer_t* sb);
 
 void sbuffer_skip(sbuffer_t* sb, int to_skip);
@@ -53,3 +55,7 @@ void str_builder_ctor(str_builder_t* cs_ptr);
 void str_builder_append(str_builder_t* cs_ptr, char c);
 
 bool str_builder_cmp(char* str_ptr1, char* str_ptr2);
+
+bool str_cmp_files(char* file_name1, char* file_name2);
+
+void str_ptrint_file(char* file_name);

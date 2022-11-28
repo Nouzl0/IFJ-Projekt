@@ -1,0 +1,1 @@
+{"type": "STAR","is_terminal": false,"left": {"type": "FRACTION","content": "1.5","is_terminal": true},"right": {"type": "PLUS","is_terminal": false,"left": {"type": "NUMBER","content": "2","is_terminal": true},"right": {"type": "NUMBER","content": "3","is_terminal": true}}}
