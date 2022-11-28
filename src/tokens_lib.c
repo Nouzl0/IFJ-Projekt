@@ -227,10 +227,25 @@ void tok_arr_insert(tok_arr_t* ta_ptr, token_type type, int line, int column, ch
 	
 }
 
+
+/**
+ * Checks if index is on end of token array
+ * 
+ * @param ta_ptr Pointer to token array
+ * @returns 1 if index is on end otherwise 0
+ */
 bool tok_arr_on_end(tok_arr_t* ta_ptr){
 	return ta_ptr->index >= ta_ptr->len;
 }
 
+
+/**
+ * Compares given token type with token type on current index
+ * 
+ * @param ta_ptr Pointer to token array
+ * @param type Token type to compare
+ * @returns 1 if token types are same otherwise 0
+ */
 bool tok_arr_cmp(tok_arr_t* ta_ptr, token_type type){
 	if(ta_ptr->index < ta_ptr->len){
 		return ta_ptr->elems[ta_ptr->index].type == type;
@@ -238,6 +253,15 @@ bool tok_arr_cmp(tok_arr_t* ta_ptr, token_type type){
 	return false;
 }
 
+
+/**
+ * Compares token types on and after current index
+ *
+ * @param ta_ptr Pointer to token array
+ * @param types Array of token types to compare
+ * @param types_len Length of token types array
+ * @returns 1 if token types math given array otherwise 0
+ */
 bool tok_arr_cmp_arr(tok_arr_t* ta_ptr, token_type* types, int types_len){
 	if( (ta_ptr->index + types_len-1) < ta_ptr->len){
 		for (int i = 0; i < types_len; i++){
@@ -251,6 +275,16 @@ bool tok_arr_cmp_arr(tok_arr_t* ta_ptr, token_type* types, int types_len){
 	return false;
 }
 
+
+/**
+ * Compares token type on current index with types in between of given range
+ * Range is defined as start type and end type in token_type enum
+ *
+ * @param ta_ptr Pointer to token array
+ * @param types Array of token types for comparison
+ * @param types_len Length of token types array
+ * @returns 1 if token type on current index is in given array otherwise 0
+ */
 bool tok_arr_cmp_range(tok_arr_t* ta_ptr, token_type start_type, token_type end_type){
 	if (ta_ptr->index < ta_ptr->len){
 		token_t tok = ta_ptr->elems[ta_ptr->index];
@@ -260,6 +294,14 @@ bool tok_arr_cmp_range(tok_arr_t* ta_ptr, token_type start_type, token_type end_
 }
 
 
+/**
+ * Compares given token type with token type on current index + offset
+ * 
+ * @param ta_ptr Pointer to token array
+ * @param type Token type to compare
+ * @param offset Offset for current index
+ * @returns 1 if token types are same otherwise 0
+ */
 bool tok_arr_cmp_offset(tok_arr_t* ta_ptr, token_type type, int offset){
 	int index = ta_ptr->index + offset;
 	if (index > ta_ptr->len - 1 || index < 0){
@@ -269,16 +311,38 @@ bool tok_arr_cmp_offset(tok_arr_t* ta_ptr, token_type type, int offset){
 }
 
 
+/**
+ * Compares given token type with token type on current index
+ * and increments index
+ * 
+ * @param ta_ptr Pointer to token array
+ * @param type Token type to compare
+ * @returns 1 if token types are same otherwise 0
+ */
 bool tok_arr_cmp_skip(tok_arr_t* ta_ptr, token_type type){
 	bool result = tok_arr_cmp(ta_ptr,type);
 	ta_ptr->index++;
 	return result;
 }
 
+
+/**
+ * Increments index with given value
+ * 
+ * @param ta_ptr Pointer to token array
+ * @param value Value to increment with
+ */
 void tok_arr_inc(tok_arr_t* ta_ptr, int value){
 	ta_ptr->index += value;
 }
 
+
+/**
+ * Returns pointer to token on current index
+ * 
+ * @param ta_ptr Pointer to token array
+ * @returns Pointer to token if index is not on end otherwise NULL
+ */
 token_t* tok_arr_get(tok_arr_t* ta_ptr){
 	if (ta_ptr->len > ta_ptr->index){
 		return &ta_ptr->elems[ta_ptr->index];
@@ -287,12 +351,26 @@ token_t* tok_arr_get(tok_arr_t* ta_ptr){
 	}
 }
 
+
+/**
+ * Returns pointer to token on current index and increments index
+ * 
+ * @param ta_ptr Pointer to token array
+ * @returns Pointer to token if index is not on end otherwise NULL
+ */
 token_t* tok_arr_get_next(tok_arr_t* ta_ptr){
 	token_t* next_tok_ptr = tok_arr_get(ta_ptr);
 	ta_ptr->index++;
 	return next_tok_ptr;
 }
 
+
+/**
+ * Returns pointer to token on current index + offset
+ * 
+ * @param ta_ptr Pointer to token array
+ * @returns Pointer to token if index is not on end otherwise NULL
+ */
 token_t* tok_arr_get_offset(tok_arr_t* ta_ptr, int offset){
 	int index = ta_ptr->index + offset;
 	if (index > ta_ptr->len - 1 || index < 0){
@@ -301,6 +379,14 @@ token_t* tok_arr_get_offset(tok_arr_t* ta_ptr, int offset){
 	return &ta_ptr->elems[ta_ptr->index + offset];
 }
 
+
+/**
+ * Counts number of commas in token array until right parenthesis
+ * Helper function for counting parameters in function call
+ * 
+ * @param ta_ptr Pointer to token array
+ * @returns Pointer to token if index is not on end otherwise NULL
+ */
 int tok_arr_get_commas(tok_arr_t* ta_ptr){
 	int index = ta_ptr->index;
 	int parens = 0;
@@ -348,7 +434,7 @@ void tok_arr_dtor(tok_arr_t* ta_ptr){
 
 void tok_arr_debug_print(tok_arr_t ta_ptr){
 	
-	printf("Printing tokens in format: [typ,obsah,sloupec,radek]\n");
+	printf("Printing tokens in format: [typ,content,column,line]\n");
 	int line = 0;
 	for (int i = 0; i < ta_ptr.len; i++){
 		

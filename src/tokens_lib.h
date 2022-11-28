@@ -19,11 +19,11 @@ typedef enum {
 	STRING,
 	
 // Terminals
-	IDENTIFIER,     // Nazev funkce
-	VARIABLE,       // Nazev promene
-	NUMBER,         // Data celeho cisla 
-	FRACTION,       // Data cisla s desetinou carou
-	TEXT,           // Data retezce
+	IDENTIFIER,     // Function name
+	VARIABLE,       // Variable name
+	NUMBER,         // Interger constant 
+	FRACTION,       // Float constant
+	TEXT,           // String constant
 	NIL,            // null
 	
 // Non-Terminals

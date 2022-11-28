@@ -119,18 +119,18 @@ void analyze_item(stree_item_t* item){
 	
 	//item->type
 	switch(item->type){
-		case STMT:
+		case EXPR:
 			rec_check_types(item->stmt);
 			break;
 		
-		case ASSIGNSTMT:
+		case ASSIGNEXPR:
 			//Vsechny prvky ktere jsou pridane do tabulky
 			//jsou na konci bloku zase odebrany
 			//tim zajistim aby promena nemohla byt pouzita z venku
 			analyze_assignstmt(item);
 			break;
 		
-		case RETSTMT:
+		case RETEXPR:
 			analyze_retstmt(item);
 			break;
 		

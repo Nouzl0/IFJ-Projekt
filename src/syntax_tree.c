@@ -40,7 +40,7 @@ stree_item_t* stree_new_block(int level){
 }
 
 void stree_insert_stmt(stree_item_t* st_block, ptree_item_t* prec_tree){
-	stree_item_t* stmt_item = stree_new_item(STMT,0);
+	stree_item_t* stmt_item = stree_new_item(EXPR,0);
 	stmt_item->level = st_block->level;
 	stmt_item->stmt = prec_tree;
 	stree_insert_to_block(st_block,stmt_item);
@@ -69,9 +69,9 @@ void stree_dtor(stree_item_t** stree){
 
 char* stree_item_type_to_string(item_type type){
 	static char *ITEM_ENUM_STRINGS[] = {
-		"ASSIGNSTMT",  // Prirazeni vyrazu do promene
-		"STMT",        // Samotny vyraz
-		"RETSTMT",     // Return s vyrazem
+		"ASSIGNEXPR",  // Prirazeni vyrazu do promene
+		"EXPR",        // Samotny vyraz
+		"RETEXPR",     // Return s vyrazem
 		"IFELSE",      // Vetveni pomoci IF a ELSE ktere je brano jako celek
 		"WHILEBLOCK",  // Obash while blocku i s podminkou
 		"BLOCK",       // Blok kodu

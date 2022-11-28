@@ -2,9 +2,8 @@
 
 /*
 
-PARSER RULES:
+Parser rules:
 ------------------------------------------------
-
 //  Assign to variable
 S -> VARIABLE, ASSIGN, {Expression}, SEMICOLON
 
@@ -24,13 +23,49 @@ S -> IF, LEFT_PAREN, {Expression}, RIGHT_PAREN, LEFT_BRACE, {Parser}, RIGHT_BRAC
 // while statement
 S -> WHILE, LEFT_PAREN, {Expression}, RIGHT_PAREN, LEFT_BRACE, {Parser}, RIGHT_BRACE
 
+
+Abstract syntax tree representation:
+------------------------------------------------
+BLOCK->items = {[ASSIGNEXPR|EXPR|RETEXPR|FUNCBLOCK|IFELSE|WHILEBLOCK],...}
+
+ASSIGNEXPR->token - Name of variable that is assigned to
+ASSIGNEXPR->expr  - Expression tree of assigning expression
+
+EXPR->expr - Expression tree
+
+FUNCBLOCK->token - Stores function return data type
+FUNCBLOCK->items = [FUNCNAME][FUNCPARAMS][BLOCK]
+
+	FUNCNAME->token - Name of function
+
+	FUNCPARAMS->items = {[PARAMTYPE],...}
+	
+		PARAMTYPE->token - Data type of n function parameter
+		PARAMTYPE->items = [PARAM]
+			
+			PARAM->token - Name of n function parameter
+
+RETEXPR->expr - Expression tree of expression requested to return
+
+IFELSE->expr - Expression tree of condition
+IFELSE->items = [BLOCK][BLOCK]
+
+WHILEBLOCK->expr - Expression tree of condition
+WHILEBLOCK->items = {[ASSIGNEXPR|EXPR|RETEXPR|FUNCBLOCK|IFELSE|WHILEBLOCK],...}
 */
 
 
 //Label
-void parser_build_block(stree_item_t* parent_node, tok_arr_t* ta_ptr, bool brace_needed);
+void parser_build_block(stree_item_t* parent_node, tok_arr_t* ta_ptr, bool is_root);
 
-
+/**
+ * Creates sub trees and insterts data for function name,
+ * parameters and code block
+ * Sub trees are appended to super tree give as parameter 
+ *
+ * @param parent_node Pointer to super tree for appending parsed sub trees
+ * @param ta_ptr Pointer to token array
+ */
 void parser_build_function(stree_item_t* parent_node, tok_arr_t* ta_ptr){
 	// Creating parent function node and adding to tree
 	stree_item_t* func_node = stree_new_item(FUNCBLOCK,3);
@@ -94,46 +129,17 @@ void parser_build_function(stree_item_t* parent_node, tok_arr_t* ta_ptr){
 		return;
 	}
 		
-	parser_build_block(body_node,ta_ptr,1);
+	parser_build_block(body_node,ta_ptr,0);
 	
 }
 
 
-void parser_build_expr(stree_item_t* parent_node, tok_arr_t* ta_ptr){
-	
-	ptree_item_t* expr_ptr = NULL;
-	
-	if(tok_arr_cmp(ta_ptr,VARIABLE) && tok_arr_cmp_offset(ta_ptr,ASSIGN,1)){
-		// Creating parent node that holds name of variable assigning to
-		stree_item_t* assign_node = stree_new_item(ASSIGNSTMT,0);
-		stree_insert_to_block(parent_node,assign_node);
-		assign_node->token = tok_arr_get(ta_ptr);
-		tok_arr_inc(ta_ptr,2);
-		
-		expr_ptr = expr_parse(ta_ptr,SEMICOLON);
-		assign_node->stmt = expr_ptr;
-		
-	} else {
-		expr_ptr = expr_parse(ta_ptr,SEMICOLON);
-		stree_insert_stmt(parent_node, expr_ptr);
-	}
-	
-	if(global_err_ptr->error){
-		return;
-	}
-	
-	if(!expr_ptr){
-		syntax_error(*tok_arr_get(ta_ptr), "Valid expression expected");
-		return; 
-	}
-	
-	if(!tok_arr_cmp_skip(ta_ptr,SEMICOLON)){
-		syntax_error(*tok_arr_get(ta_ptr), "Invalid expression end probably missing ;");
-	}
-	
-}
-
-
+/**
+ * Creates sub trees with if condition, if code block and else code block
+ *
+ * @param parent_node Pointer to super tree for appending parsed sub trees
+ * @param ta_ptr Pointer to token array
+ */
 void parser_build_ifelse(stree_item_t* parent_node, tok_arr_t* ta_ptr){
 	ptree_item_t* expr_ptr = expr_parse(ta_ptr,RIGHT_PAREN);
 	
@@ -161,7 +167,7 @@ void parser_build_ifelse(stree_item_t* parent_node, tok_arr_t* ta_ptr){
 	stree_item_t* if_body_node = stree_new_block(parent_node->level+1);
 	stree_insert_to_block(ifelse_node,if_body_node);
 	
-	parser_build_block(if_body_node,ta_ptr,1);
+	parser_build_block(if_body_node,ta_ptr,0);
 	
 	// Checks for else keyword
 	if (tok_arr_cmp(ta_ptr,ELSE)){
@@ -179,7 +185,7 @@ void parser_build_ifelse(stree_item_t* parent_node, tok_arr_t* ta_ptr){
 		stree_item_t* else_body_node = stree_new_block(parent_node->level+1);
 		stree_insert_to_block(ifelse_node,else_body_node);
 		
-		parser_build_block(else_body_node,ta_ptr,1);
+		parser_build_block(else_body_node,ta_ptr,0);
 		
 	}
 	
@@ -187,6 +193,12 @@ void parser_build_ifelse(stree_item_t* parent_node, tok_arr_t* ta_ptr){
 }
 
 
+/**
+ * Creates sub trees with while condition and while code block
+ *
+ * @param parent_node Pointer to super tree for appending parsed sub trees
+ * @param ta_ptr Pointer to token array
+ */
 void parser_build_while(stree_item_t* parent_node, tok_arr_t* ta_ptr){
 	ptree_item_t* expr_ptr = expr_parse(ta_ptr,RIGHT_PAREN);
 	
@@ -212,28 +224,28 @@ void parser_build_while(stree_item_t* parent_node, tok_arr_t* ta_ptr){
 	}
 
 	while_node->level = parent_node->level+1;	
-	parser_build_block(while_node,ta_ptr,1);
+	parser_build_block(while_node,ta_ptr,0);
 	
 
 }
 
 
 /**
- * Calls expr_recursive_parser function and if there is an error
- * calls detor function for expression root node
+ * Goes through token array token by token and builds syntax tree
+ * using rules above
  * 
- * @param tok_arr Token array with given expression tokens
- * @param expr_end_type Type of token that terminates the expression
- * @returns Pointer to newly created expression tree or NULL
+ * @param parent_node Pointer to super tree for appending parsed sub tree
+ * @param ta_ptr Pointer to token array
+ * @param is_root Determines if it root block or not
  */
-void parser_build_block(stree_item_t* parent_node, tok_arr_t* ta_ptr, bool brace_needed){
+void parser_build_block(stree_item_t* parent_node, tok_arr_t* ta_ptr, bool is_root){
 	token_type func_decl_header[] = {
 		FUNC,IDENTIFIER,LEFT_PAREN
 	};
 	
 	while(!tok_arr_on_end(ta_ptr)){
 	
-		if (tok_arr_cmp(ta_ptr,RIGHT_BRACE) && brace_needed){
+		if (tok_arr_cmp(ta_ptr,RIGHT_BRACE) && !is_root){
 			break;
 		}
 		
@@ -244,7 +256,7 @@ void parser_build_block(stree_item_t* parent_node, tok_arr_t* ta_ptr, bool brace
 		// Assign of expression to variable
 		if(tok_arr_cmp(ta_ptr,VARIABLE) && tok_arr_cmp_offset(ta_ptr,ASSIGN,1)){		
 			// Creating parent node that holds name of variable assigning to
-			stree_item_t* assign_node = stree_new_item(ASSIGNSTMT,0);
+			stree_item_t* assign_node = stree_new_item(ASSIGNEXPR,0);
 			stree_insert_to_block(parent_node,assign_node);
 			assign_node->token = tok_arr_get(ta_ptr);
 			tok_arr_inc(ta_ptr,2);
@@ -284,7 +296,7 @@ void parser_build_block(stree_item_t* parent_node, tok_arr_t* ta_ptr, bool brace
 		
 		
 		// Function declaration
-		if(tok_arr_cmp_arr(ta_ptr,func_decl_header,3)){
+		if(tok_arr_cmp_arr(ta_ptr,func_decl_header,3) && is_root){
 			tok_arr_inc(ta_ptr,3);
 			parser_build_function(parent_node, ta_ptr);
 			continue;
@@ -301,7 +313,7 @@ void parser_build_block(stree_item_t* parent_node, tok_arr_t* ta_ptr, bool brace
 				return;
 			}
 			
-			stree_item_t* return_node = stree_new_item(RETSTMT,0);
+			stree_item_t* return_node = stree_new_item(RETEXPR,0);
 			stree_insert_to_block(parent_node, return_node);
 			return_node->stmt = expr_ptr;
 			tok_arr_inc(ta_ptr,1);
@@ -332,7 +344,7 @@ void parser_build_block(stree_item_t* parent_node, tok_arr_t* ta_ptr, bool brace
 	
 	}
 	
-	if(brace_needed){
+	if(!is_root){
 		
 		if(tok_arr_cmp(ta_ptr,RIGHT_BRACE)){
 			tok_arr_inc(ta_ptr,1);
@@ -345,6 +357,13 @@ void parser_build_block(stree_item_t* parent_node, tok_arr_t* ta_ptr, bool brace
 }
 
 
+/**
+ * Checks php and strict header format
+ * Calls parser_build_block on root code block
+ * 
+ * @param ta_ptr Pointer to token array of whole file
+ * @returns Pointer to root block representing whole file by syntax tree
+ */
 stree_item_t* parser_build_all(tok_arr_t* ta_ptr){
 
 	token_type header_types[] = {
@@ -360,7 +379,7 @@ stree_item_t* parser_build_all(tok_arr_t* ta_ptr){
 	tok_arr_inc(ta_ptr, 8);
 
 	stree_item_t* root_node = stree_new_block(0);
-	parser_build_block(root_node, ta_ptr, 0);
+	parser_build_block(root_node, ta_ptr, 1);
 
 	return root_node;
 

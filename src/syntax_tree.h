@@ -6,17 +6,17 @@
 #include "precedence_tree.h"
 
 typedef enum {
-	ASSIGNSTMT,  // Prirazeni vyrazu do promene
-	STMT,        // Samotny vyraz
-	RETSTMT,     // Return s vyrazem
-	IFELSE,      // Vetveni pomoci IF a ELSE ktere je brano jako celek
-	WHILEBLOCK,  // Cyklus s podminkou a blokem
-	BLOCK,       // Blok kodu
-	FUNCBLOCK,   // Deklarace funkce
-	FUNCNAME,    // Uchovava jmeno funkce
-	FUNCPARAMS,  // Uchovava ukazatele na vsehcny parametry
-	PARAMTYPE,   // Samotny typ parametru
-	PARAM        // Samotne jmeno parametru
+	ASSIGNEXPR,
+	EXPR,
+	RETEXPR,
+	IFELSE,
+	WHILEBLOCK,
+	BLOCK,
+	FUNCBLOCK,
+	FUNCNAME,
+	FUNCPARAMS,
+	PARAMTYPE,
+	PARAM
 } item_type;
 
 
