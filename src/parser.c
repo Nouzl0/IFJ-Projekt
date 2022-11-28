@@ -409,100 +409,114 @@ stree_item_t* parse_token_array(error_handler_t* eh_ptr, tok_arr_t tok_arr){
 	recursive_parser(st_root,eh_ptr,tok_arr,7,tok_arr.len-1);
 	return st_root;
 }
-
-
-
-
 /*
-if(tok.type == FUNC && tok_arr.elems[index + 1].type == IDENTIFIER && tok_arr.elems[index + 2].type == LEFT_PAREN){
-			stree_item_t* function_item = stree_new_item(FUNCBLOCK,3);
-			stree_item_t* name_item = stree_new_item(FUNCNAME,0);
-			name_item->token = &tok_arr.elems[index + 1];
-			
-			stree_insert_to_block(function_item,name_item);
-			stree_item_t* params_item = stree_new_item(FUNCPARAMS,5);
-			stree_insert_to_block(function_item,params_item);
-			
-			stree_insert_to_block(st_root,function_item);
-		
-			index += 3;
-			tok = tok_arr.elems[index];
-		
-			while(1){
-				if(tok.type >= INT && tok.type <= STRING){
-					
-					if(tok_arr.elems[index + 1].type == VARIABLE){
-						
-						stree_item_t* type_item = stree_new_item(PARAMTYPE,1);
-						stree_insert_to_block(params_item,type_item);
-						stree_item_t* param_item = stree_new_item(PARAM,0);
-						stree_insert_to_block(type_item,param_item);
-						type_item->token = &tok_arr.elems[index];
-						param_item->token = &tok_arr.elems[index + 1];
-						index+= 2;
-						tok = tok_arr.elems[index];
-					}
-					
-				}
-				
-				
-				if(tok.type == COMMA){
-					index++;
-					tok = tok_arr.elems[index];
-					continue;
-				}
-				
-				if(tok.type == RIGHT_PAREN){
-					index++;
-					break;
-				}
-				
-				//printf("konec: %s\n",token_enum_to_string(tok.type));
-				
-				register_syntax_error(eh_ptr,tok.line,tok.column);
-				return;
-				
-			}
-			
-			
-			tok = tok_arr.elems[index];
-			if(tok.type != DDOT){
-				register_syntax_error(eh_ptr,tok.line,tok.column);
-				return;
-			}
-			index++;
-			tok = tok_arr.elems[index];
-			
-			
-			if(tok.type >= VOID && tok.type <= STRING){
-				function_item->token = &tok_arr.elems[index];
-			} else {
-				register_syntax_error(eh_ptr,tok.line,tok.column);
-				return;
-			}
-			
+
+if(tok.type == IF && tok_arr.elems[index + 1].type == LEFT_PAREN){
 			index += 2;
+			int offset = get_stmt_end_index(eh_ptr,tok_arr,index,RIGHT_PAREN,0);
+			if (!offset || eh_ptr->error){
+				//Vyraz je prazdny nebo je jeho zadani neplatne
+				return;
+			}
 			
-			int offset = get_braces_end_index(tok_arr,index);
+			stree_item_t* ifelse_item = stree_new_item(IFELSE,2);
+			stree_insert_to_block(st_root, ifelse_item);
 			
-			//printf("offset: %d\n",get_braces_end_index(tok_arr,index));
 			
-			stree_item_t* function_body = stree_new_block(1);
+			ptree_item_t* stmt_tree_ptr = parse_statement(eh_ptr,tok_arr,index,index + offset);
 			
-			recursive_parser(function_body,eh_ptr,tok_arr,index,index+offset);
+			if(stmt_tree_ptr == NULL){
+				//Strom neexistuje
+				return;
+			}
 			
-			stree_insert_to_block(function_item,function_body);
+			index += offset;
+			index++;
+			
+			ifelse_item->stmt = stmt_tree_ptr;
+			
+			tok = tok_arr.elems[index];
+			
+			if(tok.type != LEFT_BRACE){
+				//Chybi oteviraci slozena zavorka
+				return;
+			}
+			
+			index++;
+			
+			offset = get_braces_end_index(tok_arr,index);
+			
+			stree_item_t* if_body = stree_new_block(st_root->level+1);
+			
+			recursive_parser(if_body,eh_ptr,tok_arr,index,index+offset);
+			
+			stree_insert_to_block(ifelse_item,if_body);
 			
 			index+= offset;
+			
+			tok = tok_arr.elems[index];
+			if (tok.type != RIGHT_BRACE){
+				//Chybi uzaviraci slozena zavorka
+				return;
+			}
+			
+			
+			
+			if (tok_arr.elems[index+1].type == ELSE){
+				
+				if(tok_arr.elems[index+2].type != LEFT_BRACE){
+					//Chybi oteviraci slozena zavorka
+					return;
+				}
+				
+				
+				index+= 3;
+				
+				offset = get_braces_end_index(tok_arr,index);
+				stree_item_t* else_body = stree_new_block(st_root->level+1);
+				recursive_parser(else_body,eh_ptr,tok_arr,index,index+offset);
+				stree_insert_to_block(ifelse_item,else_body);
+				index += offset;
+			}
 			
 			
 		}
 
+
+//Klicove solovo RETURN
+		if(tok.type == RETURN){
+			index++;
+			tok = tok_arr.elems[index];
+			
+			int offset = get_stmt_end_index(eh_ptr,tok_arr,index,SEMICOLON,0);
+			if (!offset || eh_ptr->error){
+				//Vyraz je prazdny nebo je jeho zadani neplatne
+				return;
+			}
+			
+			ptree_item_t* stmt_tree_ptr = parse_statement(eh_ptr,tok_arr,index,index + offset);
+			
+			if(stmt_tree_ptr == NULL){
+				return;
+			} else {
+				//ptree_debug_to_json(stmt_tree_ptr);
+				stree_item_t* return_item = stree_new_item(RETSTMT,0);
+				return_item->stmt = stmt_tree_ptr;
+				stree_insert_to_block(st_root, return_item);
+			}
+			
+			index += offset;
+		}
+
+
 */
 
 
-
 //NEW
+
+//Label
+void parser_build_block(stree_item_t* parent_node, tok_arr_t* ta_ptr, bool brace_needed);
+
 
 void parser_build_function(stree_item_t* parent_node, tok_arr_t* ta_ptr){
 	// Creating parent function node and adding to tree
@@ -522,37 +536,211 @@ void parser_build_function(stree_item_t* parent_node, tok_arr_t* ta_ptr){
 	stree_item_t* body_node = stree_new_block(1);
 	stree_insert_to_block(func_node,body_node);
 	
-	//recursive_parser(function_body,eh_ptr,tok_arr,index,index+offset);
+	int separator = 1;
+	// Loops until all parameters are parsed
+	while(true){
+		// Parameter type and parameter name
+		if(separator && tok_arr_cmp_range(ta_ptr, INT, STRING) && tok_arr_cmp_offset(ta_ptr,VARIABLE,1)){
 			
+			// Creating parent node that stores type
+			stree_item_t* type_node = stree_new_item(PARAMTYPE,1);
+			stree_insert_to_block(params_node,type_node);
+			type_node->token = tok_arr_get(ta_ptr);
+			
+			// Creating child node that stores parameter name
+			stree_item_t* param_node = stree_new_item(PARAM,0);
+			stree_insert_to_block(type_node,param_node);
+			param_node->token = tok_arr_get_offset(ta_ptr,1);
+			
+			tok_arr_inc(ta_ptr,2);
+			separator = 0;
+
+		// Comma as parameter separator
+		} else if (!separator && tok_arr_cmp(ta_ptr,COMMA)) {
+			separator = 2;
+			tok_arr_inc(ta_ptr,1);
+			
+		// Right parenthesis as parameters terminating token
+		} else if (separator < 2 && tok_arr_cmp(ta_ptr,RIGHT_PAREN)){
+			tok_arr_inc(ta_ptr,1);
+			break;
+			
+		// Other invalid tokens
+		} else {
+			syntax_error(*tok_arr_get(ta_ptr), "Invalid format of function parameters");
+			return;
+		}
+	}
+	
+	//Checks right format of footer of function definition
+	if(tok_arr_cmp_skip(ta_ptr,DDOT) && tok_arr_cmp_range(ta_ptr,NIL_INT,STRING) && tok_arr_cmp_offset(ta_ptr,LEFT_BRACE,1)){
+		func_node->token = tok_arr_get(ta_ptr);
+		tok_arr_inc(ta_ptr,2);
+	} else {
+		syntax_error(*tok_arr_get(ta_ptr), "Invalid format of function return type");
+		return;
+	}
+		
+	parser_build_block(body_node,ta_ptr,1);
+	
+	for (int i = -2; i < 3; i++){
+		printf("Debug %d: %s \n",i, token_enum_to_string(tok_arr_get_offset(ta_ptr,i)->type));
+	}
+	
 	
 }
 
+
+void parser_build_expr(stree_item_t* parent_node, tok_arr_t* ta_ptr){
+	
+	ptree_item_t* expr_ptr = NULL;
+	
+	if(tok_arr_cmp(ta_ptr,VARIABLE) && tok_arr_cmp_offset(ta_ptr,ASSIGN,1)){
+		// Creating parent node that holds name of variable assigning to
+		stree_item_t* assign_node = stree_new_item(ASSIGNSTMT,0);
+		stree_insert_to_block(parent_node,assign_node);
+		assign_node->token = tok_arr_get(ta_ptr);
+		tok_arr_inc(ta_ptr,2);
+		
+		expr_ptr = expr_parse(ta_ptr,SEMICOLON);
+		assign_node->stmt = expr_ptr;
+		
+	} else {
+		expr_ptr = expr_parse(ta_ptr,SEMICOLON);
+		stree_insert_stmt(parent_node, expr_ptr);
+	}
+	
+	if(global_err_ptr->error){
+		return;
+	}
+	
+	if(!expr_ptr){
+		syntax_error(*tok_arr_get(ta_ptr), "Valid expression expected");
+		return; 
+	}
+	
+}
+
+
+void parser_build_ifelse(stree_item_t* parent_node, tok_arr_t* ta_ptr){
+	ptree_item_t* expr_ptr = expr_parse(ta_ptr,RIGHT_PAREN);
+	
+	if(global_err_ptr->error){
+		return;
+	}
+	
+	if(!expr_ptr){
+		syntax_error(*tok_arr_get(ta_ptr), "Valid expression expected");
+		return; 
+	}
+	
+	// Creating parent node that stores condition expression, if and else code blocks
+	stree_item_t* ifelse_node = stree_new_item(IFELSE,2);
+	stree_insert_to_block(parent_node, ifelse_node);
+	ifelse_node->stmt = expr_ptr;	
+	
+	// Checks expression terminating token and if code block starting token
+	if (!tok_arr_cmp_skip(ta_ptr,RIGHT_PAREN) || !tok_arr_cmp_skip(ta_ptr,LEFT_BRACE)){
+		syntax_error(*tok_arr_get(ta_ptr), "Invalid token, expected ) or {");
+		return;
+	}
+	
+	stree_item_t* if_body_node = stree_new_block(parent_node->level+1);
+	stree_insert_to_block(ifelse_node,if_body_node);
+	
+	parser_build_block(if_body_node,ta_ptr,1);
+	
+	//printf("Debug -1: %s \n", token_enum_to_string(tok_arr_get_offset(ta_ptr,-1)->type));
+	//printf("Debug 0: %s \n", token_enum_to_string(tok_arr_get(ta_ptr)->type));
+	//printf("Debug 1: %s \n", token_enum_to_string(tok_arr_get_offset(ta_ptr,1)->type));
+	
+	
+	
+	// Checks if code block terminating brace }
+	if (!tok_arr_cmp_skip(ta_ptr,RIGHT_BRACE)){
+		syntax_error(*tok_arr_get(ta_ptr), "Missing } after if code block");
+		return;
+	}
+	
+	
+	// Checks for else keyword
+	if (tok_arr_cmp(ta_ptr,ELSE)){
+		
+		// Checks else code block starting brace {
+		if (!tok_arr_cmp_skip(ta_ptr,RIGHT_BRACE)){
+			syntax_error(*tok_arr_get(ta_ptr), "Missing { before else code block");
+			return;
+		}
+		
+		stree_item_t* else_body_node = stree_new_block(parent_node->level+1);
+		stree_insert_to_block(ifelse_node,else_body_node);
+		
+		parser_build_block(else_body_node,ta_ptr,1);
+		
+		// Checks else code block terminating brace }
+		if (!tok_arr_cmp_skip(ta_ptr,RIGHT_BRACE)){
+			syntax_error(*tok_arr_get(ta_ptr), "Missing } after else code block");
+			return;
+		}
+		
+	}
+	
+
+}
+
+
+
 void parser_build_block(stree_item_t* parent_node, tok_arr_t* ta_ptr, bool brace_needed){
-	token_type func_decl_head[] = {
+	token_type func_decl_header[] = {
 		FUNC,IDENTIFIER,LEFT_PAREN
 	};
 	
 	while(!tok_arr_on_end(ta_ptr)){
-		
+	
 		if (tok_arr_cmp(ta_ptr,RIGHT_BRACE) && brace_needed){
-			// Skips terminating } 
-			tok_arr_inc(ta_ptr,1);
-			return;
+			break;
 		}
 		
 		//Function declaration parsing
-		if(tok_arr_cmp_arr(ta_ptr,func_decl_head,3)){
+		if(tok_arr_cmp_arr(ta_ptr,func_decl_header,3)){
 			tok_arr_inc(ta_ptr,3);
-		
 			parser_build_function(parent_node, ta_ptr);
-			
-		
+			continue;
 		}
 		
-
+		//Expression and assigning expression to variable
+		if(tok_arr_cmp_range(ta_ptr,IDENTIFIER,NIL) || tok_arr_cmp(ta_ptr,LEFT_PAREN)){
+			parser_build_expr(parent_node, ta_ptr);
+			continue;
+		}
+		
+		//Return expression
+		if(tok_arr_cmp(ta_ptr,RETURN)){
+			tok_arr_inc(ta_ptr,1);
+			
+			ptree_item_t* expr_ptr = expr_parse(ta_ptr,SEMICOLON);
+			
+			if(global_err_ptr->error){
+				return;
+			}
+			
+			stree_item_t* return_node = stree_new_item(RETSTMT,0);
+			stree_insert_to_block(parent_node, return_node);
+			return_node->stmt = expr_ptr;
+			//tok_arr_inc(ta_ptr,1);
+		}
+		
+		//If and else statement
+		if(tok_arr_cmp(ta_ptr,IF) && tok_arr_cmp_offset(ta_ptr,LEFT_PAREN,1)){
+			tok_arr_inc(ta_ptr,2);
+			parser_build_ifelse(parent_node, ta_ptr);
+			continue;
+		}
 		
 		tok_arr_inc(ta_ptr,1);
 	}
+	
+	//Checknut kdyz je brace needed musi koncit na brace jinak syntax error
 	
 }
 
@@ -572,7 +760,7 @@ stree_item_t* parser_build_all(tok_arr_t* ta_ptr){
 	tok_arr_inc(ta_ptr, 8);
 
 	stree_item_t* root_node = stree_new_block(0);
-	parser_build_root_block(root_node, ta_ptr);
+	parser_build_block(root_node, ta_ptr, 0);
 
 	return root_node;
 
