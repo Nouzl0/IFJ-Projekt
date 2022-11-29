@@ -4,9 +4,9 @@
 
 #include "../../src/error_handler.h"
 #include "../../src/lex.h"
-#include "../../src/statement_parser.h"
+#include "../../src/expr_parser.h"
 
-void expr_test_print(FILE* f, ptree_item_t* expr_node){
+void expr_test_print(FILE* f, expr_node_t* expr_node){
 	if (!expr_node){
 		fprintf(f,"null");
 		return;
@@ -46,7 +46,7 @@ void expr_test_print(FILE* f, ptree_item_t* expr_node){
 	fprintf(f,"}");
 }
 
-void expr_to_file(char* output_file, ptree_item_t* expr_root){
+void expr_to_file(char* output_file, expr_node_t* expr_root){
 	FILE* file = fopen(output_file,"w");
 
 	if(file == NULL){
@@ -69,7 +69,7 @@ void test_case(char* test_name, bool should_fail, char* input_file, char* ref_fi
 	
 	lex_tokenize_file(&token_array, input_file);
 	
-	ptree_item_t* expr_ptr =  expr_parse(&token_array, SEMICOLON);
+	expr_node_t* expr_ptr =  expr_parse(&token_array, SEMICOLON);
 	
 	if(should_fail){
 		
@@ -99,7 +99,7 @@ void test_case(char* test_name, bool should_fail, char* input_file, char* ref_fi
 	}
 	
 	if(expr_ptr){
-		ptree_dtor(expr_ptr);
+		expr_node_dtor(expr_ptr);
 	}
 	
 	tok_arr_dtor(&token_array);

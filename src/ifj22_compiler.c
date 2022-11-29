@@ -33,7 +33,7 @@ int main(){
 	stx_tree_to_json(ast);
 	
 	if(global_err_ptr->error){
-		stx_node_dtor(&ast);
+		stx_node_dtor(ast);
 		return global_err_ptr->error;
 	}
 	
@@ -41,10 +41,10 @@ int main(){
 	//analyze_ast(ast);
 	
 	// generates code from ast - working on it
-	generate_code(ast);
+	//generate_code(ast);
 
 	
-	stx_node_dtor(&ast);
+	stx_node_dtor(ast);
 	tok_arr_dtor(&token_array);
 	
 	
