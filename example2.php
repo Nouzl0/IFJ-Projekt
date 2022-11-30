@@ -14,7 +14,6 @@ function getMax(int $x, int $y): int {
 		return $y;
 	}
 }
-
 $a = 4 * (5 + 2);
 
 $b = (4.5 - 3.20) * (4.1 + 2.5);
