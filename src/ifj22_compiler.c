@@ -38,7 +38,7 @@ int main(){
 	}
 	
 	
-	//analyze_ast(ast);
+	analyze_ast(ast);
 	
 	// generates code from ast - working on it
 	//generate_code(ast);

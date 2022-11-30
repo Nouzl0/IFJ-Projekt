@@ -55,7 +55,7 @@ typedef struct STDataParam {
 */
 typedef struct STElementData {
     // type of var
-    int type;
+    token_type type;
     token_t* tok_ptr;
 	int param_len;
 	STDataParam* params;

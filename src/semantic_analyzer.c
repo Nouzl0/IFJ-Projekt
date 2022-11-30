@@ -1,5 +1,6 @@
 #include "semantic_analyzer.h"
-
+STList* sym_table;
+STList* func_table;
 //void semantic_error(int error_code, token_t token, char* info);
 /**
  * 
@@ -33,16 +34,19 @@ void register_function(STList* table, stx_node_t* func_item){
 	}
 
 }
-/*
+
 //Rekurzivne volano potreba zjistovat errory
 token_type rec_check_types(expr_node_t* expr){
 	if(!expr){
 		return NIL;
 	}
+	if(global_err_ptr->error){
+		return VOID;
+	}
 	
 	
 	//Zakladni matematicke operace
-	if(expr->token.type >= MINUS && expr->token.type <= SLASH){
+	if(expr->token.type >= MINUS && expr->token.type <= LESS){
 		//Typy operadnu se musi schodovat
 		//a kdyz se neschoduji je potreba pridat do stromu pretypovani
 		//Jejich vysledekem je to co do nich leze a u SLASH je to vzdy float
@@ -50,7 +54,7 @@ token_type rec_check_types(expr_node_t* expr){
 		token_type right = rec_check_types(expr->right);
 		return VOID;
 	}
-	
+/*	
 	//Pouze pro scitani dvou retezcu
 	if (expr->token.type == DOT){
 		if(rec_check_types(expr->left) == STRING && rec_check_types(expr->left) == STRING){
@@ -69,7 +73,7 @@ token_type rec_check_types(expr_node_t* expr){
 		rec_check_types(expr->left);
 		return VOID;
 	}
-	
+
 	//Porovnavaci operatory
 	if(expr->token.type >= EQUAL || expr->token.type <= LESS){
 		//Tady nevim jake datove typy budou povolene
@@ -77,7 +81,7 @@ token_type rec_check_types(expr_node_t* expr){
 		rec_check_types(expr->left);
 		return VOID;
 	}
-	
+*/	
 	//Pretypovani konstant
 	//Mozna by se hodilo provest zmeny i v ast 
 	if(expr->token.type == NUMBER){
@@ -89,13 +93,20 @@ token_type rec_check_types(expr_node_t* expr){
 	}
 	
 	if(expr->token.type == TEXT){
-		return INT;
+		return STRING;
 	}
 	
 	//Zjisteni typu promene
 	if(expr->token.type == VARIABLE){
-		//Ziskat data z tabulky symbolu
-		return VOID;
+		STElementDataPtr data = ST_DataGet(sym_table, expr->token.content);
+		
+		if(data){
+			return data->type;
+		} else {
+			semantic_error(UNDEFINED_VARIABLE_ERROR, expr->token, "Undefined variable");
+			return VOID;
+		}
+		
 	}
 	
 	//Zjisteni navratoveho typu funkce
@@ -113,7 +124,7 @@ token_type rec_check_types(expr_node_t* expr){
 	
 	return VOID;
 }
-
+/*
 void analyze_assignexpr(stx_node_t* item){
 	//Nazev promene do ktere se prirazuje: item->token->content;
 	//Vyraz ktery se prirazuje: item->expr
@@ -135,11 +146,12 @@ void analyze_whileblock(stx_node_t* item){
 }
 */
 void analyze_item(stx_node_t* item){
-	
-	//item->type
+	if(global_err_ptr->error){
+		return;
+	}	
 	switch(item->type){
 		case EXPR:
-			//rec_check_types(item->expr);
+			rec_check_types(item->expr);
 			break;
 		
 		case ASSIGNEXPR:
@@ -185,7 +197,7 @@ void analyze_ast(stx_node_t* ast_root){
 		return;
 	}
 	
-	STList* func_table = ST_Init(10);
+	func_table = ST_Init(10);
 	
 	//Prochazi vsechny funkce a bere jenom hlavicku
 	for (int i = 0; i < ast_root->items_len; i++){
@@ -194,9 +206,14 @@ void analyze_ast(stx_node_t* ast_root){
 			register_function(func_table,item);
 		}
 	}
-	
+
+	sym_table = ST_Init(10);
+
 	//Prochazi vsechny prvky a anylyzuje je
-	for (int i = 0; i < ast_root->items_len; i++){	
+	for (int i = 0; i < ast_root->items_len; i++){
+		if(global_err_ptr->error){
+			return;
+		}	
 		stx_node_t* item = ast_root->items[i];
 		if (item->type == FUNCBLOCK){
 			//analyze_function(item);
@@ -221,7 +238,7 @@ void analyze_ast(stx_node_t* ast_root){
 		printf("neni\n");
 	}
 	*/
-	
+	ST_Dispose(&sym_table);
 	ST_Dispose(&func_table);
 
 }
