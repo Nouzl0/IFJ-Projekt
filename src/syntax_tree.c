@@ -1,10 +1,14 @@
 #include "syntax_tree.h"
-/*
 
-TODO:
-	kometare
 
-*/
+/**
+ * Allocates memory for new syntax node and for child node pointers
+ * if needed 
+ * 
+ * @param type Type of syntax new node
+ * @param items_count Number of child nodes 
+ * @returns Pointer to new syntax node if allocation was successful otherwise NULL
+ */
 stx_node_t* stx_node_new(item_type type, int items_count){
 	stx_node_t* new_item = malloc(sizeof(stx_node_t));
 	
@@ -27,6 +31,14 @@ stx_node_t* stx_node_new(item_type type, int items_count){
 	return new_item;
 }
 
+
+/**
+ * Inserts syntax node to parent syntax node
+ * Makes sure that there is space allocated for the pointers 
+ * 
+ * @param sn_ptr Pointer to parent node
+ * @param new_sn_ptr Pointer to node for insert
+ */
 void stx_node_insert_item(stx_node_t* sn_ptr, stx_node_t* new_sn_ptr){
 	if(sn_ptr->items_len >= sn_ptr->items_size){
 		sn_ptr->items_size = sn_ptr->items_size * 2;
@@ -38,12 +50,28 @@ void stx_node_insert_item(stx_node_t* sn_ptr, stx_node_t* new_sn_ptr){
 }
 
 
+/**
+ * Helper function for calling stx_node_new with predefined
+ * values wich are suitable for code block node
+ * 
+ * @param level Value representing how many parent
+ * code block nodes is above new node
+ */
 stx_node_t* stx_node_new_block(int level){
 	stx_node_t* new_block = stx_node_new(BLOCK, 5);
 	new_block->level = level;
 	return new_block;
 }
 
+
+/**
+ * Helper function for calling stx_node_new for creating
+ * syntax node that only holds statement
+ * At the end new syntax node is inserted in given parent node
+ * 
+ * @param sn_ptr Pointer to parent node
+ * @param expr_root_node Pointer to expression node 
+ */
 void stx_node_insert_expr(stx_node_t* sn_ptr, expr_node_t* expr_root_node){
 	stx_node_t* stmt_item = stx_node_new(EXPR,0);
 	stmt_item->level = sn_ptr->level;
@@ -52,26 +80,38 @@ void stx_node_insert_expr(stx_node_t* sn_ptr, expr_node_t* expr_root_node){
 }
 
 
-void stx_node_dtor(stx_node_t** stree){
-	if(!(*stree)){
+/**
+ * Frees memory allocated by syntax node
+ * Calls itself recursively on node items
+ * 
+ * @param stree Pointer to root syntax node
+ */
+void stx_node_dtor(stx_node_t* stree){
+	if(!stree){
 		return;
 	}
 	
-	if((*stree)->expr){
-		expr_node_dtor((*stree)->expr);
+	if(stree->expr){
+		expr_node_dtor(stree->expr);
 	}
-	if((*stree)->items){
-		for (int i = 0; i < (*stree)->items_len; i++){
-			stx_node_dtor(&(*stree)->items[i]);
+	if(stree->items){
+		for (int i = 0; i < stree->items_len; i++){
+			stx_node_dtor(stree->items[i]);
 		}
-		free((*stree)->items);
-		(*stree)->items = NULL;
+		free(stree->items);
+		stree->items = NULL;
 	}
-	free((*stree));
-	(*stree) = NULL;
+	free(stree);
 }
 
 
+/**
+ * Frees memory allocated by syntax node
+ * Calls itself recursively on node items
+ * 
+ * @param stree Pointer to root syntax node
+ * @returns String reprezentation of enum of item type
+ */
 char* stx_node_type_to_string(item_type type){
 	static char *NODE_TYPE_ENUM_STRINGS[] = {
 		"ASSIGNEXPR",
@@ -89,6 +129,13 @@ char* stx_node_type_to_string(item_type type){
 	return NODE_TYPE_ENUM_STRINGS[type];
 }
 
+
+/**
+ * Prints out info about given syntax node
+ * Calls itself recursively on node items
+ *
+ * @param sn_ptr Pointer to root syntax node
+ */
 void stx_node_print(stx_node_t* sn_ptr){
 	
 	if(!sn_ptr){
@@ -136,6 +183,13 @@ void stx_node_print(stx_node_t* sn_ptr){
 	
 }
 
+
+/**
+ * Helper function to call stx_node_print on given root node
+ * Prints out newlines and spacers
+ *
+ * @param sn_ptr Pointer to root syntax node
+ */
 void stx_tree_to_json(stx_node_t* sn_ptr){
 	printf("\n---------------------\n");
 	stx_node_print(sn_ptr);

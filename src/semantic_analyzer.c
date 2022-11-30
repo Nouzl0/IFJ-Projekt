@@ -23,6 +23,7 @@ void register_function(STList* table, stx_node_t* func_item){
 	data->tok_ptr = name_tok_ptr;
 	
 	data->params = malloc(sizeof(STDataParam) * params_len);
+	data->param_len = func_item->items[1]->items_len;
 	
 	for (int i = 0; i < func_item->items[1]->items_len; i++){
 		stx_node_t* type_item = func_item->items[1]->items[i];
@@ -30,19 +31,7 @@ void register_function(STList* table, stx_node_t* func_item){
 		stx_node_t* name_item = type_item->items[0];
 		data->params[i].param_name = name_item->token->content;
 	}
-	
-	/*
-	//Tyto udaje pridat do tabulky funkci
-	printf("Nazev funkce: %s\n", func_item->items[0]->token->content);
-	printf("Vraci: %s\n",token_enum_to_string(func_item->token->type));
-	
-	for (int i = 0; i < func_item->items[1]->items_len; i++){
-		stx_node_t* type_item = func_item->items[1]->items[i];
-		printf("Typ parametru: %s\n",token_enum_to_string(type_item->token->type));
-		stx_node_t* name_item = type_item->items[0];
-		printf("Jemno parametru: %s\n", name_item->token->content);
-	}
-	*/	
+
 }
 /*
 //Rekurzivne volano potreba zjistovat errory
@@ -218,6 +207,11 @@ void analyze_ast(stx_node_t* ast_root){
 	
 	
 
+
+
+	/*
+	//ST_Delete(func_table, "getMax" );
+
 	
 	STElementDataPtr data = ST_DataGet(func_table, "getMax");
 	
@@ -226,7 +220,8 @@ void analyze_ast(stx_node_t* ast_root){
 	} else {
 		printf("neni\n");
 	}
+	*/
 	
 	ST_Dispose(&func_table);
-*/
+
 }

@@ -1,42 +1,30 @@
 #include "expr_parser.h"
 /*
 
-TODO:
-	Asi by bylo dobre vytvorit strukturu stmt parseru a do ni
-	vlozit promene ktere jsou potreba v kazde funkci
-	
-	statement prejmenovat na expression
-	stmt na expr
-	
-	Mozna by bylo dobre aby kazde pravidlo melo definovanou svoji funkci
-
-	Upravit komentare
-
-	Parsovani carek ve vyrazu pridat jako funkci pro pole tokenu
-
 STATEMENT:
 ----------------------------------------------
-F -> TEXT                     // "hello world" 
-F -> NUMBER                   // 10
-F -> NIL                      // null
-F -> IDENTIFIER               // print($x,$y)
-F -> VARIABLE                 // $a
-F -> LEFT_PAREN T RIGHT_PAREN // (F)
-F -> NEG F                    // !F
-F -> MINUS F                  // -F
-F -> F STAR F                 // F * F
-F -> F SLASH F                // F / F
-F -> F PLUS F                 // F + F
-F -> F MINUS F                // F - F
-F -> F EQUAL F                // F == F
-F -> F GREATER_EQUAL F        // F >= F
-F -> F LESS_EQUAL F           // F <= F
-F -> F NOT_EQUAL F            // F != F
-F -> F GREATER F              // F > F
-F -> F LESS F                 // F < F
-F -> F AND F                  // F and F
-F -> F OR F                   // F or F
-F -> F DOT F                  // F . F
+F -> TEXT                                // "hello world" 
+F -> NUMBER                              // 10
+F -> FRACTION                            // 1.5
+F -> NIL                                 // null
+F -> IDENTIFIER                          // print($x,$y)
+F -> VARIABLE                            // $a
+F -> LEFT_PAREN {Expression} RIGHT_PAREN // (F)
+F -> F STAR F                            // F * F
+F -> F SLASH F                           // F / F
+F -> F PLUS F                            // F + F
+F -> F MINUS F                           // F - F
+F -> F TYPE_EQUAL F                      // F === F
+F -> F TYPE_NOT_EQUAL F                  // F !== F
+F -> F EQUAL F                           // F == F
+F -> F GREATER_EQUAL F                   // F >= F
+F -> F LESS_EQUAL F                      // F <= F
+F -> F NOT_EQUAL F                       // F != F
+F -> F GREATER F                         // F > F
+F -> F LESS F                            // F < F
+F -> F AND F                             // F and F
+F -> F OR F                              // F or F
+F -> F DOT F                             // F . F
 */
 
 
