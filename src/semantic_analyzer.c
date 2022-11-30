@@ -1,7 +1,12 @@
 #include "semantic_analyzer.h"
 
 //void semantic_error(int error_code, token_t token, char* info);
-
+/**
+ * 
+ * 
+ * @param table 
+ * @param func_item 
+ */
 void register_function(STList* table, stx_node_t* func_item){
 	
 	token_t* name_tok_ptr = func_item->items[0]->token;
@@ -41,25 +46,25 @@ void register_function(STList* table, stx_node_t* func_item){
 }
 /*
 //Rekurzivne volano potreba zjistovat errory
-token_type rec_check_types(expr_node_t* stmt){
-	if(!stmt){
+token_type rec_check_types(expr_node_t* expr){
+	if(!expr){
 		return NIL;
 	}
 	
 	
 	//Zakladni matematicke operace
-	if(stmt->token.type >= MINUS && stmt->token.type <= SLASH){
+	if(expr->token.type >= MINUS && expr->token.type <= SLASH){
 		//Typy operadnu se musi schodovat
 		//a kdyz se neschoduji je potreba pridat do stromu pretypovani
 		//Jejich vysledekem je to co do nich leze a u SLASH je to vzdy float
-		token_type left = rec_check_types(stmt->left);
-		token_type right = rec_check_types(stmt->right);
+		token_type left = rec_check_types(expr->left);
+		token_type right = rec_check_types(expr->right);
 		return VOID;
 	}
 	
 	//Pouze pro scitani dvou retezcu
-	if (stmt->token.type == DOT){
-		if(rec_check_types(stmt->left) == STRING && rec_check_types(stmt->left) == STRING){
+	if (expr->token.type == DOT){
+		if(rec_check_types(expr->left) == STRING && rec_check_types(expr->left) == STRING){
 			return STRING;
 		} else {
 			//Semanticka chyba spatny datovy typ
@@ -68,49 +73,49 @@ token_type rec_check_types(expr_node_t* stmt){
 	}
 	
 	//Porovnavani datovych typu 
-	if(stmt->token.type == TYPE_EQUAL || stmt->token.type == TYPE_NOT_EQUAL){
+	if(expr->token.type == TYPE_EQUAL || expr->token.type == TYPE_NOT_EQUAL){
 		//Muzou se porovnavat jakekoliv datove typy
 		//Pri TYPE_EQUAL se musi shodovat i obsah
-		rec_check_types(stmt->right);
-		rec_check_types(stmt->left);
+		rec_check_types(expr->right);
+		rec_check_types(expr->left);
 		return VOID;
 	}
 	
 	//Porovnavaci operatory
-	if(stmt->token.type >= EQUAL || stmt->token.type <= LESS){
+	if(expr->token.type >= EQUAL || expr->token.type <= LESS){
 		//Tady nevim jake datove typy budou povolene
-		rec_check_types(stmt->right);
-		rec_check_types(stmt->left);
+		rec_check_types(expr->right);
+		rec_check_types(expr->left);
 		return VOID;
 	}
 	
 	//Pretypovani konstant
 	//Mozna by se hodilo provest zmeny i v ast 
-	if(stmt->token.type == NUMBER){
+	if(expr->token.type == NUMBER){
 		return INT;
 	}
 	
-	if(stmt->token.type == FRACTION){
+	if(expr->token.type == FRACTION){
 		return FLOAT;
 	}
 	
-	if(stmt->token.type == TEXT){
+	if(expr->token.type == TEXT){
 		return INT;
 	}
 	
 	//Zjisteni typu promene
-	if(stmt->token.type == VARIABLE){
+	if(expr->token.type == VARIABLE){
 		//Ziskat data z tabulky symbolu
 		return VOID;
 	}
 	
 	//Zjisteni navratoveho typu funkce
-	if(stmt->token.type == IDENTIFIER){
+	if(expr->token.type == IDENTIFIER){
 		//Vraci data z tabulky funkci
 			
 		//Porovnat pocet a typ parametru
 		//pri volani funkce
-		for(int i = 0; i < stmt->params_len; i++){
+		for(int i = 0; i < expr->params_len; i++){
 			//rec_get_type(params[i])
 		}
 		
@@ -120,23 +125,23 @@ token_type rec_check_types(expr_node_t* stmt){
 	return VOID;
 }
 
-void analyze_assignstmt(stx_node_t* item){
+void analyze_assignexpr(stx_node_t* item){
 	//Nazev promene do ktere se prirazuje: item->token->content;
-	//Vyraz ktery se prirazuje: item->stmt
+	//Vyraz ktery se prirazuje: item->expr
 }
 
-void analyze_retstmt(stx_node_t* item){
-	//Vyraz ktery se ma vratit: item->stmt
+void analyze_retexpr(stx_node_t* item){
+	//Vyraz ktery se ma vratit: item->expr
 }
 
 void analyze_ifelse(stx_node_t* item){
-	//Vyraz podminky: item->stmt
+	//Vyraz podminky: item->expr
 	//if blok: item->items[0] 
 	//else blok: item->items[1] tento blok tam byt nemusi
 }
 
 void analyze_whileblock(stx_node_t* item){
-	//Vyraz podminky: item->stmt
+	//Vyraz podminky: item->expr
 	//blok: item->items[0]
 }
 */
@@ -145,19 +150,19 @@ void analyze_item(stx_node_t* item){
 	//item->type
 	switch(item->type){
 		case EXPR:
-			//rec_check_types(item->stmt);
+			//rec_check_types(item->expr);
 			break;
 		
 		case ASSIGNEXPR:
 			//Vsechny prvky ktere jsou pridane do tabulky
 			//jsou na konci bloku zase odebrany
 			//tim zajistim aby promena nemohla byt pouzita z venku
-			//analyze_assignstmt(item);
+			//analyze_assignexpr(item);
 			break;
 		
 
 		case RETEXPR:
-			//analyze_retstmt(item);
+			//analyze_retexpr(item);
 			break;
 		
 		case IFELSE:
@@ -212,8 +217,7 @@ void analyze_ast(stx_node_t* ast_root){
 	}
 	
 	
-	
-	ST_Delete(func_table, "getMax" );
+
 	
 	STElementDataPtr data = ST_DataGet(func_table, "getMax");
 	
@@ -224,5 +228,5 @@ void analyze_ast(stx_node_t* ast_root){
 	}
 	
 	ST_Dispose(&func_table);
-	
+*/
 }
