@@ -5,7 +5,7 @@ dalsi komentar
 */
 declare(strict_types=1);
 
-fun1(fun2(),fun3(func4(),func5())); 
+//fun1(fun2(),fun3(func4(),func5())); 
 
 function getMax(int $x, int $y): int {
 	if($x === $y){

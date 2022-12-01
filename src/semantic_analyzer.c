@@ -32,7 +32,6 @@ void register_function(STList* table, stx_node_t* func_item){
 		stx_node_t* name_item = type_item->items[0];
 		data->params[i].param_name = name_item->token->content;
 	}
-
 }
 
 //Rekurzivne volano potreba zjistovat errory
@@ -44,7 +43,6 @@ token_type rec_check_types(expr_node_t* expr){
 		return VOID;
 	}
 	
-	
 	//Zakladni matematicke operace
 	if(expr->token.type >= MINUS && expr->token.type <= LESS){
 		//Typy operadnu se musi schodovat
@@ -52,38 +50,39 @@ token_type rec_check_types(expr_node_t* expr){
 		//Jejich vysledekem je to co do nich leze a u SLASH je to vzdy float
 		token_type left = rec_check_types(expr->left);
 		token_type right = rec_check_types(expr->right);
-		return VOID;
-	}
-/*	
-	//Pouze pro scitani dvou retezcu
-	if (expr->token.type == DOT){
-		if(rec_check_types(expr->left) == STRING && rec_check_types(expr->left) == STRING){
-			return STRING;
-		} else {
-			//Semanticka chyba spatny datovy typ
-			//Jine datove typy jak STRING
+		if(expr->token.type >= MINUS && expr->token.type <= STAR){
+			if(left == right){
+				return left;
+			}else{
+				semantic_error(VARIABLE_TYPE_ERROR, expr->token, "Invalid type of operand for this operation");
+				return VOID;
+			} 
 		}
-	}
-	
-	//Porovnavani datovych typu 
-	if(expr->token.type == TYPE_EQUAL || expr->token.type == TYPE_NOT_EQUAL){
-		//Muzou se porovnavat jakekoliv datove typy
-		//Pri TYPE_EQUAL se musi shodovat i obsah
-		rec_check_types(expr->right);
-		rec_check_types(expr->left);
+		if(expr->token.type == SLASH){
+			return FLOAT;
+		}
+		if (expr->token.type == DOT){
+			if(left == STRING && right == STRING){
+				return STRING;
+			}else{
+				semantic_error(VARIABLE_TYPE_ERROR, expr->token, "Invalid type of operand for this operation");
+				return VOID;
+			}
+		}
+		if(expr->token.type == TYPE_EQUAL || expr->token.type == TYPE_NOT_EQUAL){
+			return INT;
+		}
+		if(expr->token.type >= EQUAL && expr->token.type <= LESS){
+			if(left == right){
+				return INT;
+			}else{
+				semantic_error(VARIABLE_TYPE_ERROR, expr->token, "Invalid type of operand for this operation");
+				return VOID;
+			}
+		}
 		return VOID;
 	}
-
-	//Porovnavaci operatory
-	if(expr->token.type >= EQUAL || expr->token.type <= LESS){
-		//Tady nevim jake datove typy budou povolene
-		rec_check_types(expr->right);
-		rec_check_types(expr->left);
-		return VOID;
-	}
-*/	
-	//Pretypovani konstant
-	//Mozna by se hodilo provest zmeny i v ast 
+	 
 	if(expr->token.type == NUMBER){
 		return INT;
 	}
@@ -106,22 +105,33 @@ token_type rec_check_types(expr_node_t* expr){
 			semantic_error(UNDEFINED_VARIABLE_ERROR, expr->token, "Undefined variable");
 			return VOID;
 		}
-		
 	}
 	
 	//Zjisteni navratoveho typu funkce
 	if(expr->token.type == IDENTIFIER){
-		//Vraci data z tabulky funkci
-			
+		STElementDataPtr data = ST_DataGet(func_table, expr->token.content);
+		token_type return_type; 
+		if(data){
+			return_type = data->type;
+		} else {
+			semantic_error(UNDEFINED_FUNCTION_ERROR, expr->token, "Undefined function");
+			return VOID;
+		}
+		if(data->param_len != expr->params_len){
+			semantic_error(FUNCTION_CALL_ERROR, expr->token, "Number of parameters in function call differs from function definition");
+			return VOID;
+		}
 		//Porovnat pocet a typ parametru
 		//pri volani funkce
 		for(int i = 0; i < expr->params_len; i++){
-			//rec_get_type(params[i])
+			token_type eval_type = rec_check_types(expr->params[i]);
+			if(data->params[i].type != eval_type){
+				semantic_error(FUNCTION_CALL_ERROR, expr->token, "Invalid type of parameter");
+				return VOID;
+			}
 		}
-		
-		return VOID;
+		return return_type;
 	}
-	
 	return VOID;
 }
 /*
@@ -148,6 +158,9 @@ void analyze_whileblock(stx_node_t* item){
 void analyze_item(stx_node_t* item){
 	if(global_err_ptr->error){
 		return;
+	}
+	if(item->type == RETEXPR){
+		
 	}	
 	switch(item->type){
 		case EXPR:
@@ -161,7 +174,6 @@ void analyze_item(stx_node_t* item){
 			//analyze_assignexpr(item);
 			break;
 		
-
 		case RETEXPR:
 			//analyze_retexpr(item);
 			break;
@@ -207,8 +219,6 @@ void analyze_ast(stx_node_t* ast_root){
 		}
 	}
 
-	sym_table = ST_Init(10);
-
 	//Prochazi vsechny prvky a anylyzuje je
 	for (int i = 0; i < ast_root->items_len; i++){
 		if(global_err_ptr->error){
@@ -216,12 +226,24 @@ void analyze_ast(stx_node_t* ast_root){
 		}	
 		stx_node_t* item = ast_root->items[i];
 		if (item->type == FUNCBLOCK){
+			sym_table = ST_Init(10);
 			//analyze_function(item);
-		} else {
+			ST_Dispose(&sym_table);
+
+		}
+	}
+
+	sym_table = ST_Init(10);
+	for (int i = 0; i < ast_root->items_len; i++){
+		if(global_err_ptr->error){
+			return;
+		}	
+		stx_node_t* item = ast_root->items[i];
+		if (item->type != FUNCBLOCK){
 			analyze_item(item);
 		}
 	}
-	
+	ST_Dispose(&sym_table);
 	
 
 
@@ -238,7 +260,6 @@ void analyze_ast(stx_node_t* ast_root){
 		printf("neni\n");
 	}
 	*/
-	ST_Dispose(&sym_table);
 	ST_Dispose(&func_table);
 
 }
