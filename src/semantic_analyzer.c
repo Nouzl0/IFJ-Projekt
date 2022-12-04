@@ -8,6 +8,23 @@ STList* func_table;
  * @param table 
  * @param func_item 
  */
+ 
+bool valid_return_type(token_type expected, token_type returned){
+	switch(returned){
+		case NIL:
+			return expected >= NIL_INT && expected <= VOID;
+		case INT:
+			return expected == NIL_INT || expected == INT;
+		case FLOAT:
+			return expected == NIL_FLOAT || expected == FLOAT;
+		case STRING:
+			return expected == NIL_STRING || expected == STRING;
+		default:
+			return false;
+	}
+	return false;
+} 
+
 void register_function(STList* table, stx_node_t* func_item){
 	
 	token_t* name_tok_ptr = func_item->items[0]->token;
@@ -51,6 +68,7 @@ token_type rec_check_types(expr_node_t* expr){
 		token_type left = rec_check_types(expr->left);
 		token_type right = rec_check_types(expr->right);
 		if(expr->token.type >= MINUS && expr->token.type <= STAR){
+			//Pridat prevedeni na float kdyz je treba
 			if(left == right){
 				return left;
 			}else{
@@ -59,6 +77,7 @@ token_type rec_check_types(expr_node_t* expr){
 			} 
 		}
 		if(expr->token.type == SLASH){
+			//Pridat prevedeni na float kdyz je treba
 			return FLOAT;
 		}
 		if (expr->token.type == DOT){
@@ -73,6 +92,7 @@ token_type rec_check_types(expr_node_t* expr){
 			return INT;
 		}
 		if(expr->token.type >= EQUAL && expr->token.type <= LESS){
+			//Pridat prevedeni na float kdyz je potreba
 			if(left == right){
 				return INT;
 			}else{
@@ -155,40 +175,65 @@ void analyze_whileblock(stx_node_t* item){
 	//blok: item->items[0]
 }
 */
-void analyze_item(stx_node_t* item){
-	if(global_err_ptr->error){
+void analyze_block(stx_node_t* block, bool is_root, char* func_name){
+	
+	if(!block){
 		return;
 	}
-	if(item->type == RETEXPR){
-		
-	}	
-	switch(item->type){
-		case EXPR:
-			rec_check_types(item->expr);
-			break;
-		
-		case ASSIGNEXPR:
-			//Vsechny prvky ktere jsou pridane do tabulky
-			//jsou na konci bloku zase odebrany
-			//tim zajistim aby promena nemohla byt pouzita z venku
-			//analyze_assignexpr(item);
-			break;
-		
-		case RETEXPR:
-			//analyze_retexpr(item);
-			break;
-		
-		case IFELSE:
-			//analyze_ifelse(item);
-			break;
-		
-		case WHILEBLOCK:
-			//analyze_whileblock(item);
-			break;
-			
-		default:
-			//Nemelo by nastat
+	
+	for (int i = 0; i < block->items_len; i++){
+		//printf("DEBUG\n");
+		if(global_err_ptr->error){
 			return;
+		}
+
+		stx_node_t* item = block->items[i];
+		
+		switch(item->type){
+			case EXPR:
+				rec_check_types(item->expr);
+				break;
+			
+			case ASSIGNEXPR:
+				//Vsechny prvky ktere jsou pridane do tabulky
+				//jsou na konci bloku zase odebrany
+				//tim zajistim aby promena nemohla byt pouzita z venku
+				//analyze_assignexpr(item);
+				break;
+			
+			case RETEXPR:
+				if(!func_name){
+					semantic_error(FUNCTION_RETURN_ERROR, *item->token, "Return statement not in function");
+					return;
+				}
+				
+				STElementDataPtr data = ST_DataGet(func_table, func_name);
+				
+				if(!valid_return_type(data->type,rec_check_types(item->expr))){
+					if(global_err_ptr->error){
+						return;
+					}
+					semantic_error(FUNCTION_RETURN_ERROR, *item->token, "Returned type differs from function definition");
+				}
+				break;
+			
+			case IFELSE:
+				rec_check_types(item->expr);
+				//If block
+				analyze_block(item->items[0], false, func_name);
+				//Else block
+				analyze_block(item->items[1], false, func_name);
+				break;
+			
+			case WHILEBLOCK:
+				rec_check_types(item->expr);
+				analyze_block(item, false, func_name);
+				break;
+				
+			default:
+				return;
+		}
+	
 	}
 	
 	
@@ -203,7 +248,6 @@ void analyze_function(stx_node_t* func_item){
 */
 
 void analyze_ast(stx_node_t* ast_root){
-	
 	if(ast_root->items_len < 1){
 		//Prazdy blok
 		return;
@@ -219,30 +263,38 @@ void analyze_ast(stx_node_t* ast_root){
 		}
 	}
 
-	//Prochazi vsechny prvky a anylyzuje je
+	//Prochazi vsechny funkce 
 	for (int i = 0; i < ast_root->items_len; i++){
 		if(global_err_ptr->error){
+			ST_Dispose(&func_table);
 			return;
 		}	
 		stx_node_t* item = ast_root->items[i];
 		if (item->type == FUNCBLOCK){
 			sym_table = ST_Init(10);
-			//analyze_function(item);
+			
+			//Adding parameter definitions to symbol table as variables
+			for (int i = 0; i < item->items[1]->items_len; i++){
+				stx_node_t* type_item = item->items[1]->items[i];
+				stx_node_t* name_item = type_item->items[0];
+			
+				ST_CreateResize(&sym_table, name_item->token->content);
+	
+				STElementDataPtr data = ST_DataGet(sym_table, name_item->token->content);
+				data->type = type_item->token->type;
+				data->tok_ptr = name_item->token;
+			}
+			
+			analyze_block(item->items[2],true,item->items[0]->token->content);
+			
 			ST_Dispose(&sym_table);
 
 		}
 	}
-
+	
 	sym_table = ST_Init(10);
-	for (int i = 0; i < ast_root->items_len; i++){
-		if(global_err_ptr->error){
-			return;
-		}	
-		stx_node_t* item = ast_root->items[i];
-		if (item->type != FUNCBLOCK){
-			analyze_item(item);
-		}
-	}
+	//Prochazi vsechny prvky a anylyzuje je
+	analyze_block(ast_root,true,NULL);
 	ST_Dispose(&sym_table);
 	
 

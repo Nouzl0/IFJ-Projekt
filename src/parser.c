@@ -305,6 +305,7 @@ void parser_build_block(stx_node_t* parent_node, tok_arr_t* ta_ptr, bool is_root
 		
 		//Return statement
 		if(tok_arr_cmp(ta_ptr,RETURN)){
+			token_t* ret_tok_ptr = tok_arr_get(ta_ptr);
 			tok_arr_inc(ta_ptr,1);
 			
 			expr_node_t* expr_ptr = expr_parse(ta_ptr,SEMICOLON);
@@ -316,6 +317,7 @@ void parser_build_block(stx_node_t* parent_node, tok_arr_t* ta_ptr, bool is_root
 			stx_node_t* return_node = stx_node_new(RETEXPR,0);
 			stx_node_insert_item(parent_node, return_node);
 			return_node->expr = expr_ptr;
+			return_node->token = ret_tok_ptr;
 			tok_arr_inc(ta_ptr,1);
 			continue;
 		}
