@@ -8,6 +8,7 @@ errors_t* global_err_ptr = &global_err;
 #include "parser.h"
 #include "semantic_analyzer.h"
 #include "code_generation.h"
+
 /*
 TODO:
 	vytvorit soubor rozdeleni.txt a pouzit
@@ -15,7 +16,8 @@ TODO:
 
 */
 
-int main(){
+int main(){	
+	
 	errors_ctor(global_err_ptr);
 
 	tok_arr_t token_array;
@@ -34,11 +36,17 @@ int main(){
 	
 	if(global_err_ptr->error){
 		stx_node_dtor(ast);
+		tok_arr_dtor(&token_array);
 		return global_err_ptr->error;
 	}
 	
-	
 	analyze_ast(ast);
+	
+	if(global_err_ptr->error){
+		stx_node_dtor(ast);
+		tok_arr_dtor(&token_array);
+		return global_err_ptr->error;
+	}
 	
 	// generates code from ast - working on it
 	//generate_code(ast);
@@ -46,7 +54,6 @@ int main(){
 	
 	stx_node_dtor(ast);
 	tok_arr_dtor(&token_array);
-	
 	
 	
 	return 0;

@@ -43,4 +43,6 @@ void stx_node_insert_expr(stx_node_t* sn_ptr, expr_node_t* expr_root_ptr);
 
 void stx_node_dtor(stx_node_t* stree);
 
+char* stx_node_type_to_string(item_type type);
+
 void stx_tree_to_json(stx_node_t* sn_ptr);
