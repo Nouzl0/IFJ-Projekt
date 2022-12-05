@@ -133,12 +133,12 @@
     }
 
     // test_10 - testing different logic operands - result (11111111)
-    $test_10 = 1; $test_10_1 = 0; $test_10_2 = 0;
+    $test_10 = 1; $test_10_1 = 1.0; $test_10_2 = 0.0;
 
-    if (($test_10_1 / 2) == $test_10_2) {
+    if (($test_10_1 / 2.0) == $test_10_2) {
         write($test_10);
     }
-    if ($test_10 + 1 > $test_10_1 + 1) {
+    if ($test_10 + 1 > $test_10 + 1) {
         write($test_10);
     }
     if (($test_10 * 2) < ($test_10 * 2)) {
@@ -147,7 +147,7 @@
     if (($test_10 / 5) >= ($test_10_1 / 5)) {
         write($test_10);
     }
-    if (($test_10_2 + 1.00) >= $test_10_1 + 1) {
+    if (($test_10_2 + 1) >= $test_10_1 + 1) {
         write($test_10);
     }
     if ($test_10_1 <= ($test_10 + 2.5)) {

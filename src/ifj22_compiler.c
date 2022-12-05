@@ -23,7 +23,7 @@ int main(){
 	tok_arr_t token_array;
 	tok_arr_ctor(&token_array);
 		
-	lex_tokenize_file(&token_array,"./example2.php");
+	lex_tokenize_file(&token_array,"./code_tests/ifelse.php");
 	tok_arr_debug_print(token_array);
 	
 	if(global_err_ptr->error){
@@ -49,7 +49,7 @@ int main(){
 	}
 	
 	// generates code from ast - working on it
-	//generate_code(ast);
+	generate_code(ast);
 
 	
 	stx_node_dtor(ast);
