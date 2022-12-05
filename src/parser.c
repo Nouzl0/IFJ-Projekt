@@ -155,7 +155,7 @@ void parser_build_ifelse(stx_node_t* parent_node, tok_arr_t* ta_ptr){
 	// Creating parent node that stores condition expression, if and else code blocks
 	stx_node_t* ifelse_node = stx_node_new(IFELSE,2);
 	stx_node_insert_item(parent_node, ifelse_node);
-	ifelse_node->expr = expr_ptr;	
+	ifelse_node->expr = expr_ptr;
 	
 	// Checks expression terminating token and if code block starting token
 	if (!tok_arr_cmp_skip(ta_ptr,RIGHT_PAREN) || !tok_arr_cmp_skip(ta_ptr,LEFT_BRACE)){
@@ -187,6 +187,8 @@ void parser_build_ifelse(stx_node_t* parent_node, tok_arr_t* ta_ptr){
 		
 		parser_build_block(else_body_node,ta_ptr,0);
 		
+	} else {
+		ifelse_node->items[1] = NULL;
 	}
 	
 

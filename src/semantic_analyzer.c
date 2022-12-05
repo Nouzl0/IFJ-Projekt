@@ -116,6 +116,7 @@ token_type rec_check_types(expr_node_t* expr){
 			return VOID;
 			*/
 			
+			return left;
 			
 			//Pridat prevedeni na float kdyz je treba
 			if(left == right){
@@ -150,12 +151,15 @@ token_type rec_check_types(expr_node_t* expr){
 		// Value comparators
 		if(expr->token.type >= EQUAL && expr->token.type <= LESS){
 			//Pridat prevedeni na float kdyz je potreba
+			return left;
+			
 			if(left == right){
 				return INT;
 			}else{
 				semantic_error(VARIABLE_TYPE_ERROR, expr->token, "Invalid type of operand for this operation");
 				return VOID;
 			}
+			
 		}
 		return VOID;
 	}

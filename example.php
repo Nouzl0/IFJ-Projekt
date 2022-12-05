@@ -1,4 +1,7 @@
 <?php
+	
+	
+	
 	/*
 	blokovy komentar
 	*/

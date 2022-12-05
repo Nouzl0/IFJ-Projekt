@@ -142,7 +142,7 @@ void handle_block_comment(sbuffer_t *sb_ptr){
 
 
 /**
- * Shifts buffer until it arrives to end of string character (") or (')
+ * Shifts buffer until it arrives to end of string character (")
  * then saves token to array
  * All characters shifted upon are saved to cstring (defined in strings_lib.h)
  * When shifts to EOF registers error
@@ -150,18 +150,22 @@ void handle_block_comment(sbuffer_t *sb_ptr){
  * @param sb_ptr Shift buffer pointer (defined in strings_lib.h)
  */
 void handle_text(sbuffer_t* sb_ptr){
-	char term_char = sb_ptr->buffer[0]; //Storing which character started the string
 	str_builder_t cs_ptr;
 	str_builder_ctor(&cs_ptr);
 	sbuffer_shift(sb_ptr);
 	int line = sb_ptr->line;
 	int column = sb_ptr->column;
 	while(1){
-		if(sb_ptr->buffer[0] == term_char){
+		if(sb_ptr->buffer[0] == '"'){
 			tok_arr_insert(sb_ptr->ta_ptr, TEXT, line, column, cs_ptr.content);
 			sbuffer_shift(sb_ptr);
 			return;
 		}
+		
+		if(sb_ptr->buffer[0] == '\\'){
+			//sb_ptr->buffer[1] == 'n'
+		}
+		
 		// Checks for EOF
 		if(sb_ptr->end_index < 1){
 			lex_error(sb_ptr->line, "Missing string ending");
@@ -196,7 +200,7 @@ void lex_tokenize(tok_arr_t* ta_ptr, FILE* source){
 			continue;
 		}
 		// Any numeral constant
-		if( (is_char_number(sb.buffer[0])) || (sb.buffer[0] =='-' && is_char_number(sb.buffer[1])) ){
+		if((is_char_number(sb.buffer[0]))){
 			handle_number(sb_ptr);
 			continue;
 		}
@@ -239,7 +243,7 @@ void lex_tokenize(tok_arr_t* ta_ptr, FILE* source){
 		}
 		
 		// String constant content
-		if(sb.buffer[0] == '"' || sb.buffer[0] == '\''){
+		if(sb.buffer[0] == '"'){
 			handle_text(sb_ptr);
 			continue;
 		}
