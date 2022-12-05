@@ -491,11 +491,10 @@ extern void ST_DataClear(STList *list, char *string)
  */
 extern void ST_PrintList(STList *list)
 {   
-/*
+
     if (list == NULL) {
         return;
     }
-
 
     // tmp STElement pointer
     STElementPtr element_p;
@@ -517,13 +516,10 @@ extern void ST_PrintList(STList *list)
 
             // printing the elemen
             printf("%s[", element_f->name);
-            printf("%d, %d, %d, %d, %d", element_f->data->type, element_f->data->size, 
-            element_f->data->decla_line, element_f->data->usage_line, element_f->data->adress);
-            printf("] -> ");
+            printf("%d] ->", element_f->data->type);
     	}
 
         printf("NULL\n");
     }
     printf("- - - - \n\n");
-	*/
 }
