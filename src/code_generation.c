@@ -52,9 +52,24 @@ void generate_code(stx_node_t *AS_Tree) // a.k.a do_block
         float_stack = stack_init();
 
         // init print
+        printf("# - HEADER - #\n");
         printf(".IFJcode22\n");
         printf("CREATEFRAME\n");
         printf("PUSHFRAME\n");
+
+        printf("# - ARITHMETIC GLOBAL VARIABLES - #\n");
+        printf("DEFVAR GF@%%tmp0\n");
+        printf("DEFVAR GF@%%tmp1\n");
+        printf("DEFVAR GF@%%tmp2\n");
+
+        printf("# - BOOL GLOBAL VARIABLES - #\n");
+        printf("DEFVAR GF@%%bool0\n");
+        printf("DEFVAR GF@%%bool1\n");
+        printf("DEFVAR GF@%%bvar0\n");
+        printf("DEFVAR GF@%%bvar1\n");
+
+        printf("# - MAIN - #\n");
+
     }
 
     // go through all nodes in tree recursively
@@ -75,6 +90,7 @@ void generate_code(stx_node_t *AS_Tree) // a.k.a do_block
         ST_Dispose(&symbol_table);
         stack_dispose(&left_stack);
         stack_dispose(&right_stack);
+        stack_dispose(&float_stack);
 
         // end print
         printf("POPFRAME\n");
@@ -100,9 +116,6 @@ void do_assignexpr(stx_node_t* AS_Tree) {
     if ((AS_Tree == NULL) || (AS_Tree->type != ASSIGNEXPR)) {
         return;
     }
-
-    // #1 - variables
-    static bool tmp_var_active = false;
 
     // #2 check if there are floats
     arithmetic_print_floatcheck(AS_Tree->expr, true);
@@ -137,14 +150,6 @@ void do_assignexpr(stx_node_t* AS_Tree) {
     // #3 - retype variable if needed
     if (is_float == true) {
         arithmetic_print_float_retype(AS_Tree->expr);
-    }
-
-    // #3 - defines tmp variables - TODO: check if this is the right format and make it smarter
-    if (tmp_var_active == false) {
-        for(int i = 0; i < 3; i++) {
-            printf("DEFVAR GF@\%%tmp%d\n", i);
-        }
-        tmp_var_active = true;
     }
 
     // #4 - printing move instruction
@@ -273,17 +278,19 @@ void do_whileblock(stx_node_t* AS_Tree)
     int func_label = label_counter;
     label_counter++;
 
+    // #1 - check copies
+    while_check_def(AS_Tree);
 
-    // #1 - Create label
-    printf("LABEL %s%d\n", "#while", func_label);
+    // #2 - Create label
+    printf("LABEL %s%d\n", "\%while", func_label);
 
-    // #2 - print JUMPIF
-    logic_print(AS_Tree->expr, "#endwhile", func_label);
+    // #3 - print JUMPIF
+    logic_print(AS_Tree->expr, "\%endwhile", func_label);
     generate_code(AS_Tree);                               
 
-    // #3 - end label
-    printf("JUMP %s%d\n", "#while", func_label);
-    printf("LABEL %s%d\n", "#endwhile", func_label);
+    // #4 - end label
+    printf("JUMP %s%d\n", "\%while", func_label);
+    printf("LABEL %s%d\n", "\%endwhile", func_label);
 }
 
 void do_funcblock(stx_node_t* AS_Tree)
@@ -561,6 +568,36 @@ void print_stack(expr_node_t* AP_Tree, bool left_side)
     }
 }
 
+void while_check_def(stx_node_t* stx_while)
+{   
+    // goind through all the items in the while loop
+    for (int i = 0; i < stx_while->items_len; i++) {
+        
+        // getting the type of the item
+        item_type item = stx_while->items[i]->type;
+
+        // adds variable to stack and while stack
+        if (item == ASSIGNEXPR || item == EXPR) {
+            if ((ST_ElementExists(symbol_table, stx_while->items[i]->token->content)) == false) {
+
+                // adding variable to symbol table
+                ST_CreateResize(&symbol_table, stx_while->items[i]->token->content);
+                STElementDataPtr data = ST_DataGet(symbol_table, stx_while->items[i]->token->content);
+                data->type = NUMBER;
+
+                // defining new variable
+                printf("DEFVAR LF@%s\n", stx_while->items[i]->token->content);
+            }
+        }
+        
+        // continue recursively to search for variables
+        if (item == IFELSE || item == WHILEBLOCK || item == BLOCK) {
+            while_check_def(stx_while->items[i]);
+        }
+    }
+}
+
+
 // float checker
 void arithmetic_print_floatcheck(expr_node_t* AP_Tree, bool reset)
 {   
@@ -665,23 +702,12 @@ void aritmetic_print_floatclean(void)
 void logic_print(expr_node_t* AP_Tree, char* label, int label_num) 
 {
     // #0 - variables
-    //char *left_term = NULL, *right_term = NULL;
-    static bool function_start = true;
     bool left_expr_float = false, right_expr_float = false;
 
     // #1 - function check and reset
     if (AP_Tree == NULL) {
         return;
     }
-    // printing tmp helper variables
-    if (function_start == true) {
-        printf("DEFVAR GF@%s\n", "\%bool0");
-        printf("DEFVAR GF@%s\n", "\%bool1");
-        printf("DEFVAR GF@%s\n", "\%bvar0");
-        printf("DEFVAR GF@%s\n", "\%bvar1");
-        function_start = false;
-    }
-
 
     // #2 - getting sub-trees values
     if ((AP_Tree->left != NULL) && AP_Tree->right != NULL) {

@@ -28,16 +28,20 @@ void do_funcblock(stx_node_t* AS_Tree);
 
 // AP_Tree functions
 void arithmetic_print(expr_node_t* AP_Tree , char* assigned_var, bool reset);
+void logic_print(expr_node_t* AP_Tree, char* label, int label_counter);
+void func_print(expr_node_t* AP_Tree);
+
+// stack functions
 void print_stack(expr_node_t* AP_Tree, bool left_side);
+
+// special while function
+void while_check_def(stx_node_t* stx_while);
 
 // float retyping
 void arithmetic_print_floatcheck(expr_node_t* AP_Tree, bool reset);
 void arithmetic_print_float_retype(expr_node_t* AP_Tree);
 void arithmetic_print_float_untype(void);
 void aritmetic_print_floatclean(void);
-
-void logic_print(expr_node_t* AP_Tree, char* label, int label_counter);
-void func_print(expr_node_t* AP_Tree);
 
 // func call functions
 void func_test_print(expr_node_t* AP_Tree);

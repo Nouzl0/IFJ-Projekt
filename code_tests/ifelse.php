@@ -147,13 +147,13 @@
     if (($test_10 / 5) >= ($test_10_1 / 5)) {
         write($test_10);
     }
-    if (($test_10_2 + 1) >= $test_10_1 + 1) {
+    if (($test_10_2 + 1.25) >= $test_10_1 + 45.5) {
         write($test_10);
     }
-    if ($test_10_1 <= ($test_10 + 2.5)) {
+    if ($test_10_1 <= ($test_10_1 * 2.1)) {
         write($test_10);
     }
-    if (($test_10_2 + 0.00) <= $test_10_1) {
+    if (($test_10_2 + 46.65) <= $test_10_1) {
         write($test_10);
     }
 
@@ -164,7 +164,7 @@
         $test_11 = 2;
         if ($test_11 !== (2 / 2)) {
             $test_11 = 2.5;
-            if ($test_11 == 3) {
+            if ($test_11 == 3.5) {
 
                 $test_11 = 4;
             } else {
