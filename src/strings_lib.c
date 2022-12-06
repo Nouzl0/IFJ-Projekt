@@ -25,6 +25,18 @@ bool is_char_permited(char c){
 		c == 9     // Tab
 	);
 }
+bool is_char_valid_hex(char c){
+	if(c >= 'a' && c <= 'f'){
+		return true;
+	}
+	if(c >= 'A' && c <= 'F'){
+		return true;
+	}
+	return is_char_number(c);
+}
+bool is_char_valid_octal(char c){
+	return c >= '0' && c <= '8';
+}
 
 /**************************************
 	Shift buffer handling functions
