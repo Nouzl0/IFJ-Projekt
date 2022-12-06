@@ -1,7 +1,4 @@
 <?php
-	
-	
-	
 	/*
 	blokovy komentar
 	*/
@@ -15,5 +12,4 @@
 	$ret = concat($a, "svete");
 	$b = 45 + 83 + 120 / 20;
 	write($ret, $a);
-	functionx()
 ?>

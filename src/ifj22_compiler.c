@@ -23,8 +23,11 @@ int main(){
 	tok_arr_t token_array;
 	tok_arr_ctor(&token_array);
 		
-	lex_tokenize_file(&token_array,"./code_tests/while.php");
+	lex_tokenize_file(&token_array,"./example2.php");
+	//lex_tokenize(&token_array,stdin);
 	tok_arr_debug_print(token_array);
+	
+	//return 0;
 	
 	if(global_err_ptr->error){
 		tok_arr_dtor(&token_array);

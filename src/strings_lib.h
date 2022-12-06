@@ -10,7 +10,8 @@ bool is_char_valid_body_of_id(char c);
 bool is_char_letter(char c);
 bool is_char_variable_name(char c);
 bool is_char_permited(char c);
-
+bool is_char_valid_hex(char c);
+bool is_char_valid_octal(char c);
 
 /*******************
 	Shift buffer

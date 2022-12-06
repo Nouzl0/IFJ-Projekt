@@ -52,15 +52,10 @@ void handle_number(sbuffer_t* sb_ptr){
 	str_builder_t cs_ptr;
 	str_builder_ctor(&cs_ptr);
 	
-	// Checks for negative numeral
-	if (sb_ptr->buffer[0] == '-'){
-		str_builder_append(&cs_ptr, sb_ptr->buffer[0]);
-		sbuffer_shift(sb_ptr);
-	}
-	
 	while(is_char_number(sb_ptr->buffer[0])){
 		str_builder_append(&cs_ptr, sb_ptr->buffer[0]);
 		sbuffer_shift(sb_ptr);
+		
 		
 		/*
 			Decimal point is only valid in between of valid numeral characters
@@ -145,6 +140,7 @@ void handle_block_comment(sbuffer_t *sb_ptr){
  * Shifts buffer until it arrives to end of string character (")
  * then saves token to array
  * All characters shifted upon are saved to cstring (defined in strings_lib.h)
+ * Escape sequences if valid are registered and replaced
  * When shifts to EOF registers error
  *
  * @param sb_ptr Shift buffer pointer (defined in strings_lib.h)
@@ -162,15 +158,63 @@ void handle_text(sbuffer_t* sb_ptr){
 			return;
 		}
 		
-		if(sb_ptr->buffer[0] == '\\'){
-			//sb_ptr->buffer[1] == 'n'
-		}
-		
 		// Checks for EOF
 		if(sb_ptr->end_index < 1){
 			lex_error(sb_ptr->line, "Missing string ending");
 			return;
 		}
+		
+		if(sb_ptr->buffer[0] == '$'){
+			lex_error(sb_ptr->line, "Sign $ cannot be written in string without escaping \\");
+			sbuffer_shift(sb_ptr);
+			continue;
+		}
+		
+		// Escape sequences
+		if(sb_ptr->buffer[0] == '\\'){
+			if(sb_ptr->buffer[1] == '"'){
+				str_builder_append(&cs_ptr,'"');
+				sbuffer_skip(sb_ptr,2);
+				continue;
+			} else if(sb_ptr->buffer[1] == 'n') {
+				str_builder_append(&cs_ptr,'\n');
+				sbuffer_skip(sb_ptr,2);
+				continue;
+			} else if(sb_ptr->buffer[1] == 't') {
+				str_builder_append(&cs_ptr,'\t');
+				sbuffer_skip(sb_ptr,2);
+				continue;
+			} else if(sb_ptr->buffer[1] == '\\') {
+				str_builder_append(&cs_ptr,'\\');
+				sbuffer_skip(sb_ptr,2);
+				continue;
+			// Escape with hex value
+			} else if(sb_ptr->buffer[1] == 'x' && is_char_valid_hex(sb_ptr->buffer[2]) && is_char_valid_hex(sb_ptr->buffer[3])) {
+				char hex[] = {sb_ptr->buffer[2],sb_ptr->buffer[3]};
+				int num = (int)strtol(hex, NULL, 16);
+				if (num < 256){
+					char c = (char) num; 
+					
+					str_builder_append(&cs_ptr,c);
+					sbuffer_skip(sb_ptr,4);
+					continue;
+				}
+			// Escape with octal value
+			} else if(is_char_valid_octal(sb_ptr->buffer[1]) && is_char_valid_octal(sb_ptr->buffer[2]) && is_char_valid_octal(sb_ptr->buffer[3])){
+				char octal[] = {sb_ptr->buffer[1],sb_ptr->buffer[2],sb_ptr->buffer[3]};
+			
+				int num = (int)strtol(octal, NULL, 8);
+				if (num < 256){
+					char c = (char) num; 
+					str_builder_append(&cs_ptr,c);
+					sbuffer_skip(sb_ptr,4);
+					continue;
+				}
+			
+			}
+			
+		}
+		
 		str_builder_append(&cs_ptr,sb_ptr->buffer[0]);
 		sbuffer_shift(sb_ptr);
 	}
