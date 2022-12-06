@@ -19,29 +19,29 @@
 void generate_code(stx_node_t *AS_Tree);
 
 // item type functions
-void do_assignexpr(stx_node_t* AS_Tree);
-void do_expr(stx_node_t* AS_Tree);
-void do_retexpr(stx_node_t* AS_Tree);
-void do_ifelse(stx_node_t* AS_Tree);
-void do_whileblock(stx_node_t* AS_Tree);
-void do_funcblock(stx_node_t* AS_Tree);
+void do_block(stx_node_t *AS_Tree, STList *symbol_table, bool is_func);
+void do_assignexpr(stx_node_t* AS_Tree, STList *symbol_table);
+void do_expr(stx_node_t* AS_Tree, STList *symbol_table);
+void do_retexpr(stx_node_t* AS_Tree, STList *symbol_table);
+void do_ifelse(stx_node_t* AS_Tree, STList *symbol_table);
+void do_whileblock(stx_node_t* AS_Tree, STList *symbol_table);
+void do_funcblock(stx_node_t* AS_Tree, STList *symbol_table);
 
 // AP_Tree functions
 void arithmetic_print(expr_node_t* AP_Tree , char* assigned_var, bool reset);
-void logic_print(expr_node_t* AP_Tree, char* label, int label_counter);
+void logic_print(expr_node_t* AP_Tree, STList *symbol_table, char* label, int label_num);
 void func_print(expr_node_t* AP_Tree);
 
 // stack functions
 void print_stack(expr_node_t* AP_Tree, bool left_side);
 
 // special while function
-void while_check_def(stx_node_t* stx_while);
+void while_check_def(stx_node_t* stx_while, STList *symbol_table);
 
 // float retyping
-void arithmetic_print_floatcheck(expr_node_t* AP_Tree, bool reset);
-void arithmetic_print_float_retype(expr_node_t* AP_Tree);
-void arithmetic_print_float_untype(void);
-void aritmetic_print_floatclean(void);
+void arithmetic_print_floatcheck(expr_node_t* AP_Tree, STList *symbol_table, bool reset);
+void arithmetic_print_float_retype(expr_node_t* AP_Tree, STList *symbol_table);
+void arithmetic_print_float_untype(STList *symbol_table);
 
 // func call functions
 void func_test_print(expr_node_t* AP_Tree);

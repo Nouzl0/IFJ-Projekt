@@ -8,7 +8,7 @@
 /* - - - - - - - - - - - - */
 
 // symbol table
-STList *symbol_table;
+//STList *symbol_table;
 
 // used in arithmetics
 StackPtr left_stack = NULL, right_stack = NULL, float_stack = NULL;
@@ -23,13 +23,25 @@ bool is_float = false;
 /* - - - - - - - - - - */
 
 // working on this library 
+void generate_code(stx_node_t *AS_Tree) {
+    
+    // init
+    STList *symbol_table = ST_Init(10);
+    
+    // create code
+    do_block(AS_Tree, symbol_table, false);
+
+    // end
+    ST_Dispose(&symbol_table);
+}
+
 
 /**
  * @brief Generates instruction code from AST
  * 
  * @param AS_Tree Syntax tree
  */
-void generate_code(stx_node_t *AS_Tree) // a.k.a do_block
+void do_block(stx_node_t *AS_Tree, STList *symbol_table, bool is_func) // a.k.a do_block
 {
     // #0 - check if tree is not empty
 	if (AS_Tree == NULL) {
@@ -46,7 +58,6 @@ void generate_code(stx_node_t *AS_Tree) // a.k.a do_block
         main_branch = true;
 
         // init functions
-        symbol_table = ST_Init(10);
         left_stack = stack_init();
         right_stack = stack_init();
         float_stack = stack_init();
@@ -68,26 +79,39 @@ void generate_code(stx_node_t *AS_Tree) // a.k.a do_block
         printf("DEFVAR GF@%%bvar0\n");
         printf("DEFVAR GF@%%bvar1\n");
 
+        printf("# - FUNCTION GLOBAL VARIABLES - #\n");
+        printf("DEFVAR GF@%%freturn\n");
+
         printf("# - MAIN - #\n");
 
     }
 
-    // go through all nodes in tree recursively
+    // #3 - go through all nodes in tree recursively
     if (AS_Tree->items_len != 0) {
         for (int i = 0; i < AS_Tree->items_len; i++) {
-            do_assignexpr(AS_Tree->items[i]);
-            do_expr(AS_Tree->items[i]);
-            do_retexpr(AS_Tree->items[i]);
-            do_ifelse(AS_Tree->items[i]);
-            do_whileblock(AS_Tree->items[i]);
-            do_funcblock(AS_Tree->items[i]);
+            do_assignexpr(AS_Tree->items[i], symbol_table);
+            do_expr(AS_Tree->items[i], symbol_table);
+            do_retexpr(AS_Tree->items[i], symbol_table);
+            do_ifelse(AS_Tree->items[i], symbol_table);
+            do_whileblock(AS_Tree->items[i], symbol_table);
+            do_funcblock(AS_Tree->items[i], symbol_table);
         }
     }
 
-    // #3 - generate code end
+    // #4 - if function print return
+    if (is_func == true) {
+        
+        // dispose of function symtable
+        ST_Dispose(&symbol_table);
+
+        // print function end
+        printf("POPFRAME\n");
+        printf("RETURN\n");
+    }
+
+    // #5 - generate code end
     if (main_branch == true) {
         // free memory
-        ST_Dispose(&symbol_table);
         stack_dispose(&left_stack);
         stack_dispose(&right_stack);
         stack_dispose(&float_stack);
@@ -109,7 +133,7 @@ void generate_code(stx_node_t *AS_Tree) // a.k.a do_block
  * 
  * @param AS_Tree - Abstract syntax tree
  */
-void do_assignexpr(stx_node_t* AS_Tree) {
+void do_assignexpr(stx_node_t* AS_Tree, STList *symbol_table) {
     
 
     // #0 - check if tree is not empty
@@ -118,7 +142,7 @@ void do_assignexpr(stx_node_t* AS_Tree) {
     }
 
     // #2 check if there are floats
-    arithmetic_print_floatcheck(AS_Tree->expr, true);
+    arithmetic_print_floatcheck(AS_Tree->expr, symbol_table, true);
 
     // #2 - defines variable - TODO: check if this is the right format
     if ((ST_ElementExists(symbol_table, AS_Tree->token->content)) == false) {
@@ -149,7 +173,7 @@ void do_assignexpr(stx_node_t* AS_Tree) {
 
     // #3 - retype variable if needed
     if (is_float == true) {
-        arithmetic_print_float_retype(AS_Tree->expr);
+        arithmetic_print_float_retype(AS_Tree->expr, symbol_table);
     }
 
     // #4 - printing move instruction
@@ -159,7 +183,13 @@ void do_assignexpr(stx_node_t* AS_Tree) {
         print_stack(AS_Tree->expr, false);
 
         // printing the move instruction
-        printf("MOVE LF@%s %s\n", AS_Tree->token->content, stack_pop(&right_stack));
+
+        if (AS_Tree->expr->token.type == IDENTIFIER) {
+            func_print(AS_Tree->expr);
+            printf("MOVE LF@%s GF@%%freturn\n", AS_Tree->token->content);
+        } else {
+            printf("MOVE LF@%s %s\n", AS_Tree->token->content, stack_pop(&right_stack));
+        }
     
     // #5 - else solve arithmetic expression
     } else {
@@ -179,12 +209,8 @@ void do_assignexpr(stx_node_t* AS_Tree) {
 }
 
 
-/**
- * @brief 
- * 
- * @param AS_Tree 
- */
-void do_expr(stx_node_t* AS_Tree) 
+
+void do_expr(stx_node_t* AS_Tree, STList *symbol_table) 
 {   
     // check if tree is not empty
     if ((AS_Tree == NULL) || (AS_Tree->type != EXPR)) {
@@ -198,26 +224,27 @@ void do_expr(stx_node_t* AS_Tree)
 
 }
 
-void do_retexpr(stx_node_t* AS_Tree) 
+void do_retexpr(stx_node_t* AS_Tree, STList *symbol_table) 
 {   
     // check if tree is not empty
     if ((AS_Tree == NULL) || (AS_Tree->type != RETEXPR)) {
         return;
     }
 
-    // variables
-    static bool tmp_var_active = false; 
-
-    // defines tmp variables - TODO: check if this is the right format and make it smarter
-    if (tmp_var_active == false) {
-        printf("DEFVAR LF@#freturn\n");
-        tmp_var_active = true;
+    if (AS_Tree->expr != NULL) {
+        // print rest of the tree
+        if (AS_Tree->expr->left == NULL && AS_Tree->expr->right == NULL) { 
+            // print move
+            print_stack(AS_Tree->expr, false);
+            printf("MOVE GF@%%freturn %s\n", stack_pop(&right_stack));
+        } else {
+            // print arithmetic
+            arithmetic_print(AS_Tree->expr, "GF@\%freturn", true);
+        }
     }
 
-    // print rest of the tree
-    arithmetic_print(AS_Tree->expr, "#freturn", true);
-
     // print return
+    printf("POPFRAME\n");
     printf("RETURN\n");
 }
 
@@ -226,7 +253,7 @@ void do_retexpr(stx_node_t* AS_Tree)
  * @brief 
  * 
  */
-void do_ifelse(stx_node_t* AS_Tree) 
+void do_ifelse(stx_node_t* AS_Tree, STList *symbol_table) 
 {   
     // #0 - check if tree is not empty
     if ((AS_Tree == NULL) || (AS_Tree->type != IFELSE)) {
@@ -242,21 +269,21 @@ void do_ifelse(stx_node_t* AS_Tree)
     // if with else condition
     if (AS_Tree->items_len == 2) {
         // if condition
-        logic_print(AS_Tree->expr, "\%else", else_label);
-        generate_code(AS_Tree->items[0]);            
+        logic_print(AS_Tree->expr, symbol_table, "\%else", else_label);
+        do_block(AS_Tree->items[0], symbol_table, false);            
         printf("JUMP %%if%d\n", if_label);
         
         // else condition
         printf("LABEL %%else%d\n", else_label);
-        generate_code(AS_Tree->items[1]);
+        do_block(AS_Tree->items[1], symbol_table, false);
         printf("LABEL %%if%d\n", if_label);                
     }
 
     // if without else condition
     if (AS_Tree->items_len == 1) {
         // if condition
-        logic_print(AS_Tree->expr, "\%else", else_label);
-        generate_code(AS_Tree->items[0]);                  
+        logic_print(AS_Tree->expr, symbol_table, "\%else", else_label);
+        do_block(AS_Tree->items[0], symbol_table, false);                  
         printf("LABEL %%else%d\n", else_label);
     }
 }
@@ -266,7 +293,7 @@ void do_ifelse(stx_node_t* AS_Tree)
  * @brief 
  * 
  */
-void do_whileblock(stx_node_t* AS_Tree)
+void do_whileblock(stx_node_t* AS_Tree, STList *symbol_table)
 {
     // #0 - check if tree is not empty
     if ((AS_Tree == NULL) || (AS_Tree->type != WHILEBLOCK)) {
@@ -279,39 +306,75 @@ void do_whileblock(stx_node_t* AS_Tree)
     label_counter++;
 
     // #1 - check copies
-    while_check_def(AS_Tree);
+    while_check_def(AS_Tree, symbol_table);
 
     // #2 - Create label
     printf("LABEL %s%d\n", "\%while", func_label);
 
     // #3 - print JUMPIF
-    logic_print(AS_Tree->expr, "\%endwhile", func_label);
-    generate_code(AS_Tree);                               
+    logic_print(AS_Tree->expr, symbol_table,"\%endwhile", func_label);
+    do_block(AS_Tree, symbol_table, false);                               
 
     // #4 - end label
     printf("JUMP %s%d\n", "\%while", func_label);
     printf("LABEL %s%d\n", "\%endwhile", func_label);
 }
 
-void do_funcblock(stx_node_t* AS_Tree)
+void do_funcblock(stx_node_t* AS_Tree, STList *symbol_table)
 {
     // #0 - check if tree is not empty
     if ((AS_Tree == NULL) || (AS_Tree->type != FUNCBLOCK)) {
         return;
-    }  
+    }
 
-    // #1 - Print label
-    printf("LABEL %s%s\n", "#func", AS_Tree->items[0]->token->content);
+    // #1 variables
+    static int func_def = 0;  
 
-    // #2 - assign variables
+    // #2 - Print label
+    printf("# - %s - #\n", AS_Tree->items[0]->token->content);
+    printf("JUMP %%fjump%d\n", func_def);
+    printf("LABEL %%func%s\n", AS_Tree->items[0]->token->content);
+    printf("PUSHFRAME\n");
+
+
+    // #3 - create symbol table for function
+    STList *func_symbol_table = ST_Init(10);
+
+    // #4 - assign variables
     for (int i = 0; i < AS_Tree->items[1]->items_len; i++) {
-        printf("CREATEFRAME\n");
+
+        // add variables to symbol table
+        ST_CreateResize(&func_symbol_table, AS_Tree->items[1]->items[i]->items[0]->token->content);
+        STElementDataPtr data = ST_DataGet(func_symbol_table, AS_Tree->items[1]->items[i]->items[0]->token->content);
+        token_type param_type = AS_Tree->items[1]->items[i]->token->type;
+        
+        switch (param_type) {
+            // number
+            case INT:
+                data->type = NUMBER;
+                break;
+            // fraction
+            case FLOAT:
+                data->type = FRACTION;
+                break;
+            // string
+            case STRING:
+                data->type = TEXT;
+                break;
+            // something else
+            default:
+                break;
+        }
+
         printf("DEFVAR LF@%s\n", AS_Tree->items[1]->items[i]->items[0]->token->content);
-        printf("MOVE %s #fvar%d\n",AS_Tree->items[1]->items[i]->items[0]->token->content, i);
+        printf("MOVE LF@%s LF@%%fvar%d\n",AS_Tree->items[1]->items[i]->items[0]->token->content, i);
     }
     
-    // #2 - now do block code
-    generate_code(AS_Tree->items[2]);
+
+    // #5 - now do block code
+    do_block(AS_Tree->items[2], func_symbol_table, true);
+    printf("LABEL %%fjump%d\n", func_def);
+    func_def++;
 }
 
 
@@ -525,6 +588,8 @@ void print_stack(expr_node_t* AP_Tree, bool left_side)
             // string
             case TEXT:
                 strcpy(buffer, "string@");
+
+
                 strcat(buffer, AP_Tree->token.content);
                 stack_push_string(&left_stack, buffer);
                 break;
@@ -532,6 +597,7 @@ void print_stack(expr_node_t* AP_Tree, bool left_side)
             default:
                 break;
         }
+    
 
     // right side of the tree
     } else {
@@ -568,7 +634,7 @@ void print_stack(expr_node_t* AP_Tree, bool left_side)
     }
 }
 
-void while_check_def(stx_node_t* stx_while)
+void while_check_def(stx_node_t* stx_while, STList *symbol_table)
 {   
     // goind through all the items in the while loop
     for (int i = 0; i < stx_while->items_len; i++) {
@@ -592,14 +658,14 @@ void while_check_def(stx_node_t* stx_while)
         
         // continue recursively to search for variables
         if (item == IFELSE || item == WHILEBLOCK || item == BLOCK) {
-            while_check_def(stx_while->items[i]);
+            while_check_def(stx_while->items[i], symbol_table);
         }
     }
 }
 
 
 // float checker
-void arithmetic_print_floatcheck(expr_node_t* AP_Tree, bool reset)
+void arithmetic_print_floatcheck(expr_node_t* AP_Tree, STList *symbol_table, bool reset)
 {   
     // reseting the function call
     if (reset == true) {
@@ -608,12 +674,12 @@ void arithmetic_print_floatcheck(expr_node_t* AP_Tree, bool reset)
 
     // recursive call left
     if (AP_Tree->left != NULL) {
-        arithmetic_print_floatcheck(AP_Tree->left, false);
+        arithmetic_print_floatcheck(AP_Tree->left, symbol_table, false);
     }
 
     // recursive call right
     if (AP_Tree->right != NULL) {
-        arithmetic_print_floatcheck(AP_Tree->right, false);
+        arithmetic_print_floatcheck(AP_Tree->right, symbol_table, false);
     }
 
     // float number -> float
@@ -644,16 +710,16 @@ void arithmetic_print_floatcheck(expr_node_t* AP_Tree, bool reset)
     }
 }
 
-void arithmetic_print_float_retype(expr_node_t* AP_Tree)
+void arithmetic_print_float_retype(expr_node_t* AP_Tree, STList *symbol_table)
 {
     // recursive call left
     if (AP_Tree->left != NULL) {
-        arithmetic_print_float_retype(AP_Tree->left);
+        arithmetic_print_float_retype(AP_Tree->left, symbol_table);
     }
 
     // recursive call right
     if (AP_Tree->right != NULL) {
-        arithmetic_print_float_retype(AP_Tree->right);
+        arithmetic_print_float_retype(AP_Tree->right, symbol_table);
     }
 
     if (AP_Tree->token.type == VARIABLE) {
@@ -673,7 +739,7 @@ void arithmetic_print_float_retype(expr_node_t* AP_Tree)
 }
 
 
-void arithmetic_print_float_untype(void)
+void arithmetic_print_float_untype(STList *symbol_table)
 {
     // poping the stack
     while(float_stack->size > 0) {
@@ -689,17 +755,8 @@ void arithmetic_print_float_untype(void)
     }
 }
 
-void aritmetic_print_floatclean(void)
-{
-    while(float_stack->size > 0) {
-        stack_pop(&float_stack);
-    }
-}
 
-
-
-
-void logic_print(expr_node_t* AP_Tree, char* label, int label_num) 
+void logic_print(expr_node_t* AP_Tree, STList *symbol_table, char* label, int label_num) 
 {
     // #0 - variables
     bool left_expr_float = false, right_expr_float = false;
@@ -714,7 +771,7 @@ void logic_print(expr_node_t* AP_Tree, char* label, int label_num)
         
 
         // checking left float
-        arithmetic_print_floatcheck(AP_Tree->left, true);
+        arithmetic_print_floatcheck(AP_Tree->left, symbol_table, true);
         if (is_float == true) {
             left_expr_float = true;
         }
@@ -730,7 +787,7 @@ void logic_print(expr_node_t* AP_Tree, char* label, int label_num)
         } else {
             // retype variable if needed
             if (left_expr_float == true) {
-                arithmetic_print_float_retype(AP_Tree->left);
+                arithmetic_print_float_retype(AP_Tree->left, symbol_table);
             }
 
             // arithemetic expression
@@ -739,7 +796,7 @@ void logic_print(expr_node_t* AP_Tree, char* label, int label_num)
 
 
         // checking right float
-        arithmetic_print_floatcheck(AP_Tree->right, true);
+        arithmetic_print_floatcheck(AP_Tree->right, symbol_table, true);
         if (is_float == true) {
             right_expr_float = true;
         }   
@@ -756,7 +813,7 @@ void logic_print(expr_node_t* AP_Tree, char* label, int label_num)
 
             // retype variable if needed
             if (right_expr_float == true) {
-                arithmetic_print_float_retype(AP_Tree->right);
+                arithmetic_print_float_retype(AP_Tree->right, symbol_table);
             }
             
             // arithemetic expression
@@ -817,7 +874,7 @@ void logic_print(expr_node_t* AP_Tree, char* label, int label_num)
 
     // #5 - untype and jumping to if - printing
     if (left_expr_float == true || right_expr_float == true) {
-    arithmetic_print_float_untype();
+    arithmetic_print_float_untype(symbol_table);
     }
     printf("JUMPIFNEQ %s%d GF@%%bool0 bool@true\n", label, label_num);
 }
@@ -825,7 +882,6 @@ void logic_print(expr_node_t* AP_Tree, char* label, int label_num)
 void func_print(expr_node_t* AP_Tree) {
     
     // variables
-    static int func_def_var = 0;
     const char def_func[20][10] = { "write", };
     const int def_func_num = 1;
     int func_num = 0;
@@ -848,34 +904,36 @@ void func_print(expr_node_t* AP_Tree) {
 
         // user defined
         default:
-            // check if there is a need to create function variable
-            if (func_def_var < AP_Tree->params_len) {
-                while (func_def_var < AP_Tree->params_len) {
-                    printf("DEFVAR LF@#fvar%d\n", func_def_var);
-                    func_def_var++;
-                }
-            }
+
+            // create function frame
+            printf("CREATEFRAME\n"); 
 
             // init function variables
             for (int i = 0; i < AP_Tree->params_len; i++) {
-            
+
                 // printing move instruction
                 if ((AP_Tree->params[i]->left == NULL) && (AP_Tree->params[i]->right == NULL)) {
-                    printf("MOVE #fvar%d %s\n", i, AP_Tree->params[i]->token.content);
+                    
+                    // define variables
+                    printf("DEFVAR TF@%%fvar%d\n", i);
+
+                    // adding to stack and printing from it
+                    print_stack(AP_Tree->params[i], false);
+                    printf("MOVE TF@%%fvar%d %s\n", i, stack_pop(&right_stack));
 
                 // else solve arithmetic expression
                 } else {
                     // appending the number to the variable name
-                    char fvar[16];
-                    sprintf(fvar, "fvar%d", i);
+                    char buffer[1000];
+                    sprintf(buffer, "LF@%%fvar%d", i);
 
                     // recurive call
-                    arithmetic_print(AP_Tree->params[i], fvar, false);
+                    arithmetic_print(AP_Tree->params[i], buffer, false);
                 }
             }
 
             // print function call
-            printf("CALL #func%s\n", AP_Tree->token.content);
+            printf("CALL %%func%s\n", AP_Tree->token.content);
             break;
         }
 }
