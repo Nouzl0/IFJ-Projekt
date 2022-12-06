@@ -81,9 +81,61 @@ void do_block(stx_node_t *AS_Tree, STList *symbol_table, bool is_func) // a.k.a 
 
         printf("# - FUNCTION GLOBAL VARIABLES - #\n");
         printf("DEFVAR GF@%%freturn\n");
+        
+        printf("# - FUNCTION SUBSTRING - #\n");
+        printf("JUMP %%substring\n");
+        printf("LABEL substring\n");
+        printf("PUSHFRAME\n");
+        printf("DEFVAR LF@var1\n");
+        printf("DEFVAR LF@var2\n");
+        printf("DEFVAR LF@var3\n");
+        printf("MOVE LF@var1 LF@%%fvar0\n");
+        printf("MOVE LF@var2 LF@%%fvar1\n");
+        printf("MOVE LF@var3 LF@%%fvar2\n");
 
+        printf("#check vars\n");
+
+        printf("#var1 is input string\n");
+        printf("#var2 is the beginning index\n");
+        printf("#var3 is the index after end of substring\n");
+
+        printf("#tmp is index of position in string\n");
+        printf("LT GF@%%tmp0 LF@var2 int@0\n");
+        printf("JUMPIFEQ %%substrerr GF@%%tmp0 bool@true\n");
+        printf("LT GF@%%tmp0 LF@var3 int@0\n");
+        printf("JUMPIFEQ %%substrerr GF@%%tmp0 bool@true\n");
+        printf("GT GF@%%tmp0 LF@var2 LF@var3\n");
+        printf("JUMPIFEQ %%substrerr GF@%%tmp0 bool@true\n");
+        printf("STRLEN GF@%%tmp2 GF@var1\n");
+        printf("JUMPIFEQ %%substrerr GF@var2 GF@%%tmp2 #i equals lenght of string\n");
+        printf("LT GF@%%tmp0 GF@%%tmp2 GF@var2\n");
+        printf("JUMPIFEQ %%substrerr GF@%%tmp0 bool@true\n");
+        printf("LT GF@%%tmp0 GF@%%tmp2 GF@var3\n");
+        printf("JUMPIFEQ %%substrerr GF@%%tmp0 bool@true\n");
+        printf("#\n");
+        printf("#keep only desired chars\n");
+        printf("MOVE GF@%%tmp0 int@0\n");
+        printf("JUMPIFEQ %%strkeep GF@%%tmp0 GF@var2\n");
+        printf("ADD GF@%%tmp0 GF@%%tmp0 int@1\n");
+        printf("JUMP substring\n");
+        printf("#\n");
+        printf("LABEL %%strkeep\n");
+        printf("JUMPIFEQ %%substrend GF@tmp GF@var3\n");
+        printf("GETCHAR GF@%%tmp2 GF@var1 GF@%%tmp0\n");
+        printf("CONCAT GF@%%tmp1 GF@%%tmp1 GF@%%tmp2\n");
+        printf("ADD GF@%%tmp0 GF@%%tmp0 int@1\n");
+        printf("JUMP %%strkeep\n");
+        printf("#");
+        printf("LABEL %%substrend\n");
+        printf("MOVE GF@%%freturn GF@%%tmp1\n");
+        printf("POPFRAME");
+        printf("RETURN\n");
+        printf("LABEL %%substrerr\n");
+        printf("MOVE GF@%%freturn nil@nil\n");
+        printf("POPFRAME");
+        printf("RETURN\n");
+        printf("LABEL %%substring\n");
         printf("# - MAIN - #\n");
-
     }
 
     // #3 - go through all nodes in tree recursively
@@ -144,7 +196,7 @@ void do_assignexpr(stx_node_t* AS_Tree, STList *symbol_table) {
     // #2 check if there are floats
     arithmetic_print_floatcheck(AS_Tree->expr, symbol_table, true);
 
-    // #2 - defines variable - TODO: check if this is the right format
+    // #2 - defines variable
     if ((ST_ElementExists(symbol_table, AS_Tree->token->content)) == false) {
         
         // adding variable to symbol table
@@ -182,11 +234,20 @@ void do_assignexpr(stx_node_t* AS_Tree, STList *symbol_table) {
         // adding to stack
         print_stack(AS_Tree->expr, false);
 
-        // printing the move instruction
-
+        // is function
         if (AS_Tree->expr->token.type == IDENTIFIER) {
-            func_print(AS_Tree->expr);
-            printf("MOVE LF@%s GF@%%freturn\n", AS_Tree->token->content);
+            
+            // function is undefined
+            if (is_defined_func(AS_Tree->expr) == -1) {
+                func_print(AS_Tree->expr, NULL);
+                printf("MOVE LF@%s GF@%%freturn\n", AS_Tree->token->content);
+            
+            // function is defined
+            } else {
+                func_print(AS_Tree->expr, AS_Tree->token->content);
+            }
+
+        // is not arithmetic expression
         } else {
             printf("MOVE LF@%s %s\n", AS_Tree->token->content, stack_pop(&right_stack));
         }
@@ -219,7 +280,7 @@ void do_expr(stx_node_t* AS_Tree, STList *symbol_table)
 
     // call function
     if (AS_Tree->expr->token.type == IDENTIFIER) {
-        func_print(AS_Tree->expr);
+        func_print(AS_Tree->expr, NULL);
     }
 
 }
@@ -446,7 +507,7 @@ void arithmetic_print(expr_node_t* AP_Tree , char* assigned_var, bool reset) {
 
             // left terminal is the function
             if ((AP_Tree->left->token.type == IDENTIFIER) && (AP_Tree->right->token.type != IDENTIFIER)) {
-                func_print(AP_Tree->left);
+                func_print(AP_Tree->left, NULL);
                 
                 // setting up functions
                 var_offset = tmp_var_offset;
@@ -460,7 +521,7 @@ void arithmetic_print(expr_node_t* AP_Tree , char* assigned_var, bool reset) {
             
             // right terminal is the function
             if ((AP_Tree->right->token.type == IDENTIFIER) && (AP_Tree->left->token.type != IDENTIFIER)) {
-                func_print(AP_Tree->right);
+                func_print(AP_Tree->right, NULL);
 
                 // setting up variables for printing
                 var_offset = tmp_var_offset;
@@ -474,7 +535,7 @@ void arithmetic_print(expr_node_t* AP_Tree , char* assigned_var, bool reset) {
 
             // both terminals are functions
             if ((AP_Tree->right->token.type == IDENTIFIER) && (AP_Tree->left->token.type == IDENTIFIER)) {
-                func_print(AP_Tree->left);
+                func_print(AP_Tree->left, NULL);
 
                 // left side -> setting up variables and printing 
                 var_offset = tmp_var_offset;
@@ -482,7 +543,7 @@ void arithmetic_print(expr_node_t* AP_Tree , char* assigned_var, bool reset) {
                 printf("MOVE LF%s LF\%freturn\n", var_left);
 
                 // right side -> setting up variables and printing 
-                func_print(AP_Tree->right);
+                func_print(AP_Tree->right, NULL);
                 var_offset = tmp_var_offset;
                 var_right = tmp_variables[1 + var_offset];
                 printf("MOVE LF%s LF\%freturn\n", var_right);
@@ -541,21 +602,19 @@ void arithmetic_print(expr_node_t* AP_Tree , char* assigned_var, bool reset) {
 // extension of the arithmetic_print
 void print_stack(expr_node_t* AP_Tree, bool left_side)
 {   
-    
-    char buffer[1000], float_buffer[1000];
-
+    char buffer[1000] = { 0 }, sec_buffer[1000] = { 0 };
 
     // TEMPORATY - quick fix will probably be deleted
     if ((is_float == true) && (AP_Tree->token.type == NUMBER || AP_Tree->token.type == FRACTION)) {
         if (left_side == true) {
             strcpy(buffer, "float@");
-            sprintf(float_buffer, "%a", atof(AP_Tree->token.content));
-            strcat(buffer, float_buffer);
+            sprintf(sec_buffer, "%a", atof(AP_Tree->token.content));
+            strcat(buffer, sec_buffer);
             stack_push_string(&left_stack, buffer);
         } else {
             strcpy(buffer, "float@");
-            sprintf(float_buffer, "%a", atof(AP_Tree->token.content));
-            strcat(buffer, float_buffer);
+            sprintf(sec_buffer, "%a", atof(AP_Tree->token.content));
+            strcat(buffer, sec_buffer);
             stack_push_string(&right_stack, buffer);
         }
 
@@ -575,8 +634,8 @@ void print_stack(expr_node_t* AP_Tree, bool left_side)
             // fraction
             case FRACTION:
                 strcpy(buffer, "float@");
-                sprintf(float_buffer, "%a", atof(AP_Tree->token.content));
-                strcat(buffer, float_buffer);
+                sprintf(sec_buffer, "%a", atof(AP_Tree->token.content));
+                strcat(buffer, sec_buffer);
                 stack_push_string(&left_stack, buffer);
                 break;
             // variable
@@ -588,9 +647,9 @@ void print_stack(expr_node_t* AP_Tree, bool left_side)
             // string
             case TEXT:
                 strcpy(buffer, "string@");
-
-
-                strcat(buffer, AP_Tree->token.content);
+                strcpy(sec_buffer, AP_Tree->token.content);
+                format_string_print(sec_buffer);
+                strcat(buffer, sec_buffer);
                 stack_push_string(&left_stack, buffer);
                 break;
 
@@ -611,8 +670,8 @@ void print_stack(expr_node_t* AP_Tree, bool left_side)
             // fraction
             case FRACTION:
                 strcpy(buffer, "float@");
-                sprintf(float_buffer, "%a", atof(AP_Tree->token.content));
-                strcat(buffer, float_buffer);
+                sprintf(sec_buffer, "%a", atof(AP_Tree->token.content));
+                strcat(buffer, sec_buffer);
                 stack_push_string(&right_stack, buffer);
                 break;
             // variable
@@ -624,7 +683,9 @@ void print_stack(expr_node_t* AP_Tree, bool left_side)
             // string
             case TEXT:
                 strcpy(buffer, "string@");
-                strcat(buffer, AP_Tree->token.content);
+                strcpy(sec_buffer, AP_Tree->token.content);
+                format_string_print(sec_buffer);
+                strcat(buffer, sec_buffer);
                 stack_push_string(&right_stack, buffer);
                 break;
             
@@ -633,6 +694,35 @@ void print_stack(expr_node_t* AP_Tree, bool left_side)
         }
     }
 }
+
+// formats the string for printing
+void format_string_print(char *buffer) {
+
+    // variables
+    char replace_buffer[1000] = { 0 }, sym_buffer[1000] = { 0 };
+    int i = 0;
+
+    // going through the string
+    while(buffer[i] != 0){
+
+        // getting the symbol
+        if(buffer[i] > ' ' && buffer[i] != '\\'){
+            sprintf(sym_buffer, "%c",buffer[i]);
+        } else {
+            sprintf(sym_buffer, "\\%.3d",buffer[i]);
+        }
+        i++;
+
+        // adding to the buffer
+        strcat(replace_buffer, sym_buffer);
+    }
+
+    // copying the buffer
+    strcpy(buffer, replace_buffer);
+}
+
+
+
 
 void while_check_def(stx_node_t* stx_while, STList *symbol_table)
 {   
@@ -879,28 +969,43 @@ void logic_print(expr_node_t* AP_Tree, STList *symbol_table, char* label, int la
     printf("JUMPIFNEQ %s%d GF@%%bool0 bool@true\n", label, label_num);
 }
 
-void func_print(expr_node_t* AP_Tree) {
+void func_print(expr_node_t* AP_Tree, char *token_content) {
     
-    // variables
-    const char def_func[20][10] = { "write", };
-    const int def_func_num = 1;
-    int func_num = 0;
+    // #1 - checking if the function is language-defined
+    int func_num = is_defined_func(AP_Tree);
 
-    // #1 checking if the function is language-defined 
-    do {
-        if ((strcmp(def_func[func_num], AP_Tree->token.content)) == 0 ) {
-            break;
-        }
-        func_num++;
-    } while(func_num < def_func_num);
-
-
-    // going back to function or printing
+    // #2 - if defined, does the function
     switch (func_num) {
-        
-        // print
-        case 0: func_test_print(AP_Tree);
+        //
+        case 0: func_reads(AP_Tree, token_content);
             break;
+        //
+        case 1: func_readi(AP_Tree, token_content);
+            break;
+
+        case 2: func_readf(AP_Tree, token_content);
+            break;
+        
+        case 3: func_write(AP_Tree);
+            break;
+        
+        case 4: func_strlen(AP_Tree, token_content);
+            break;
+
+        case 5: func_ord(AP_Tree, token_content);
+            break;
+
+        case 6: func_chr(AP_Tree, token_content);
+            break;
+
+        case 7: func_strval(AP_Tree, token_content);
+            break;
+
+        case 8: func_intval(AP_Tree, token_content);
+            break;   
+
+        case 9: func_floatval(AP_Tree, token_content);
+            break;      
 
         // user defined
         default:
@@ -938,12 +1043,88 @@ void func_print(expr_node_t* AP_Tree) {
         }
 }
 
+
+
 /* - - - - - - - - - - - */
 /*  FUNC CALL FUNCTIONS  */
 /* - - - - - - - - - - - */
 
-// simple print used for debugging
-void func_test_print(expr_node_t* AP_Tree) 
+int is_defined_func(expr_node_t* AP_Tree) 
 {
-    printf("WRITE LF@%s\n", AP_Tree->params[0]->token.content);
+    const char def_func[20][11] = { "reads", "readi", "readf", "write", "strlen", "ord", "chr", "strval", "intval", "floatval"};
+    const int def_func_num = 11;
+    int func_num = 0;
+    bool flag = false;
+
+    do {
+        if ((strcmp(def_func[func_num], AP_Tree->token.content)) == 0 ) {
+            flag = true;
+            break;
+        }
+        func_num++;
+    } while(func_num < def_func_num);
+
+    // if the function is defined, returns its number
+    if(flag == true) {
+        return func_num;
+    } else {
+        return -1;
+    }
+}
+
+
+
+void func_reads(expr_node_t* AP_Tree, char *token_content) {
+    printf("READ LF@%s string\n", token_content);
+}
+
+
+void func_readi(expr_node_t* AP_Tree, char *token_content) {
+    printf("READ LF@%s int\n", token_content);
+}
+
+void func_readf(expr_node_t* AP_Tree, char *token_content) {
+    printf("READ LF@%s float\n", token_content);
+}
+
+// simple print used for debugging
+void func_write(expr_node_t* AP_Tree) 
+{
+    for(int i = 0; i < AP_Tree->params_len; i++){
+        print_stack(AP_Tree->params[i], false);
+        printf("WRITE %s\n", stack_pop(&right_stack));
+    }
+}
+
+void func_strlen(expr_node_t* AP_Tree, char *token_content) {
+    print_stack(AP_Tree->params[0], false);
+    printf("STRLEN LF@%s %s\n", token_content, stack_pop(&right_stack));
+}
+
+void func_ord(expr_node_t* AP_Tree, char *token_content){
+    if(strlen(AP_Tree->params[0]->token.content) == 0){
+        printf("MOVE LF@%s int@0\n", token_content);
+    } else {
+        print_stack(AP_Tree->params[0], false);
+        printf("STRI2INT LF@%s %s int@0\n", token_content, stack_pop(&right_stack));
+    }
+}
+
+void func_chr(expr_node_t* AP_Tree, char *token_content) {
+    print_stack(AP_Tree->params[0], false);
+    printf("INT2CHAR LF@%s %s\n", token_content, stack_pop(&right_stack));
+}
+
+void func_strval(expr_node_t* AP_Tree, char *token_content){
+    if(strlen(AP_Tree->params[0]->token.content) == 0){
+        printf("MOVE LF@%s nil@nil\n", token_content);
+    }
+}
+
+void func_intval(expr_node_t* AP_Tree, char *token_content){
+    printf("FLOAT2INT LF@%s nil@nil\n", token_content);
+}
+
+void func_floatval(expr_node_t* AP_Tree, char *token_content){
+    
 }

@@ -33,12 +33,12 @@
 //    $test_2 = test_2_add(1, 1);
 //    write($test_2);
 //
-//    // test 3 - simple function with arithmetics and return result (2)
-//    function test_3_add(int $x, int $y): int {
-//        return $x + $y;
-//    }
-//    $test_3 = test_3_add(1, 1);
-//    write($test_3);
+    // test 3 - simple function with arithmetics and return result (2)
+    function test_3_add(int $x, int $y, int $z): int {
+        return $x + $y;
+    }
+    $test_3 = test_3_add(1, 1, 1);
+    write($test_3);
 //
 //    // test 4 - simple function with recursion result (2)
 //    function test_4_add(int $x): int {

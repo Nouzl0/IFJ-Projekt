@@ -30,10 +30,11 @@ void do_funcblock(stx_node_t* AS_Tree, STList *symbol_table);
 // AP_Tree functions
 void arithmetic_print(expr_node_t* AP_Tree , char* assigned_var, bool reset);
 void logic_print(expr_node_t* AP_Tree, STList *symbol_table, char* label, int label_num);
-void func_print(expr_node_t* AP_Tree);
+void func_print(expr_node_t* AP_Tree, char *token_content);
 
 // stack functions
 void print_stack(expr_node_t* AP_Tree, bool left_side);
+void format_string_print(char *buffer);
 
 // special while function
 void while_check_def(stx_node_t* stx_while, STList *symbol_table);
@@ -44,4 +45,14 @@ void arithmetic_print_float_retype(expr_node_t* AP_Tree, STList *symbol_table);
 void arithmetic_print_float_untype(STList *symbol_table);
 
 // func call functions
-void func_test_print(expr_node_t* AP_Tree);
+int is_defined_func(expr_node_t* AP_Tree);
+void func_reads(expr_node_t* AP_Tree, char *token_content);
+void func_readi(expr_node_t* AP_Tree, char *token_content);
+void func_readf(expr_node_t* AP_Tree, char *token_content);
+void func_write(expr_node_t* AP_Tree);
+void func_strlen(expr_node_t* AP_Tree, char *token_content);
+void func_ord(expr_node_t* AP_Tree, char * token_content);
+void func_chr(expr_node_t* AP_Tree, char* token_content);
+void func_strval(expr_node_t* AP_Tree, char* token_content);
+void func_intval(expr_node_t* AP_Tree, char* token_content);
+void func_floatval(expr_node_t* AP_Tree, char* token_content);
