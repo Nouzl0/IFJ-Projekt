@@ -956,28 +956,28 @@ void func_print(expr_node_t* AP_Tree, char *token_content) {
 
     // #2 - if defined, does the function
     switch (func_num) {
-        //
+        //function reads - reads string from stdin
         case 0: func_reads(token_content);
             break;
-        //
+        //function readi - reads int from stdin
         case 1: func_readi(token_content);
             break;
-
+        //function readf - reads float from stdin
         case 2: func_readf(token_content);
             break;
-        
+        //function write - writes to stdout
         case 3: func_write(AP_Tree);
             break;
-        
+        //function strlen - returns lenght of given string
         case 4: func_strlen(AP_Tree, token_content);
             break;
-
+        //function ord - returns ASCII of first character of the given string
         case 5: func_ord(AP_Tree, token_content);
             break;
-
+        //function chr - returns character represented by given ASCII value
         case 6: func_chr(AP_Tree, token_content);
             break;
-
+        //functions stral - returns given variable as string
         case 7: func_strval(AP_Tree, token_content);
             break;     
 
@@ -1044,6 +1044,7 @@ int is_defined_func(expr_node_t* AP_Tree)
     int func_num = 0;
     bool flag = false;
 
+    //loop trough builtin functions
     do {
         if ((strcmp(def_func[func_num], AP_Tree->token.content)) == 0 ) {
             flag = true;
@@ -1075,7 +1076,7 @@ void func_readf(char *token_content) {
     printf("READ LF@%s float\n", token_content);
 }
 
-// simple print used for debugging
+
 void func_write(expr_node_t* AP_Tree) 
 {
     for(int i = 0; i < AP_Tree->params_len; i++){
@@ -1167,6 +1168,7 @@ void func_substring(void)
     printf("# ======================== #\n");
 }
 
+//prints definiton for intval function
 void func_intval(void) {
     printf("# - FUNCTION intval - #\n");
     printf("JUMP %%intval\n");
@@ -1197,6 +1199,7 @@ void func_intval(void) {
     printf("# =============================== #\n");
 }
 
+//prints definition for floatval function
 void func_floatval(void){
     printf("# - FUNCTION floatval - #\n");
     printf("JUMP %%float\n");
