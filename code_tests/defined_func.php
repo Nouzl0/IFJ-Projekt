@@ -11,5 +11,5 @@
     $var2 = 2;
     $var3 = 5;
     $x = substring($var1, $var2, $var3);
-    write($x); //should be 64
+    write($x); //should be cde
 ?>

@@ -84,7 +84,7 @@ void do_block(stx_node_t *AS_Tree, STList *symbol_table, bool is_func) // a.k.a 
         printf("# =============================== #\n");
         
         // print langauge defined functions
-        //func_substring();
+        func_substring();
     }
 
     // #3 - go through all nodes in tree recursively
@@ -1112,55 +1112,54 @@ void func_floatval(expr_node_t* AP_Tree, char *token_content){
 // prints definition for SUBSTRING function
 void func_substring(void) 
 {
-        printf("# - FUNCTION SUBSTRING - #\n");
-        printf("JUMP %%substring\n");
-        printf("LABEL substring\n");
-        printf("PUSHFRAME\n");
-        printf("DEFVAR LF@var1\n");
-        printf("DEFVAR LF@var2\n");
-        printf("DEFVAR LF@var3\n");
-        printf("MOVE LF@var1 LF@%%fvar0\n");
-        printf("MOVE LF@var2 LF@%%fvar1\n");
-        printf("MOVE LF@var3 LF@%%fvar2\n");
-        printf("#check vars\n");
-        printf("#var1 is input string\n");
-        printf("#var2 is the beginning index\n");
-        printf("#var3 is the index after end of substring\n");
-        printf("#tmp is index of position in string\n");
-        printf("LT GF@%%tmp0 LF@var2 int@0\n");
-        printf("JUMPIFEQ %%substrerr GF@%%tmp0 bool@true\n");
-        printf("LT GF@%%tmp0 LF@var3 int@0\n");
-        printf("JUMPIFEQ %%substrerr GF@%%tmp0 bool@true\n");
-        printf("GT GF@%%tmp0 LF@var2 LF@var3\n");
-        printf("JUMPIFEQ %%substrerr GF@%%tmp0 bool@true\n");
-        printf("STRLEN GF@%%tmp2 GF@var1\n");
-        printf("JUMPIFEQ %%substrerr GF@var2 GF@%%tmp2 #i equals lenght of string\n");
-        printf("LT GF@%%tmp0 GF@%%tmp2 GF@var2\n");
-        printf("JUMPIFEQ %%substrerr GF@%%tmp0 bool@true\n");
-        printf("LT GF@%%tmp0 GF@%%tmp2 GF@var3\n");
-        printf("JUMPIFEQ %%substrerr GF@%%tmp0 bool@true\n");
-        printf("#\n");
-        printf("#keep only desired chars\n");
-        printf("MOVE GF@%%tmp0 int@0\n");
-        printf("JUMPIFEQ %%strkeep GF@%%tmp0 GF@var2\n");
-        printf("ADD GF@%%tmp0 GF@%%tmp0 int@1\n");
-        printf("JUMP substring\n");
-        printf("#\n");
-        printf("LABEL %%strkeep\n");
-        printf("JUMPIFEQ %%substrend GF@tmp GF@var3\n");
-        printf("GETCHAR GF@%%tmp2 GF@var1 GF@%%tmp0\n");
-        printf("CONCAT GF@%%tmp1 GF@%%tmp1 GF@%%tmp2\n");
-        printf("ADD GF@%%tmp0 GF@%%tmp0 int@1\n");
-        printf("JUMP %%strkeep\n");
-        printf("#");
-        printf("LABEL %%substrend\n");
-        printf("MOVE GF@%%freturn GF@%%tmp1\n");
-        printf("POPFRAME\n");
-        printf("RETURN\n");
-        printf("LABEL %%substrerr\n");
-        printf("MOVE GF@%%freturn nil@nil\n");
-        printf("POPFRAME");
-        printf("RETURN\n");
-        printf("LABEL %%substring\n");
-        printf("# ======================== #\n");
+    printf("# - FUNCTION SUBSTRING - #\n");
+    printf("#check vars\n");
+    printf("#var1 is input string\n");
+    printf("#var2 is the beginning index\n");
+    printf("#var3 is the index after end of substring\n");
+    printf("JUMP %%substring\n");
+    printf("LABEL funcsubstring\n");
+    printf("PUSHFRAME\n");
+    printf("DEFVAR LF@var1\n");
+    printf("DEFVAR LF@var2\n");
+    printf("DEFVAR LF@var3\n");
+    printf("MOVE LF@var1 LF@%%fvar0\n");
+    printf("MOVE LF@var2 LF@%%fvar1\n");
+    printf("MOVE LF@var3 LF@%%fvar2\n");
+    printf("LT GF@%%tmp0 LF@var2 int@0\n");
+    printf("JUMPIFEQ %%substrerr GF@%%tmp0 bool@true\n");
+    printf("LT GF@%%tmp0 LF@var3 int@0\n");
+    printf("JUMPIFEQ %%substrerr GF@%%tmp0 bool@true\n");
+    printf("GT GF@%%tmp0 LF@var2 LF@var3\n");
+    printf("JUMPIFEQ %%substrerr GF@%%tmp0 bool@true\n");
+    printf("STRLEN GF@%%tmp2 LF@var1\n");
+    printf("JUMPIFEQ %%substrerr LF@var2 GF@%%tmp2 #i equals lenght of string\n");
+    printf("LT GF@%%tmp0 GF@%%tmp2 LF@var2\n");
+    printf("JUMPIFEQ %%substrerr GF@%%tmp0 bool@true\n");
+    printf("LT GF@%%tmp0 GF@%%tmp2 LF@var3\n");
+    printf("JUMPIFEQ %%substrerr GF@%%tmp0 bool@true\n");
+    printf("MOVE GF@%%tmp0 int@0\n");
+    printf("MOVE GF@%%tmp1 string@\n");
+    printf("JUMP %%substring1\n");
+    printf("LABEL %%substring1\n");
+    printf("#keep only desired chars\n");
+    printf("JUMPIFEQ %%strkeep GF@%%tmp0 LF@var2\n");
+    printf("ADD GF@%%tmp0 GF@%%tmp0 int@1\n");
+    printf("JUMP %%substring1\n");
+    printf("LABEL %%strkeep\n");
+    printf("JUMPIFEQ %%substrend GF@%%tmp0 LF@var3\n");
+    printf("GETCHAR GF@%%tmp2 LF@var1 GF@%%tmp0\n");
+    printf("CONCAT GF@%%tmp1 GF@%%tmp1 GF@%%tmp2\n");
+    printf("ADD GF@%%tmp0 GF@%%tmp0 int@1\n");
+    printf("JUMP %%strkeep\n");
+    printf("LABEL %%substrend\n");
+    printf("MOVE GF@%%freturn GF@%%tmp1\n");
+    printf("POPFRAME\n");
+    printf("RETURN\n");
+    printf("LABEL %%substrerr\n");
+    printf("MOVE GF@%%freturn nil@nil\n");
+    printf("POPFRAME\n");
+    printf("RETURN\n");
+    printf("LABEL %%substring\n");
+    printf("# ======================== #\n");
 }
