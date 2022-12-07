@@ -48,8 +48,6 @@ typedef enum {
 	// Comparators
 	TYPE_EQUAL,     // ===
 	TYPE_NOT_EQUAL, // !==
-	EQUAL,          // ==
-	NOT_EQUAL,      // !=
 	GREATER_EQUAL,  // >=
 	LESS_EQUAL,     // <=
 	GREATER,        // >

@@ -19,19 +19,19 @@
  * @param type Token type of operator
  * @returns 
  */
-#define PRECEDENCE_TABLE_SIZE 12
+#define PRECEDENCE_TABLE_SIZE 11
 int get_precedence_by_type(token_type type){
 	token_type arr1[PRECEDENCE_TABLE_SIZE] = {
 		STAR, SLASH,
 		PLUS, MINUS, DOT,
-		GREATER, LESS, EQUAL, GREATER_EQUAL, LESS_EQUAL,
+		GREATER, LESS, GREATER_EQUAL, LESS_EQUAL,
 		TYPE_EQUAL, TYPE_NOT_EQUAL
 		};
 	
 	int arr2[PRECEDENCE_TABLE_SIZE] = {
 		2, 2,
 		3, 3, 3,
-		4, 4, 4, 4, 4,
+		4, 4, 4, 4,
 		5, 5
 	};
 	

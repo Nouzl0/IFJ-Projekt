@@ -28,10 +28,8 @@ F -> F PLUS F                            // F + F
 F -> F MINUS F                           // F - F
 F -> F TYPE_EQUAL F                      // F === F
 F -> F TYPE_NOT_EQUAL F                  // F !== F
-F -> F EQUAL F                           // F == F
 F -> F GREATER_EQUAL F                   // F >= F
 F -> F LESS_EQUAL F                      // F <= F
-F -> F NOT_EQUAL F                       // F != F
 F -> F GREATER F                         // F > F
 F -> F LESS F                            // F < F
 F -> F AND F                             // F and F

@@ -124,7 +124,7 @@ token_type rec_check_types(expr_node_t* expr){
 		token_type right = rec_check_types(expr->right);
 		
 		// Math and value comparison operators
-		if( (expr->token.type >= MINUS && expr->token.type <= SLASH) || (expr->token.type >= LESS && expr->token.type <= EQUAL) ){
+		if( (expr->token.type >= MINUS && expr->token.type <= SLASH) || (expr->token.type >= TYPE_EQUAL && expr->token.type <= LESS) ){
 			if(left == STRING || left == NIL || right == STRING || right == NIL){
 				semantic_error(VARIABLE_TYPE_ERROR, expr->token, "Invalid type of operand for this operation");
 				return VOID;

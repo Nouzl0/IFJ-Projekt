@@ -26,7 +26,7 @@ static trecord_t keyword_register[KEYWORD_REGISTER_LENGTH] = {
 	{"void", VOID}
 };
 
-#define SYMBOL_REGISTER_LENGTH 26
+#define SYMBOL_REGISTER_LENGTH 24
 static trecord_t symbol_register[SYMBOL_REGISTER_LENGTH] = {
 	{"?int", NIL_INT},
 	{"?float", NIL_FLOAT},
@@ -35,8 +35,6 @@ static trecord_t symbol_register[SYMBOL_REGISTER_LENGTH] = {
 	{"?>", FOOTER},
 	{"===", TYPE_EQUAL},
 	{"!==", TYPE_NOT_EQUAL},
-	{"==", EQUAL},
-	{"!=", NOT_EQUAL},
 	{">=", GREATER_EQUAL},
 	{"<=", LESS_EQUAL},
 	{">", GREATER},
@@ -146,8 +144,6 @@ char* token_enum_to_string(token_type type){
 		// Comparators
 		"TYPE_EQUAL",
 		"TYPE_NOT_EQUAL",
-		"EQUAL",
-		"NOT_EQUAL",
 		"GREATER_EQUAL",
 		"LESS_EQUAL",
 		"GREATER",
