@@ -23,7 +23,7 @@ int main(){
 	tok_arr_t token_array;
 	tok_arr_ctor(&token_array);
 		
-	lex_tokenize_file(&token_array,"./example2.php");
+	lex_tokenize_file(&token_array,"./code_tests/iterative_factorial.php");
 	//lex_tokenize(&token_array,stdin);
 	tok_arr_debug_print(token_array);
 	

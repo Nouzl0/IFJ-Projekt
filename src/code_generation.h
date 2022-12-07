@@ -21,11 +21,11 @@ void generate_code(stx_node_t *AS_Tree);
 // item type functions
 void do_block(stx_node_t *AS_Tree, STList *symbol_table, bool is_func);
 void do_assignexpr(stx_node_t* AS_Tree, STList *symbol_table);
-void do_expr(stx_node_t* AS_Tree, STList *symbol_table);
-void do_retexpr(stx_node_t* AS_Tree, STList *symbol_table);
+void do_expr(stx_node_t* AS_Tree);
+void do_retexpr(stx_node_t* AS_Tree);
 void do_ifelse(stx_node_t* AS_Tree, STList *symbol_table);
 void do_whileblock(stx_node_t* AS_Tree, STList *symbol_table);
-void do_funcblock(stx_node_t* AS_Tree, STList *symbol_table);
+void do_funcblock(stx_node_t* AS_Tree);
 
 // AP_Tree functions
 void arithmetic_print(expr_node_t* AP_Tree , char* assigned_var, bool reset);
@@ -56,3 +56,4 @@ void func_chr(expr_node_t* AP_Tree, char* token_content);
 void func_strval(expr_node_t* AP_Tree, char* token_content);
 void func_intval(expr_node_t* AP_Tree, char* token_content);
 void func_floatval(expr_node_t* AP_Tree, char* token_content);
+void func_substring(void);

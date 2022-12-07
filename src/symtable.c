@@ -115,7 +115,7 @@ extern STList* ST_Resize(STList *list, size_t size)
     int hash_value;
 
     // going through every array pointer of STlist
-    for (int i = 0; i < (list->list_size); i++) {
+    for (size_t i = 0; i < (list->list_size); i++) {
         element_p = list->array[i];
 
         // re-pointing the old elements from old to new list
@@ -405,7 +405,7 @@ extern void ST_DeleteAll(STList *list)
     STElementPtr element_p;
 
     // going through every array pointer of STlist
-    for (int i = 0; i < (list->list_size); i++) {
+    for (size_t i = 0; i < (list->list_size); i++) {
         
         // deleting the elements in linked list
     	while (list->array[i] != NULL) {
@@ -501,9 +501,9 @@ extern void ST_PrintList(STList *list)
     STElementPtr element_f;
 
     // going through every array pointer of STlist
-    for (int i = 0; i < (list->list_size); i++) {
+    for (size_t i = 0; i < (list->list_size); i++) {
         
-        printf("array[%d] -> ", i);
+        printf("array[%ld] -> ", i);
 
         element_p = list->array[i];
 
