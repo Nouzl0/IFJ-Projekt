@@ -23,7 +23,7 @@ int main(){
 	tok_arr_t token_array;
 	tok_arr_ctor(&token_array);
 
-	lex_tokenize_file(&token_array,"./code_tests/funcfunc_call.php");
+	lex_tokenize_file(&token_array,"./code_tests/string_work.php");
 
 	//lex_tokenize(&token_array,stdin);
 	tok_arr_debug_print(token_array);

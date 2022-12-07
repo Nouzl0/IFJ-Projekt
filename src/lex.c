@@ -1,16 +1,4 @@
 #include "lex.h"
-/*
-	TODO:
-	
-	Pridat vice povolenych znaku pro promene a identifikatory 
-	jako cisla a _
-	
-	Mohlo by se hodit pocitani otevrenych a uzavrenych zavorek
-	Nektere funkce by mozna sly implementovat pomoci jedne
-	
-	Bylo by dobre nastavit limit velikosti nazvu promnenych
-	ale stejne to nebude asi testovane takze tak
-*/
 
 
 /**
@@ -172,24 +160,33 @@ void handle_text(sbuffer_t* sb_ptr){
 		
 		// Escape sequences
 		if(sb_ptr->buffer[0] == '\\'){
+			if(sb_ptr->buffer[1] == '$'){
+				str_builder_append(&cs_ptr,'$');
+				sbuffer_skip(sb_ptr,2);
+				continue;
+			}
 			if(sb_ptr->buffer[1] == '"'){
 				str_builder_append(&cs_ptr,'"');
 				sbuffer_skip(sb_ptr,2);
 				continue;
-			} else if(sb_ptr->buffer[1] == 'n') {
+			}
+			if(sb_ptr->buffer[1] == 'n') {
 				str_builder_append(&cs_ptr,'\n');
 				sbuffer_skip(sb_ptr,2);
 				continue;
-			} else if(sb_ptr->buffer[1] == 't') {
+			}
+			if(sb_ptr->buffer[1] == 't') {
 				str_builder_append(&cs_ptr,'\t');
 				sbuffer_skip(sb_ptr,2);
 				continue;
-			} else if(sb_ptr->buffer[1] == '\\') {
+			}
+			if(sb_ptr->buffer[1] == '\\') {
 				str_builder_append(&cs_ptr,'\\');
 				sbuffer_skip(sb_ptr,2);
 				continue;
 			// Escape with hex value
-			} else if(sb_ptr->buffer[1] == 'x' && is_char_valid_hex(sb_ptr->buffer[2]) && is_char_valid_hex(sb_ptr->buffer[3])) {
+			}
+			if(sb_ptr->buffer[1] == 'x' && is_char_valid_hex(sb_ptr->buffer[2]) && is_char_valid_hex(sb_ptr->buffer[3])) {
 				char hex[] = {sb_ptr->buffer[2],sb_ptr->buffer[3]};
 				int num = (int)strtol(hex, NULL, 16);
 				if (num < 256){
@@ -200,7 +197,8 @@ void handle_text(sbuffer_t* sb_ptr){
 					continue;
 				}
 			// Escape with octal value
-			} else if(is_char_valid_octal(sb_ptr->buffer[1]) && is_char_valid_octal(sb_ptr->buffer[2]) && is_char_valid_octal(sb_ptr->buffer[3])){
+			}
+			if(is_char_valid_octal(sb_ptr->buffer[1]) && is_char_valid_octal(sb_ptr->buffer[2]) && is_char_valid_octal(sb_ptr->buffer[3])){
 				char octal[] = {sb_ptr->buffer[1],sb_ptr->buffer[2],sb_ptr->buffer[3]};
 			
 				int num = (int)strtol(octal, NULL, 8);

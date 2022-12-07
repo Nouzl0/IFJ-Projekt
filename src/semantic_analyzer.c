@@ -3,12 +3,13 @@ STList* sym_table;
 STList* func_table;
 
 
-//void semantic_error(int error_code, token_t token, char* info);
 /**
+ * Compares data types
+ * Nullable data types are matched with non nullable counter part 
  * 
- * 
- * @param table 
- * @param func_item 
+ * @param expected Expected token to compare against
+ * @param returned Returned token to compare with
+ * @returns true if expected token is same as returned or normalized returned
  */
 bool valid_return_type(token_type expected, token_type returned){
 	switch(returned){
@@ -26,6 +27,13 @@ bool valid_return_type(token_type expected, token_type returned){
 	return false;
 } 
 
+
+/**
+ * Returns non nullable data type by passed nullable data type
+ * 
+ * @param tok Given nullable data type or any other token
+ * @returns non nullable data type or any other token
+ */
 token_type return_normalize(token_type tok){
 	switch(tok){
 		case NIL_INT:
@@ -42,6 +50,12 @@ token_type return_normalize(token_type tok){
 } 
 
 
+/**
+ * Saves function name, return type and parameter types to function table
+ * 
+ * @param table Given function table
+ * @param func_item Pointer to syntax node that stores function definiton
+ */
 void register_function(STList* table, stx_node_t* func_item){
 	
 	token_t* name_tok_ptr = func_item->items[0]->token;
@@ -50,6 +64,7 @@ void register_function(STList* table, stx_node_t* func_item){
 	token_type return_type = func_item->token->type;
 	
 	STElementDataPtr data = ST_DataGet(table, func_name);
+	// Function name is already in function table
 	if(data){
 		semantic_error(SEMANTIC_ERROR, *func_item->token, "Function with this name is already defined");
 		return;
@@ -62,9 +77,11 @@ void register_function(STList* table, stx_node_t* func_item){
 	data->type = return_type;
 	data->tok_ptr = name_tok_ptr;
 	
+	
 	data->params = malloc(sizeof(STDataParam) * params_len);
 	data->param_len = func_item->items[1]->items_len;
 	
+	// Adding parameters name and type to function table 
 	for (int i = 0; i < func_item->items[1]->items_len; i++){
 		stx_node_t* type_item = func_item->items[1]->items[i];
 		data->params[i].type = type_item->token->type;
@@ -74,6 +91,13 @@ void register_function(STList* table, stx_node_t* func_item){
 }
 
 
+/**
+ * Returns data type of given expression
+ * Calls itself recursively for every operand and function call parameter
+ * 
+ * @param expr Pointer to expression nodes
+ * @returns Token which is data type given expression
+ */
 token_type rec_check_types(expr_node_t* expr){
 	if(!expr){
 		return NIL;
@@ -84,67 +108,27 @@ token_type rec_check_types(expr_node_t* expr){
 	
 	// All operands
 	if(expr->token.type >= MINUS && expr->token.type <= LESS){
-		//Typy operadnu se musi schodovat
-		//a kdyz se neschoduji je potreba pridat do stromu pretypovani
-		//Jejich vysledekem je to co do nich leze a u SLASH je to vzdy float
 		token_type left = rec_check_types(expr->left);
 		token_type right = rec_check_types(expr->right);
-		if(expr->token.type >= MINUS && expr->token.type <= STAR){
-			if(left == STRING || right == STRING){
-				semantic_error(VARIABLE_TYPE_ERROR, expr->token, "Invalid type of operand for this operation");
-				return VOID;
-			}
-			/*
-			if(left == right){
-				return left;
-			}
-			*/
-			//expr->left
-			//expr->right
-			/*
-			expr_node_t* new_node_ptr = malloc(sizeof(expr_node_t));
-			new_node_ptr->is_terminal = 1;
-			new_node_ptr->precedence = 0;
-			new_node_ptr->token.type = IDENTIFIER;
-			new_node_ptr->token.line = 0;
-			new_node_ptr->token.column = tok;
-			new_node_ptr->token.content = intval;
-			new_node_ptr->params_len = 1;
-			new_node_ptr->params = expr->left , expr->right;
-			new_node_ptr->right = NULL;
-			new_node_ptr->left = NULL;
-			*/
-			/*
-			expr_node_t* new_node_ptr;
-			if(left != right){
-				
-			}
-			
-			if(left == INT){
-				
-			} else if(left == FLOAT){
-				
-			}
-			
-			semantic_error(VARIABLE_TYPE_ERROR, expr->token, "Invalid type of operand for this operation");
-			return VOID;
-			*/
-			
-			return left;
-			
-			//Pridat prevedeni na float kdyz je treba
-			if(left == right){
-				return left;
-			}else{
-				semantic_error(VARIABLE_TYPE_ERROR, expr->token, "Invalid type of operand for this operation");
-				return VOID;
-			} 
-		}
 		
-		// Division
-		if(expr->token.type == SLASH){
-			//Pridat prevedeni na float kdyz je treba
-			return FLOAT;
+		//Math and value comparison operators
+		if( (expr->token.type >= MINUS && expr->token.type <= SLASH) || (expr->token.type >= LESS && expr->token.type <= EQUAL) ){
+			if(left == STRING || left == NIL || right == STRING || right == NIL){
+				semantic_error(VARIABLE_TYPE_ERROR, expr->token, "Invalid type of operand for this operation");
+				return VOID;
+			}
+			
+			//Division
+			if(expr->token.type == SLASH){
+				return FLOAT;
+			}
+			
+			if(left == FLOAT || right == FLOAT){
+				return FLOAT;
+			} else {
+				return INT;
+			}
+			
 		}
 		
 		// String concat
@@ -162,19 +146,6 @@ token_type rec_check_types(expr_node_t* expr){
 			return INT;
 		}
 		
-		// Value comparators
-		if(expr->token.type >= EQUAL && expr->token.type <= LESS){
-			//Pridat prevedeni na float kdyz je potreba
-			return left;
-			
-			if(left == right){
-				return INT;
-			}else{
-				semantic_error(VARIABLE_TYPE_ERROR, expr->token, "Invalid type of operand for this operation");
-				return VOID;
-			}
-			
-		}
 		return VOID;
 	}
 	
@@ -272,6 +243,14 @@ token_type rec_check_types(expr_node_t* expr){
 	return expr->token.type;
 }
 
+
+/**
+ * Goes through items in syntax tree code block and checks for right data types
+ * Calls itself recursively for sub code blocks of if, while and function 
+ * 
+ * @param block Pointer to syntax node 
+ * @param func_name String that stores name of function
+ */
 void analyze_block(stx_node_t* block, char* func_name){
 	
 	if(!block){
@@ -302,10 +281,12 @@ void analyze_block(stx_node_t* block, char* func_name){
 				
 				data = ST_DataGet(sym_table, var_name);
 				
+				// Variable already exists, only changes type
 				if(data){
 					data->type = var_type;
 					data->tok_ptr = item->token;
 				} else {
+				// Inserts variable name to symbol table
 					ST_Create(sym_table, var_name);
 					data = ST_DataGet(sym_table, var_name);
 					data->type = var_type;
@@ -327,6 +308,7 @@ void analyze_block(stx_node_t* block, char* func_name){
 				break;
 			
 			case RETEXPR:
+				// Return statement allowed only in function code block
 				if(!func_name){
 					semantic_error(FUNCTION_RETURN_ERROR, *item->token, "Return statement not in function");
 					//free(remove_arr);
@@ -373,6 +355,12 @@ void analyze_block(stx_node_t* block, char* func_name){
 	
 }
 
+
+/**
+ * Inserts builtin functions definitions to function table
+ * 
+ * @param table Pointer to function table
+ */
 void insert_builtins(STList* table){
 	STElementDataPtr data;
 	
@@ -445,6 +433,13 @@ void insert_builtins(STList* table){
 	
 }
 
+
+/**
+ * Goes through root node of syntax tree and calls analyze functions
+ *  
+ *
+ * @param ast_root Pointer to root syntax node
+ */
 void analyze_ast(stx_node_t* ast_root){
 	if(ast_root->items_len < 1){
 		//Prazdy blok
