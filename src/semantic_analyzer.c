@@ -295,6 +295,7 @@ void analyze_block(stx_node_t* block, bool is_root, char* func_name){
 					data = ST_DataGet(sym_table, var_name);
 					data->type = var_type;
 					data->tok_ptr = item->token;
+					/* Unused scope of variables
 					if(!is_root){
 						
 						if(remove_arr_len >= remove_arr_size){
@@ -305,6 +306,7 @@ void analyze_block(stx_node_t* block, bool is_root, char* func_name){
 						remove_arr[remove_arr_len] = var_name;
 						remove_arr_len++;
 					}
+					*/
 				}
 				
 				break;
@@ -345,13 +347,13 @@ void analyze_block(stx_node_t* block, bool is_root, char* func_name){
 		}
 	
 	}
-	
+	/* Unused scope of variables
 	if(!is_root){
 		for (int i = 0; i < remove_arr_len; i++){
 			ST_Delete(sym_table, remove_arr[i]);   
 		}
 	}
-	
+	*/
 	free(remove_arr);
 	
 }
