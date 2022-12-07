@@ -81,6 +81,7 @@ void do_block(stx_node_t *AS_Tree, STList *symbol_table, bool is_func) // a.k.a 
 
         printf("# - FUNCTION GLOBAL VARIABLES - #\n");
         printf("DEFVAR GF@%%freturn\n");
+        printf("# =============================== #\n");
         
         // print langauge defined functions
         //func_substring();
@@ -269,6 +270,9 @@ void do_ifelse(stx_node_t* AS_Tree, STList *symbol_table)
         return;
     }
 
+    // check copies
+    while_check_def(AS_Tree, symbol_table); 
+
     // variables
     static int if_label_cnt = 0, else_label_cnt = 0;  
     int if_label = if_label_cnt, else_label = else_label_cnt;
@@ -342,7 +346,7 @@ void do_funcblock(stx_node_t* AS_Tree)
     // #2 - Print label
     printf("# - %s - #\n", AS_Tree->items[0]->token->content);
     printf("JUMP %%fjump%d\n", func_def);
-    printf("LABEL %%func%s\n", AS_Tree->items[0]->token->content);
+    printf("LABEL func%s\n", AS_Tree->items[0]->token->content);
     printf("PUSHFRAME\n");
 
 
@@ -478,7 +482,7 @@ void arithmetic_print(expr_node_t* AP_Tree , char* assigned_var, bool reset) {
                 stack_push_ptr(&left_stack, tmp_left_term);
 
                 // printing
-                printf("MOVE LF%s GF@%%freturn\n", var_right);
+                printf("MOVE %s GF@%%freturn\n", var_right);
                 printf("%s %s %s %s\n", instruction_set[AP_Tree->token.type - 13], assigned_var, stack_pop(&left_stack), var_right);
             }
 
@@ -489,13 +493,13 @@ void arithmetic_print(expr_node_t* AP_Tree , char* assigned_var, bool reset) {
                 // left side -> setting up variables and printing 
                 var_offset = tmp_var_offset;
                 var_left = tmp_variables[0 + var_offset];
-                printf("MOVE LF%s GF@%%freturn\n", var_left);
+                printf("MOVE %s GF@%%freturn\n", var_left);
 
                 // right side -> setting up variables and printing 
                 func_print(AP_Tree->right, NULL);
                 var_offset = tmp_var_offset;
                 var_right = tmp_variables[1 + var_offset];
-                printf("MOVE LF%s GF%%freturn\n", var_right);
+                printf("MOVE %s GF@%%freturn\n", var_right);
 
                 // printing the result of tmp variables
                 printf("%s %s %s %s\n", instruction_set[AP_Tree->token.type - 13], assigned_var, var_left, var_right);
@@ -690,22 +694,28 @@ void while_check_def(stx_node_t* stx_while, STList *symbol_table)
         item_type item = stx_while->items[i]->type;
 
         // adds variable to stack and while stack
-        if (item == ASSIGNEXPR || item == EXPR) {
-            if ((ST_ElementExists(symbol_table, stx_while->items[i]->token->content)) == false) {
+        if (item == ASSIGNEXPR) {
+            if (stx_while->items[i]->token->content != NULL) {
+                if ((ST_ElementExists(symbol_table, stx_while->items[i]->token->content)) == false) {
 
-                // adding variable to symbol table
-                ST_CreateResize(&symbol_table, stx_while->items[i]->token->content);
-                STElementDataPtr data = ST_DataGet(symbol_table, stx_while->items[i]->token->content);
-                data->type = NUMBER;
+                    // adding variable to symbol table
+                    ST_CreateResize(&symbol_table, stx_while->items[i]->token->content);
+                    STElementDataPtr data = ST_DataGet(symbol_table, stx_while->items[i]->token->content);
+                    data->type = NUMBER;
 
-                // defining new variable
-                printf("DEFVAR LF@%s\n", stx_while->items[i]->token->content);
+                    // defining new variable
+                    printf("DEFVAR LF@%s\n", stx_while->items[i]->token->content);
+                }
             }
         }
         
         // continue recursively to search for variables
         if (item == IFELSE || item == WHILEBLOCK || item == BLOCK) {
-            while_check_def(stx_while->items[i], symbol_table);
+
+            // recursive call
+            if (stx_while->items[i] != NULL) {
+                while_check_def(stx_while->items[i], symbol_table);
+            }
         }
     }
 }
@@ -965,7 +975,6 @@ void func_print(expr_node_t* AP_Tree, char *token_content) {
 
         // user defined
         default:
-
             // create function frame
             printf("CREATEFRAME\n"); 
 
@@ -974,27 +983,42 @@ void func_print(expr_node_t* AP_Tree, char *token_content) {
 
                 // printing move instruction
                 if ((AP_Tree->params[i]->left == NULL) && (AP_Tree->params[i]->right == NULL)) {
-                    
-                    // define variables
-                    printf("DEFVAR TF@%%fvar%d\n", i);
+                    // is func call
+                    if (AP_Tree->params[i]->token.type == IDENTIFIER) {
+                        func_print(AP_Tree->params[i], token_content);
 
-                    // adding to stack and printing from it
-                    print_stack(AP_Tree->params[i], false);
-                    printf("MOVE TF@%%fvar%d %s\n", i, stack_pop(&right_stack));
+                    // is arithmetic expression
+                    } else {
+                        // define variables
+                        printf("DEFVAR TF@%%fvar%d\n", i);
+
+                        // adding to stack and printing from it
+                        print_stack(AP_Tree->params[i], false);
+                        printf("MOVE TF@%%fvar%d %s\n", i, stack_pop(&right_stack));
+                    }
 
                 // else solve arithmetic expression
                 } else {
-                    // appending the number to the variable name
-                    char buffer[1000];
-                    sprintf(buffer, "LF@%%fvar%d", i);
+                    // is func call
+                    if (AP_Tree->params[i]->token.type == IDENTIFIER) {
+                        func_print(AP_Tree->params[i], token_content);
 
-                    // recurive call
-                    arithmetic_print(AP_Tree->params[i], buffer, false);
+                    // is arithmetic expression
+                    } else {
+                        // define variables
+                        printf("DEFVAR TF@%%fvar%d\n", i);
+                        // appending the number to the variable name
+                        char buffer[1000];
+                        sprintf(buffer, "TF@%%fvar%d", i);
+
+                        // recurive call
+                        arithmetic_print(AP_Tree->params[i], buffer, false);
+                    }
                 }
             }
 
             // print function call
-            printf("CALL %%func%s\n", AP_Tree->token.content);
+            printf("CALL func%s\n", AP_Tree->token.content);
             break;
         }
 }

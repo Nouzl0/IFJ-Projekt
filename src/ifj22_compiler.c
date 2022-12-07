@@ -23,7 +23,7 @@ int main(){
 	tok_arr_t token_array;
 	tok_arr_ctor(&token_array);
 		
-	lex_tokenize_file(&token_array,"./code_tests/iterative_factorial.php");
+	lex_tokenize_file(&token_array,"./code_tests/funcfunc_call.php");
 	//lex_tokenize(&token_array,stdin);
 	tok_arr_debug_print(token_array);
 	
@@ -45,13 +45,12 @@ int main(){
 	
 	analyze_ast(ast);
 	
-	if(global_err_ptr->error){
-		stx_node_dtor(ast);
-		tok_arr_dtor(&token_array);
-		return global_err_ptr->error;
-	}
+//	if(global_err_ptr->error){
+//		stx_node_dtor(ast);
+//		tok_arr_dtor(&token_array);
+//		return global_err_ptr->error;
+//	}
 	
-	// generates code from ast - working on it
 	generate_code(ast);
 
 	
