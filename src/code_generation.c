@@ -962,7 +962,7 @@ void logic_print(expr_node_t* AP_Tree, STList *symbol_table, char* label, int la
     // #4 - solving the bool expresion - printing 
     switch (AP_Tree->token.type)
     {
-    case EQUAL:
+    case TYPE_EQUAL:
         printf("EQ GF@%%bool0 GF@%%bvar0 GF@%%bvar1\n");
         break;
     
