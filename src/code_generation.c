@@ -12,8 +12,8 @@
 
 #include "code_generation.h"
 
-
-
+#define sym_table_start_size 1000
+#define buffer_size 1000
 
 /* - - - - - - - - - - - - */
 /*     GLOBAL VARIABLES    */
@@ -38,7 +38,7 @@ bool is_float = false;
 void generate_code(stx_node_t *AS_Tree) {
     
     // init
-    STList *symbol_table = ST_Init(10);
+    STList *symbol_table = ST_Init(sym_table_start_size);
     
     // create code
     do_block(AS_Tree, symbol_table, false);
@@ -48,10 +48,16 @@ void generate_code(stx_node_t *AS_Tree) {
 }
 
 
+
+/* - - - - - - - - - - - -*/
+/*   ITEM TYPE FUNCTIONS  */
+/* - - - - - - - - - - - -*/
+
 /**
  * @brief Generates instruction code from AST
  * 
  * @param AS_Tree Syntax tree
+ * @param symbol_table Symbol table
  */
 void do_block(stx_node_t *AS_Tree, STList *symbol_table, bool is_func) // a.k.a do_block
 {
@@ -142,16 +148,11 @@ void do_block(stx_node_t *AS_Tree, STList *symbol_table, bool is_func) // a.k.a 
 }
 
 
-
-/* - - - - - - - - - - - -*/
-/*   ITEM TYPE FUNCTIONS  */
-/* - - - - - - - - - - - -*/
-
 /**
- * Assignes value to variable
- *  - TODO: make sure the format of assigned variable is correct
+ *  - Assignes value to variable
  * 
  * @param AS_Tree - Abstract syntax tree
+ * @param symbol_table - Symbol table
  */
 void do_assignexpr(stx_node_t* AS_Tree, STList *symbol_table) {
     
@@ -224,7 +225,7 @@ void do_assignexpr(stx_node_t* AS_Tree, STList *symbol_table) {
     } else {
 
         // setup correct format
-        char buffer[1000]; 
+        char buffer[buffer_size]; 
         strcpy(buffer, "LF@");
         strcat(buffer, AS_Tree->token->content);
 
@@ -238,7 +239,11 @@ void do_assignexpr(stx_node_t* AS_Tree, STList *symbol_table) {
 }
 
 
-
+/**
+ * @brief - Prints function/expression
+ * 
+ * @param AS_Tree - syntax tree
+ */
 void do_expr(stx_node_t* AS_Tree) 
 {   
     // check if tree is not empty
@@ -279,8 +284,10 @@ void do_retexpr(stx_node_t* AS_Tree)
 
 
 /**
- * @brief 
+ * @brief - Prints if-else statement
  * 
+ * @param AS_Tree - syntax tree
+ * @param symbol_table - symbol table
  */
 void do_ifelse(stx_node_t* AS_Tree, STList *symbol_table) 
 {   
@@ -290,7 +297,7 @@ void do_ifelse(stx_node_t* AS_Tree, STList *symbol_table)
     }
 
     // check copies
-    while_check_def(AS_Tree, symbol_table); 
+    check_if_defined(AS_Tree, symbol_table); 
 
     // variables
     static int if_label_cnt = 0, else_label_cnt = 0;  
@@ -322,8 +329,10 @@ void do_ifelse(stx_node_t* AS_Tree, STList *symbol_table)
 
 
 /**
- * @brief 
+ * @brief - Prints while statement
  * 
+ * @param AS_Tree - syntax tree
+ * @param symbol_table - symbol table
  */
 void do_whileblock(stx_node_t* AS_Tree, STList *symbol_table)
 {
@@ -338,7 +347,7 @@ void do_whileblock(stx_node_t* AS_Tree, STList *symbol_table)
     label_counter++;
 
     // #1 - check copies
-    while_check_def(AS_Tree, symbol_table);
+    check_if_defined(AS_Tree, symbol_table);
 
     // #2 - Create label
     printf("LABEL %s%d\n", "\%while", func_label);
@@ -352,6 +361,11 @@ void do_whileblock(stx_node_t* AS_Tree, STList *symbol_table)
     printf("LABEL %s%d\n", "\%endwhile", func_label);
 }
 
+/**
+ * @brief - Prints function declaration
+ * 
+ * @param AS_Tree - syntax tree
+ */
 void do_funcblock(stx_node_t* AS_Tree)
 {
     // #0 - check if tree is not empty
@@ -370,7 +384,7 @@ void do_funcblock(stx_node_t* AS_Tree)
 
 
     // #3 - create symbol table for function
-    STList *func_symbol_table = ST_Init(10);
+    STList *func_symbol_table = ST_Init(sym_table_start_size);
 
     // #4 - assign variables
     for (int i = 0; i < AS_Tree->items[1]->items_len; i++) {
@@ -416,8 +430,7 @@ void do_funcblock(stx_node_t* AS_Tree)
 /* - - - - - - - - - - - - - */
 
 /**
- * Recursively prints arithmetic expression from Precedence Tree
- *  - used in function (do_assignexpr, func_call)
+ * @brief - Recursively prints arithmetic expression from Precedence Tree
  * 
  * @param AP_Tree Precedence tree, from which instruction will be created
  * @param assigned_var Variable, for which are the instructions created
@@ -571,10 +584,15 @@ void arithmetic_print(expr_node_t* AP_Tree , char* assigned_var, bool reset) {
 }
 
 
-// extension of the arithmetic_print
+/**
+ * @brief Sends string to the stack -> stack changes it to desired format
+ * 
+ * @param AP_Tree - expression tree
+ * @param left_side - true if left side of the expression, false otherwise
+ */
 void print_stack(expr_node_t* AP_Tree, bool left_side)
 {   
-    char buffer[1000] = { 0 }, sec_buffer[1000] = { 0 };
+    char buffer[buffer_size] = { 0 }, sec_buffer[buffer_size] = { 0 };
 
     // TEMPORATY - quick fix will probably be deleted
     if ((is_float == true) && (AP_Tree->token.type == NUMBER || AP_Tree->token.type == FRACTION)) {
@@ -675,11 +693,15 @@ void print_stack(expr_node_t* AP_Tree, bool left_side)
     }
 }
 
-// formats the string for printing
+/**
+ * @brief Formats string to desired string format -> used by print_stack
+ * 
+ * @param buffer - string to be formatted
+ */
 void format_string_print(char *buffer) {
 
     // variables
-    char replace_buffer[1000] = { 0 }, sym_buffer[1000] = { 0 };
+    char replace_buffer[buffer_size] = { 0 }, sym_buffer[buffer_size] = { 0 };
     int i = 0;
 
     // going through the string
@@ -703,8 +725,13 @@ void format_string_print(char *buffer) {
 
 
 
-
-void while_check_def(stx_node_t* stx_while, STList *symbol_table)
+/**
+ * @brief Checks if the variable is defined in the symbol table
+ * 
+ * @param stx_while - while/if loop node
+ * @param symbol_table - symbol table
+ */
+void check_if_defined(stx_node_t* stx_while, STList *symbol_table)
 {   
     // goind through all the items in the while loop
     for (int i = 0; i < stx_while->items_len; i++) {
@@ -733,14 +760,19 @@ void while_check_def(stx_node_t* stx_while, STList *symbol_table)
 
             // recursive call
             if (stx_while->items[i] != NULL) {
-                while_check_def(stx_while->items[i], symbol_table);
+                check_if_defined(stx_while->items[i], symbol_table);
             }
         }
     }
 }
 
 
-// float checker
+/**
+ * @brief Checks if the variable is float
+ * 
+ * @param AP_Tree - arithmetic expression tree
+ * @param symbol_table - symbol table
+ */
 void arithmetic_print_floatcheck(expr_node_t* AP_Tree, STList *symbol_table, bool reset)
 {   
     // reseting the function call
@@ -786,6 +818,12 @@ void arithmetic_print_floatcheck(expr_node_t* AP_Tree, STList *symbol_table, boo
     }
 }
 
+/**
+ * @brief Retypes variables to float
+ * 
+ * @param AP_Tree - arithmetic expression tree
+ * @param symbol_table - symbol table
+ */
 void arithmetic_print_float_retype(expr_node_t* AP_Tree, STList *symbol_table)
 {
     // recursive call left
@@ -814,7 +852,11 @@ void arithmetic_print_float_retype(expr_node_t* AP_Tree, STList *symbol_table)
     } 
 }
 
-
+/**
+ * @brief Retypes variables back to int
+ * 
+ * @param symbol_table - symbol table
+ */
 void arithmetic_print_float_untype(STList *symbol_table)
 {
     // poping the stack
@@ -831,7 +873,14 @@ void arithmetic_print_float_untype(STList *symbol_table)
     }
 }
 
-
+/**
+ * @brief Prints logic expression
+ * 
+ * @param AP_Tree - logic expression tree
+ * @param symbol_table - symbol table
+ * @param label - label name string
+ * @param label_num - number of variable
+ */
 void logic_print(expr_node_t* AP_Tree, STList *symbol_table, char* label, int label_num) 
 {
     // #0 - variables
@@ -954,6 +1003,12 @@ void logic_print(expr_node_t* AP_Tree, STList *symbol_table, char* label, int la
     printf("JUMPIFNEQ %s%d GF@%%bool0 bool@true\n", label, label_num);
 }
 
+/**
+ * @brief Prints function call
+ * 
+ * @param AP_Tree - expression tree
+ * @param token_content - token content for defined functions
+ */
 void func_print(expr_node_t* AP_Tree, char *token_content) {
     
     // #0 - variables
@@ -1008,7 +1063,7 @@ void func_print(expr_node_t* AP_Tree, char *token_content) {
                     printf("MOVE LF@%%ffvar%d GF@%%freturn\n", func_call);
 
                     // saving to buffer
-                    char buffer[1000];
+                    char buffer[buffer_size];
                     sprintf(buffer, "LF@%%ffvar%d", func_call);
                     stack_push_string(&right_stack, buffer);
 
@@ -1051,7 +1106,7 @@ void func_print(expr_node_t* AP_Tree, char *token_content) {
                             // define variables
                             printf("DEFVAR TF@%%fvar%d\n", i);
                             // appending the number to the variable name
-                            char buffer[1000];
+                            char buffer[buffer_size];
                             sprintf(buffer, "TF@%%fvar%d", i);
 
                             // recurive call
@@ -1076,6 +1131,11 @@ void func_print(expr_node_t* AP_Tree, char *token_content) {
 /*  FUNC CALL FUNCTIONS  */
 /* - - - - - - - - - - - */
 
+/**
+ * @brief Checks if the function is defined
+ * 
+ * @param token_content - token content for defined functions
+ */
 int is_defined_func(expr_node_t* AP_Tree) 
 {
     const char def_func[20][8] = { "reads", "readi", "readf", "write", "strlen", "ord", "chr", "strval"};
@@ -1101,21 +1161,38 @@ int is_defined_func(expr_node_t* AP_Tree)
 }
 
 
-
+/**
+ * @brief Function reads - reads string from stdin
+ * 
+ * @param token_content - token content for defined functions
+ */
 void func_reads(char *token_content) {
     printf("READ LF@%s string\n", token_content);
 }
 
-
+/**
+ * @brief Function readi - reads int from stdin
+ * 
+ * @param token_content - token content for defined functions
+ */
 void func_readi(char *token_content) {
     printf("READ LF@%s int\n", token_content);
 }
 
+/**
+ * @brief Function readf - reads float from stdin
+ * 
+ * @param token_content - token content for defined functions
+ */
 void func_readf(char *token_content) {
     printf("READ LF@%s float\n", token_content);
 }
 
-
+/**
+ * @brief Function write - writes given variable to stdout
+ * 
+ * @param AP_Tree - expression tree
+ */
 void func_write(expr_node_t* AP_Tree) 
 {
     for (int i = 0; i < AP_Tree->params_len; i++) {
@@ -1141,11 +1218,23 @@ void func_write(expr_node_t* AP_Tree)
     }
 }
 
+/**
+ * @brief Function strlen - returns length of given string
+ * 
+ * @param AP_Tree - expression tree
+ * @param token_content - token content for defined functions
+ */
 void func_strlen(expr_node_t* AP_Tree, char *token_content) {
     print_stack(AP_Tree->params[0], false);
     printf("STRLEN LF@%s %s\n", token_content, stack_pop(&right_stack));
 }
 
+/**
+ * @brief Function ord - int of given character
+ * 
+ * @param AP_Tree - expression tree
+ * @param token_content - token content for defined functions
+ */
 void func_ord(expr_node_t* AP_Tree, char *token_content){
     if(strlen(AP_Tree->params[0]->token.content) == 0){
         printf("MOVE LF@%s int@0\n", token_content);
@@ -1155,11 +1244,24 @@ void func_ord(expr_node_t* AP_Tree, char *token_content){
     }
 }
 
+/**
+ * @brief Function chr - returns character of given ASCII code
+ * 
+ * @param AP_Tree - expression tree
+ * @param token_content - token content for defined functions
+ */
 void func_chr(expr_node_t* AP_Tree, char *token_content) {
     print_stack(AP_Tree->params[0], false);
     printf("INT2CHAR LF@%s %s\n", token_content, stack_pop(&right_stack));
 }
 
+
+/**
+ * @brief Function strval - checks if given string is nil
+ * 
+ * @param AP_Tree - expression tree
+ * @param token_content - token content for defined functions
+ */
 void func_strval(expr_node_t* AP_Tree, char *token_content){
     if(strlen(AP_Tree->params[0]->token.content) == 0){
         printf("MOVE LF@%s nil@nil\n", token_content);
@@ -1169,7 +1271,10 @@ void func_strval(expr_node_t* AP_Tree, char *token_content){
     }
 }
 
-// prints definition for SUBSTRING function
+/**
+ * @brief Function substr - returns substring of given string
+ * - defines in header of ifjcode
+ */
 void func_substring(void) 
 {
     printf("# - FUNCTION SUBSTRING - #\n");
@@ -1219,7 +1324,10 @@ void func_substring(void)
     printf("# ======================== #\n");
 }
 
-//prints definiton for intval function
+/**
+ * @brief Function intval - returns integer value of given variable
+ * - defines in header of ifjcode
+ */
 void func_intval(void) {
     printf("# - FUNCTION intval - #\n");
     printf("JUMP %%intval\n");
@@ -1250,7 +1358,10 @@ void func_intval(void) {
     printf("# =============================== #\n");
 }
 
-//prints definition for floatval function
+/**
+ * @brief Function floatval - returns float value of given variable
+ * - defines in header of ifjcode
+ */
 void func_floatval(void){
     printf("# - FUNCTION floatval - #\n");
     printf("JUMP %%float\n");

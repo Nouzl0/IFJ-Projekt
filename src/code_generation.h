@@ -10,6 +10,7 @@
  * @author David Nevrlka <xnevrl00>
  */
 
+// libraries
 #pragma once
 #include <stdio.h>
 #include <stdlib.h>
@@ -43,7 +44,7 @@ void print_stack(expr_node_t* AP_Tree, bool left_side);
 void format_string_print(char *buffer);
 
 // special while function
-void while_check_def(stx_node_t* stx_while, STList *symbol_table);
+void check_if_defined(stx_node_t* stx_while, STList *symbol_table);
 
 // float retyping
 void arithmetic_print_floatcheck(expr_node_t* AP_Tree, STList *symbol_table, bool reset);
