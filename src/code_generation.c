@@ -81,9 +81,10 @@ void do_block(stx_node_t *AS_Tree, STList *symbol_table, bool is_func) // a.k.a 
 
         printf("# - FUNCTION GLOBAL VARIABLES - #\n");
         printf("DEFVAR GF@%%freturn\n");
+        printf("# =============================== #\n");
         
         // print langauge defined functions
-        //func_substring();
+        func_substring();
     }
 
     // #3 - go through all nodes in tree recursively
@@ -269,6 +270,9 @@ void do_ifelse(stx_node_t* AS_Tree, STList *symbol_table)
         return;
     }
 
+    // check copies
+    while_check_def(AS_Tree, symbol_table); 
+
     // variables
     static int if_label_cnt = 0, else_label_cnt = 0;  
     int if_label = if_label_cnt, else_label = else_label_cnt;
@@ -342,7 +346,7 @@ void do_funcblock(stx_node_t* AS_Tree)
     // #2 - Print label
     printf("# - %s - #\n", AS_Tree->items[0]->token->content);
     printf("JUMP %%fjump%d\n", func_def);
-    printf("LABEL %%func%s\n", AS_Tree->items[0]->token->content);
+    printf("LABEL func%s\n", AS_Tree->items[0]->token->content);
     printf("PUSHFRAME\n");
 
 
@@ -478,7 +482,7 @@ void arithmetic_print(expr_node_t* AP_Tree , char* assigned_var, bool reset) {
                 stack_push_ptr(&left_stack, tmp_left_term);
 
                 // printing
-                printf("MOVE LF%s GF@%%freturn\n", var_right);
+                printf("MOVE %s GF@%%freturn\n", var_right);
                 printf("%s %s %s %s\n", instruction_set[AP_Tree->token.type - 13], assigned_var, stack_pop(&left_stack), var_right);
             }
 
@@ -489,13 +493,13 @@ void arithmetic_print(expr_node_t* AP_Tree , char* assigned_var, bool reset) {
                 // left side -> setting up variables and printing 
                 var_offset = tmp_var_offset;
                 var_left = tmp_variables[0 + var_offset];
-                printf("MOVE LF%s GF@%%freturn\n", var_left);
+                printf("MOVE %s GF@%%freturn\n", var_left);
 
                 // right side -> setting up variables and printing 
                 func_print(AP_Tree->right, NULL);
                 var_offset = tmp_var_offset;
                 var_right = tmp_variables[1 + var_offset];
-                printf("MOVE LF%s GF%%freturn\n", var_right);
+                printf("MOVE %s GF@%%freturn\n", var_right);
 
                 // printing the result of tmp variables
                 printf("%s %s %s %s\n", instruction_set[AP_Tree->token.type - 13], assigned_var, var_left, var_right);
@@ -690,22 +694,28 @@ void while_check_def(stx_node_t* stx_while, STList *symbol_table)
         item_type item = stx_while->items[i]->type;
 
         // adds variable to stack and while stack
-        if (item == ASSIGNEXPR || item == EXPR) {
-            if ((ST_ElementExists(symbol_table, stx_while->items[i]->token->content)) == false) {
+        if (item == ASSIGNEXPR) {
+            if (stx_while->items[i]->token->content != NULL) {
+                if ((ST_ElementExists(symbol_table, stx_while->items[i]->token->content)) == false) {
 
-                // adding variable to symbol table
-                ST_CreateResize(&symbol_table, stx_while->items[i]->token->content);
-                STElementDataPtr data = ST_DataGet(symbol_table, stx_while->items[i]->token->content);
-                data->type = NUMBER;
+                    // adding variable to symbol table
+                    ST_CreateResize(&symbol_table, stx_while->items[i]->token->content);
+                    STElementDataPtr data = ST_DataGet(symbol_table, stx_while->items[i]->token->content);
+                    data->type = NUMBER;
 
-                // defining new variable
-                printf("DEFVAR LF@%s\n", stx_while->items[i]->token->content);
+                    // defining new variable
+                    printf("DEFVAR LF@%s\n", stx_while->items[i]->token->content);
+                }
             }
         }
         
         // continue recursively to search for variables
         if (item == IFELSE || item == WHILEBLOCK || item == BLOCK) {
-            while_check_def(stx_while->items[i], symbol_table);
+
+            // recursive call
+            if (stx_while->items[i] != NULL) {
+                while_check_def(stx_while->items[i], symbol_table);
+            }
         }
     }
 }
@@ -965,7 +975,6 @@ void func_print(expr_node_t* AP_Tree, char *token_content) {
 
         // user defined
         default:
-
             // create function frame
             printf("CREATEFRAME\n"); 
 
@@ -974,27 +983,42 @@ void func_print(expr_node_t* AP_Tree, char *token_content) {
 
                 // printing move instruction
                 if ((AP_Tree->params[i]->left == NULL) && (AP_Tree->params[i]->right == NULL)) {
-                    
-                    // define variables
-                    printf("DEFVAR TF@%%fvar%d\n", i);
+                    // is func call
+                    if (AP_Tree->params[i]->token.type == IDENTIFIER) {
+                        func_print(AP_Tree->params[i], token_content);
 
-                    // adding to stack and printing from it
-                    print_stack(AP_Tree->params[i], false);
-                    printf("MOVE TF@%%fvar%d %s\n", i, stack_pop(&right_stack));
+                    // is arithmetic expression
+                    } else {
+                        // define variables
+                        printf("DEFVAR TF@%%fvar%d\n", i);
+
+                        // adding to stack and printing from it
+                        print_stack(AP_Tree->params[i], false);
+                        printf("MOVE TF@%%fvar%d %s\n", i, stack_pop(&right_stack));
+                    }
 
                 // else solve arithmetic expression
                 } else {
-                    // appending the number to the variable name
-                    char buffer[1000];
-                    sprintf(buffer, "LF@%%fvar%d", i);
+                    // is func call
+                    if (AP_Tree->params[i]->token.type == IDENTIFIER) {
+                        func_print(AP_Tree->params[i], token_content);
 
-                    // recurive call
-                    arithmetic_print(AP_Tree->params[i], buffer, false);
+                    // is arithmetic expression
+                    } else {
+                        // define variables
+                        printf("DEFVAR TF@%%fvar%d\n", i);
+                        // appending the number to the variable name
+                        char buffer[1000];
+                        sprintf(buffer, "TF@%%fvar%d", i);
+
+                        // recurive call
+                        arithmetic_print(AP_Tree->params[i], buffer, false);
+                    }
                 }
             }
 
             // print function call
-            printf("CALL %%func%s\n", AP_Tree->token.content);
+            printf("CALL func%s\n", AP_Tree->token.content);
             break;
         }
 }
@@ -1088,55 +1112,54 @@ void func_floatval(expr_node_t* AP_Tree, char *token_content){
 // prints definition for SUBSTRING function
 void func_substring(void) 
 {
-        printf("# - FUNCTION SUBSTRING - #\n");
-        printf("JUMP %%substring\n");
-        printf("LABEL substring\n");
-        printf("PUSHFRAME\n");
-        printf("DEFVAR LF@var1\n");
-        printf("DEFVAR LF@var2\n");
-        printf("DEFVAR LF@var3\n");
-        printf("MOVE LF@var1 LF@%%fvar0\n");
-        printf("MOVE LF@var2 LF@%%fvar1\n");
-        printf("MOVE LF@var3 LF@%%fvar2\n");
-        printf("#check vars\n");
-        printf("#var1 is input string\n");
-        printf("#var2 is the beginning index\n");
-        printf("#var3 is the index after end of substring\n");
-        printf("#tmp is index of position in string\n");
-        printf("LT GF@%%tmp0 LF@var2 int@0\n");
-        printf("JUMPIFEQ %%substrerr GF@%%tmp0 bool@true\n");
-        printf("LT GF@%%tmp0 LF@var3 int@0\n");
-        printf("JUMPIFEQ %%substrerr GF@%%tmp0 bool@true\n");
-        printf("GT GF@%%tmp0 LF@var2 LF@var3\n");
-        printf("JUMPIFEQ %%substrerr GF@%%tmp0 bool@true\n");
-        printf("STRLEN GF@%%tmp2 GF@var1\n");
-        printf("JUMPIFEQ %%substrerr GF@var2 GF@%%tmp2 #i equals lenght of string\n");
-        printf("LT GF@%%tmp0 GF@%%tmp2 GF@var2\n");
-        printf("JUMPIFEQ %%substrerr GF@%%tmp0 bool@true\n");
-        printf("LT GF@%%tmp0 GF@%%tmp2 GF@var3\n");
-        printf("JUMPIFEQ %%substrerr GF@%%tmp0 bool@true\n");
-        printf("#\n");
-        printf("#keep only desired chars\n");
-        printf("MOVE GF@%%tmp0 int@0\n");
-        printf("JUMPIFEQ %%strkeep GF@%%tmp0 GF@var2\n");
-        printf("ADD GF@%%tmp0 GF@%%tmp0 int@1\n");
-        printf("JUMP substring\n");
-        printf("#\n");
-        printf("LABEL %%strkeep\n");
-        printf("JUMPIFEQ %%substrend GF@tmp GF@var3\n");
-        printf("GETCHAR GF@%%tmp2 GF@var1 GF@%%tmp0\n");
-        printf("CONCAT GF@%%tmp1 GF@%%tmp1 GF@%%tmp2\n");
-        printf("ADD GF@%%tmp0 GF@%%tmp0 int@1\n");
-        printf("JUMP %%strkeep\n");
-        printf("#");
-        printf("LABEL %%substrend\n");
-        printf("MOVE GF@%%freturn GF@%%tmp1\n");
-        printf("POPFRAME\n");
-        printf("RETURN\n");
-        printf("LABEL %%substrerr\n");
-        printf("MOVE GF@%%freturn nil@nil\n");
-        printf("POPFRAME");
-        printf("RETURN\n");
-        printf("LABEL %%substring\n");
-        printf("# ======================== #\n");
+    printf("# - FUNCTION SUBSTRING - #\n");
+    printf("#check vars\n");
+    printf("#var1 is input string\n");
+    printf("#var2 is the beginning index\n");
+    printf("#var3 is the index after end of substring\n");
+    printf("JUMP %%substring\n");
+    printf("LABEL funcsubstring\n");
+    printf("PUSHFRAME\n");
+    printf("DEFVAR LF@var1\n");
+    printf("DEFVAR LF@var2\n");
+    printf("DEFVAR LF@var3\n");
+    printf("MOVE LF@var1 LF@%%fvar0\n");
+    printf("MOVE LF@var2 LF@%%fvar1\n");
+    printf("MOVE LF@var3 LF@%%fvar2\n");
+    printf("LT GF@%%tmp0 LF@var2 int@0\n");
+    printf("JUMPIFEQ %%substrerr GF@%%tmp0 bool@true\n");
+    printf("LT GF@%%tmp0 LF@var3 int@0\n");
+    printf("JUMPIFEQ %%substrerr GF@%%tmp0 bool@true\n");
+    printf("GT GF@%%tmp0 LF@var2 LF@var3\n");
+    printf("JUMPIFEQ %%substrerr GF@%%tmp0 bool@true\n");
+    printf("STRLEN GF@%%tmp2 LF@var1\n");
+    printf("JUMPIFEQ %%substrerr LF@var2 GF@%%tmp2 #i equals lenght of string\n");
+    printf("LT GF@%%tmp0 GF@%%tmp2 LF@var2\n");
+    printf("JUMPIFEQ %%substrerr GF@%%tmp0 bool@true\n");
+    printf("LT GF@%%tmp0 GF@%%tmp2 LF@var3\n");
+    printf("JUMPIFEQ %%substrerr GF@%%tmp0 bool@true\n");
+    printf("MOVE GF@%%tmp0 int@0\n");
+    printf("MOVE GF@%%tmp1 string@\n");
+    printf("JUMP %%substring1\n");
+    printf("LABEL %%substring1\n");
+    printf("#keep only desired chars\n");
+    printf("JUMPIFEQ %%strkeep GF@%%tmp0 LF@var2\n");
+    printf("ADD GF@%%tmp0 GF@%%tmp0 int@1\n");
+    printf("JUMP %%substring1\n");
+    printf("LABEL %%strkeep\n");
+    printf("JUMPIFEQ %%substrend GF@%%tmp0 LF@var3\n");
+    printf("GETCHAR GF@%%tmp2 LF@var1 GF@%%tmp0\n");
+    printf("CONCAT GF@%%tmp1 GF@%%tmp1 GF@%%tmp2\n");
+    printf("ADD GF@%%tmp0 GF@%%tmp0 int@1\n");
+    printf("JUMP %%strkeep\n");
+    printf("LABEL %%substrend\n");
+    printf("MOVE GF@%%freturn GF@%%tmp1\n");
+    printf("POPFRAME\n");
+    printf("RETURN\n");
+    printf("LABEL %%substrerr\n");
+    printf("MOVE GF@%%freturn nil@nil\n");
+    printf("POPFRAME\n");
+    printf("RETURN\n");
+    printf("LABEL %%substring\n");
+    printf("# ======================== #\n");
 }
