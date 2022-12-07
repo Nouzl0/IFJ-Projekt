@@ -21,13 +21,6 @@ errors_t* global_err_ptr = &global_err;
 #include "semantic_analyzer.h"
 #include "code_generation.h"
 
-/*
-TODO:
-	vytvorit soubor rozdeleni.txt a pouzit
-	odradkovani LF ne CR LF
-
-*/
-
 int main(){	
 	
 	errors_ctor(global_err_ptr);
@@ -35,12 +28,14 @@ int main(){
 	tok_arr_t token_array;
 	tok_arr_ctor(&token_array);
 
-	lex_tokenize_file(&token_array,"./example.php");
+	//lex_tokenize_file(&token_array,"./example.php");
 
-	//lex_tokenize(&token_array,stdin);
-	tok_arr_debug_print(token_array);
+	lex_tokenize(&token_array,stdin);
 	
-	return 0;
+	
+	//tok_arr_debug_print(token_array);
+	
+	//return 0;
 	
 	if(global_err_ptr->error){
 		tok_arr_dtor(&token_array);
@@ -48,7 +43,7 @@ int main(){
 	}
 	
 	stx_node_t* ast = parser_build_all(&token_array);
-	stx_tree_to_json(ast);
+	//stx_tree_to_json(ast);
 	
 	if(global_err_ptr->error){
 		stx_node_dtor(ast);
@@ -58,11 +53,11 @@ int main(){
 	
 	analyze_ast(ast);
 	
-//	if(global_err_ptr->error){
-//		stx_node_dtor(ast);
-//		tok_arr_dtor(&token_array);
-//		return global_err_ptr->error;
-//	}
+	if(global_err_ptr->error){
+		stx_node_dtor(ast);
+		tok_arr_dtor(&token_array);
+		return global_err_ptr->error;
+	}
 	
 	generate_code(ast);
 

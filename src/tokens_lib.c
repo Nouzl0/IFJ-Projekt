@@ -12,11 +12,6 @@
 
 #include "tokens_lib.h"
 
-/*
-TODO:
-	Pridat komentaro pro pomocne funkce pro pruchod pole tokenu
-*/
-
 #define KEYWORD_REGISTER_LENGTH 10
 static trecord_t keyword_register[KEYWORD_REGISTER_LENGTH] = {
 	{"null", NIL},
