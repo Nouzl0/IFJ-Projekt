@@ -1174,7 +1174,7 @@ void func_substring(void)
 {
     printf("# - FUNCTION SUBSTRING - #\n");
     printf("JUMP %%substring\n");
-    printf("LABEL funcsubstr\n");
+    printf("LABEL funcsubstring\n");
     printf("PUSHFRAME\n");
     printf("DEFVAR LF@var1\n");
     printf("DEFVAR LF@var2\n");
