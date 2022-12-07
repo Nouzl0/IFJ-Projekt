@@ -1,3 +1,15 @@
+/**
+ * Project: Implementace překladače imperativního jazyka IFJ22
+ * 
+ * @file ifj22_compiler.c
+ * @brief Main file of this project
+ * 
+ * @author Nikolas Nosál <xnosal01>
+ * @author Adam Mrkva <xmrkva04>
+ * @author Rostislav Navrátil <xnavra72>
+ * @author David Nevrlka <xnevrl00>
+ */
+
 #include <stdlib.h>
 
 #include "error_handler.h"
@@ -22,12 +34,13 @@ int main(){
 
 	tok_arr_t token_array;
 	tok_arr_ctor(&token_array);
-		
-	lex_tokenize_file(&token_array,"./code_tests/funcfunc_call.php");
+
+	lex_tokenize_file(&token_array,"./example.php");
+
 	//lex_tokenize(&token_array,stdin);
 	tok_arr_debug_print(token_array);
 	
-	//return 0;
+	return 0;
 	
 	if(global_err_ptr->error){
 		tok_arr_dtor(&token_array);

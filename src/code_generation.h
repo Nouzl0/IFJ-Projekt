@@ -1,3 +1,15 @@
+/**
+ * Project: Implementace překladače imperativního jazyka IFJ22
+ * 
+ * @file code_generation.h
+ * @brief Header file for end code generation
+ * 
+ * @author Nikolas Nosál <xnosal01>
+ * @author Adam Mrkva <xmrkva04>
+ * @author Rostislav Navrátil <xnavra72>
+ * @author David Nevrlka <xnevrl00>
+ */
+
 #pragma once
 #include <stdio.h>
 #include <stdlib.h>
@@ -40,14 +52,14 @@ void arithmetic_print_float_untype(STList *symbol_table);
 
 // func call functions
 int is_defined_func(expr_node_t* AP_Tree);
-void func_reads(expr_node_t* AP_Tree, char *token_content);
-void func_readi(expr_node_t* AP_Tree, char *token_content);
-void func_readf(expr_node_t* AP_Tree, char *token_content);
+void func_reads(char *token_content);
+void func_readi(char *token_content);
+void func_readf(char *token_content);
 void func_write(expr_node_t* AP_Tree);
 void func_strlen(expr_node_t* AP_Tree, char *token_content);
 void func_ord(expr_node_t* AP_Tree, char * token_content);
 void func_chr(expr_node_t* AP_Tree, char* token_content);
 void func_strval(expr_node_t* AP_Tree, char* token_content);
-void func_intval(expr_node_t* AP_Tree, char* token_content);
-void func_floatval(expr_node_t* AP_Tree, char* token_content);
 void func_substring(void);
+void func_intval(void);
+void func_floatval(void);
