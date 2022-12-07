@@ -8,8 +8,8 @@
 
 
     $var1 = "abcdefg";
-    $var2 = 2;
+    $var2 = 2.789;
     $var3 = 5;
-    $x = substring($var1, $var2, $var3);
+    $x = intval($var2);
     write($x); //should be cde
 ?>

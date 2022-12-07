@@ -85,6 +85,8 @@ void do_block(stx_node_t *AS_Tree, STList *symbol_table, bool is_func) // a.k.a 
         
         // print langauge defined functions
         func_substring();
+        func_intval();
+        func_floatval();
     }
 
     // #3 - go through all nodes in tree recursively
@@ -943,13 +945,13 @@ void func_print(expr_node_t* AP_Tree, char *token_content) {
     // #2 - if defined, does the function
     switch (func_num) {
         //
-        case 0: func_reads(AP_Tree, token_content);
+        case 0: func_reads(token_content);
             break;
         //
-        case 1: func_readi(AP_Tree, token_content);
+        case 1: func_readi(token_content);
             break;
 
-        case 2: func_readf(AP_Tree, token_content);
+        case 2: func_readf(token_content);
             break;
         
         case 3: func_write(AP_Tree);
@@ -965,13 +967,7 @@ void func_print(expr_node_t* AP_Tree, char *token_content) {
             break;
 
         case 7: func_strval(AP_Tree, token_content);
-            break;
-
-        case 8: func_intval(AP_Tree, token_content);
-            break;   
-
-        case 9: func_floatval(AP_Tree, token_content);
-            break;      
+            break;     
 
         // user defined
         default:
@@ -1031,8 +1027,8 @@ void func_print(expr_node_t* AP_Tree, char *token_content) {
 
 int is_defined_func(expr_node_t* AP_Tree) 
 {
-    const char def_func[20][11] = { "reads", "readi", "readf", "write", "strlen", "ord", "chr", "strval", "intval", "floatval"};
-    const int def_func_num = 11;
+    const char def_func[20][8] = { "reads", "readi", "readf", "write", "strlen", "ord", "chr", "strval"};
+    const int def_func_num = 8;
     int func_num = 0;
     bool flag = false;
 
@@ -1054,16 +1050,16 @@ int is_defined_func(expr_node_t* AP_Tree)
 
 
 
-void func_reads(expr_node_t* AP_Tree, char *token_content) {
+void func_reads(char *token_content) {
     printf("READ LF@%s string\n", token_content);
 }
 
 
-void func_readi(expr_node_t* AP_Tree, char *token_content) {
+void func_readi(char *token_content) {
     printf("READ LF@%s int\n", token_content);
 }
 
-void func_readf(expr_node_t* AP_Tree, char *token_content) {
+void func_readf(char *token_content) {
     printf("READ LF@%s float\n", token_content);
 }
 
@@ -1098,15 +1094,10 @@ void func_chr(expr_node_t* AP_Tree, char *token_content) {
 void func_strval(expr_node_t* AP_Tree, char *token_content){
     if(strlen(AP_Tree->params[0]->token.content) == 0){
         printf("MOVE LF@%s nil@nil\n", token_content);
+    } else {
+        print_stack(AP_Tree->params[0], false);
+        printf("MOVE LF@%s %s\n", token_content, stack_pop(&right_stack));
     }
-}
-
-void func_intval(expr_node_t* AP_Tree, char *token_content){
-    printf("FLOAT2INT LF@%s nil@nil\n", token_content);
-}
-
-void func_floatval(expr_node_t* AP_Tree, char *token_content){
-    
 }
 
 // prints definition for SUBSTRING function
@@ -1118,7 +1109,7 @@ void func_substring(void)
     printf("#var2 is the beginning index\n");
     printf("#var3 is the index after end of substring\n");
     printf("JUMP %%substring\n");
-    printf("LABEL funcsubstring\n");
+    printf("LABEL funcsubstr\n");
     printf("PUSHFRAME\n");
     printf("DEFVAR LF@var1\n");
     printf("DEFVAR LF@var2\n");
@@ -1162,4 +1153,64 @@ void func_substring(void)
     printf("RETURN\n");
     printf("LABEL %%substring\n");
     printf("# ======================== #\n");
+}
+
+void func_intval(void) {
+    printf("# - FUNCTION intval - #\n");
+    printf("JUMP %%intval\n");
+    printf("LABEL funcintval\n");
+    printf("PUSHFRAME\n");
+    printf("DEFVAR LF@var1\n");
+    printf("MOVE GF@%%tmp2 bool@false\n");
+    printf("MOVE LF@var1 LF@%%fvar0\n");
+    printf("TYPE GF@%%tmp0 LF@var1\n");
+    printf("EQ GF@%%tmp1 GF@%%tmp0 string@int\n");
+    printf("JUMPIFEQ %%intvalI bool@true GF@%%tmp1\n");
+    printf("EQ GF@%%tmp1 GF@%%tmp0 string@float\n");
+    printf("JUMPIFEQ %%intvalF bool@true GF@%%tmp1\n");
+    printf("MOVE GF@%%freturn int@0\n");
+    printf("POPFRAME\n");
+    printf("RETURN\n");
+    printf("\n");
+    printf("LABEL %%intvalI #input is int\n");
+    printf("MOVE GF@%%freturn LF@var1\n");
+    printf("POPFRAME\n");
+    printf("RETURN\n");
+    printf("\n");
+    printf("LABEL %%intvalF #input is float\n");
+    printf("FLOAT2INT GF@%%freturn LF@var1\n");
+    printf("POPFRAME\n");
+    printf("RETURN\n");
+    printf("LABEL %%intval\n");
+    printf("# =============================== #\n");
+}
+
+void func_floatval(void){
+    printf("# - FUNCTION floatval - #\n");
+    printf("JUMP %%float\n");
+    printf("LABEL funcfloatval\n");
+    printf("PUSHFRAME\n");
+    printf("DEFVAR LF@var1\n");
+    printf("MOVE GF@%%tmp2 bool@false\n");
+    printf("MOVE LF@var1 LF@%%fvar0\n");
+    printf("TYPE GF@%%tmp0 LF@var1\n");
+    printf("EQ GF@%%tmp1 GF@%%tmp0 string@int\n");
+    printf("JUMPIFEQ %%floatvalI bool@true GF@%%tmp1\n");
+    printf("EQ GF@%%tmp1 GF@%%tmp0 string@float\n");
+    printf("JUMPIFEQ %%floatvalF bool@true GF@%%tmp1\n");
+    printf("MOVE GF@%%freturn float@0x0p+0 #else input is null\n");
+    printf("POPFRAME\n");
+    printf("RETURN\n");
+    printf("\n");
+    printf("LABEL %%floatvalI #input is int\n");
+    printf("INT2FLOAT GF@%%freturn LF@var1\n");
+    printf("POPFRAME\n");
+    printf("RETURN\n");
+    printf("\n");
+    printf("LABEL %%floatvalF #input is float\n");
+    printf("MOVE GF@%%freturn LF@var1\n");
+    printf("POPFRAME\n");
+    printf("RETURN\n");
+    printf("LABEL %%float\n");
+    printf("# =============================== #\n");
 }
