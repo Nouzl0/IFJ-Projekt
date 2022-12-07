@@ -958,7 +958,6 @@ void func_print(expr_node_t* AP_Tree, char *token_content) {
     
     // #0 - variables
     static int func_call = 0;
-    static int first_params_len = 0;
 
     // #1 - checking if the function is language-defined
     int func_num = is_defined_func(AP_Tree);
@@ -1126,7 +1125,7 @@ void func_write(expr_node_t* AP_Tree)
             // go to bottom
             func_print(AP_Tree->params[i], NULL); 
             // define variables
-            printf("WRITE GF@%%freturn\n", i);
+            printf("WRITE GF@%%freturn\n");
         }
 
         // if arithmetic expression
@@ -1175,7 +1174,7 @@ void func_substring(void)
 {
     printf("# - FUNCTION SUBSTRING - #\n");
     printf("JUMP %%substring\n");
-    printf("LABEL funcsubstr\n");
+    printf("LABEL funcsubstring\n");
     printf("PUSHFRAME\n");
     printf("DEFVAR LF@var1\n");
     printf("DEFVAR LF@var2\n");
