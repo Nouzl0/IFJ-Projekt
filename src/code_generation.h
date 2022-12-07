@@ -1,3 +1,15 @@
+/**
+ * Project: Implementace překladače imperativního jazyka IFJ22
+ * 
+ * @file code_generation.h
+ * @brief Header file for end code generation
+ * 
+ * @author Nikolas Nosál <xnosal01>
+ * @author Adam Mrkva <xmrkva04>
+ * @author Rostislav Navrátil <xnavra72>
+ * @author David Nevrlka <xnevrl00>
+ */
+
 #pragma once
 #include <stdio.h>
 #include <stdlib.h>

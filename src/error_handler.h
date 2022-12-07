@@ -1,3 +1,15 @@
+/**
+ * Project: Implementace překladače imperativního jazyka IFJ22
+ * 
+ * @file error_handler.h
+ * @brief Header file for error handling
+ * 
+ * @author Nikolas Nosál <xnosal01>
+ * @author Adam Mrkva <xmrkva04>
+ * @author Rostislav Navrátil <xnavra72>
+ * @author David Nevrlka <xnevrl00>
+ */
+
 #pragma once
 #include <stdlib.h>
 #include <stdio.h>

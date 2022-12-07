@@ -1,3 +1,15 @@
+/**
+ * Project: Implementace překladače imperativního jazyka IFJ22
+ * 
+ * @file symtable.c
+ * @brief Table of symbols
+ * 
+ * @author Nikolas Nosál <xnosal01>
+ * @author Adam Mrkva <xmrkva04>
+ * @author Rostislav Navrátil <xnavra72>
+ * @author David Nevrlka <xnevrl00>
+ */
+
 #include "symtable.h"
 
 /* - - - - - - - - - - - - - */

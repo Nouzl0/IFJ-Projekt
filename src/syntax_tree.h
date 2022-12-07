@@ -1,3 +1,15 @@
+/**
+ * Project: Implementace překladače imperativního jazyka IFJ22
+ * 
+ * @file syntax_tree.h
+ * @brief Header file for syntax tree
+ * 
+ * @author Nikolas Nosál <xnosal01>
+ * @author Adam Mrkva <xmrkva04>
+ * @author Rostislav Navrátil <xnavra72>
+ * @author David Nevrlka <xnevrl00>
+ */
+
 #pragma once
 
 #include <stdlib.h>
