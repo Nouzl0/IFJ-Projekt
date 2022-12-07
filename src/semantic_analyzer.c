@@ -26,6 +26,20 @@ bool valid_return_type(token_type expected, token_type returned){
 	return false;
 } 
 
+token_type return_normalize(token_type tok){
+	switch(tok){
+		case NIL_INT:
+			return INT;
+		case NIL_FLOAT:
+			return FLOAT;
+		case NIL_STRING:
+			return STRING;
+		default:
+			return tok;
+	}
+	return tok;
+	
+} 
 
 
 void register_function(STList* table, stx_node_t* func_item){
@@ -252,25 +266,26 @@ token_type rec_check_types(expr_node_t* expr){
 				return VOID;
 			}
 		}
-		return return_type;
+		
+		return return_normalize(return_type);
 	}
 	return expr->token.type;
 }
 
-void analyze_block(stx_node_t* block, bool is_root, char* func_name){
+void analyze_block(stx_node_t* block, char* func_name){
 	
 	if(!block){
 		return;
 	}
-	
+	/* Unused scope of variables
 	char** remove_arr = malloc(sizeof(char*) * 5);
 	int remove_arr_size = 5;
 	int remove_arr_len = 0;
-	
+	*/
 	STElementDataPtr data;
 	for (int i = 0; i < block->items_len; i++){
 		if(global_err_ptr->error){
-			free(remove_arr);
+			//free(remove_arr);
 			return;
 		}
 		
@@ -314,7 +329,7 @@ void analyze_block(stx_node_t* block, bool is_root, char* func_name){
 			case RETEXPR:
 				if(!func_name){
 					semantic_error(FUNCTION_RETURN_ERROR, *item->token, "Return statement not in function");
-					free(remove_arr);
+					//free(remove_arr);
 					return;
 				}
 				
@@ -322,7 +337,7 @@ void analyze_block(stx_node_t* block, bool is_root, char* func_name){
 				
 				if(!valid_return_type(data->type,rec_check_types(item->expr))){
 					if(global_err_ptr->error){
-						free(remove_arr);
+						//free(remove_arr);
 						return;
 					}
 					semantic_error(FUNCTION_RETURN_ERROR, *item->token, "Returned type differs from function definition");
@@ -332,14 +347,14 @@ void analyze_block(stx_node_t* block, bool is_root, char* func_name){
 			case IFELSE:
 				rec_check_types(item->expr);
 				//If block
-				analyze_block(item->items[0], false, func_name);
+				analyze_block(item->items[0], func_name);
 				//Else block
-				analyze_block(item->items[1], false, func_name);
+				analyze_block(item->items[1], func_name);
 				break;
 			
 			case WHILEBLOCK:
 				rec_check_types(item->expr);
-				analyze_block(item, false, func_name);
+				analyze_block(item, func_name);
 				break;
 				
 			default:
@@ -354,7 +369,7 @@ void analyze_block(stx_node_t* block, bool is_root, char* func_name){
 		}
 	}
 	*/
-	free(remove_arr);
+	//free(remove_arr);
 	
 }
 
@@ -403,12 +418,14 @@ void insert_builtins(STList* table){
 	ST_Create(table, "substring");
 	data = ST_DataGet(table, "substring");
 	data->type = NIL_STRING;
-	data->param_len = 2;
+	data->param_len = 3;
 	data->params = malloc(sizeof(STDataParam) * data->param_len);
 	data->params[0].type = STRING;
 	data->params[0].param_name = NULL;
-	data->params[1].type = STRING;
+	data->params[1].type = INT;
 	data->params[1].param_name = NULL;
+	data->params[2].type = INT;
+	data->params[2].param_name = NULL;
 	
 	ST_Create(table, "ord");
 	data = ST_DataGet(table, "ord");
@@ -469,7 +486,7 @@ void analyze_ast(stx_node_t* ast_root){
 				data->tok_ptr = name_item->token;
 			}
 			
-			analyze_block(item->items[2],true,item->items[0]->token->content);
+			analyze_block(item->items[2],item->items[0]->token->content);
 			
 			ST_Dispose(&sym_table);
 
@@ -478,7 +495,7 @@ void analyze_ast(stx_node_t* ast_root){
 	
 	sym_table = ST_Init(10);
 	//Prochazi vsechny prvky a anylyzuje je
-	analyze_block(ast_root,true,NULL);
+	analyze_block(ast_root,NULL);
 	ST_Dispose(&sym_table);
 	
 

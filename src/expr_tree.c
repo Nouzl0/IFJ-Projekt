@@ -216,6 +216,17 @@ void expr_node_dtor(expr_node_t* en_ptr){
 	
 }
 
+void tok_content_esc_print(char * str){
+    int i = 0;
+    while(str[i] != 0){
+        if(str[i] > ' ' && str[i] != '\\'){
+            printf("%c",str[i]);
+        } else {
+            printf("|%.3d",str[i]);
+        }
+        i++;
+    }
+}
 
 /**
  * Recursively calls itself on expression nodes and prints out 
@@ -232,7 +243,10 @@ void expr_node_print(expr_node_t* en_ptr){
 	
 	printf("\"type\": \"%s\",",token_enum_to_string(en_ptr->token.type));
 	if(en_ptr->token.content != NULL){
-		printf("\"content\": \"%s\",",en_ptr->token.content);
+		//printf("\"content\": \"%s\",",en_ptr->token.content);
+		printf("\"content\": \"");
+		tok_content_esc_print(en_ptr->token.content);
+		printf("\",");
 	}
 	printf("\"precedence\": \"%d\",",en_ptr->precedence);
 	if(en_ptr->is_terminal){
