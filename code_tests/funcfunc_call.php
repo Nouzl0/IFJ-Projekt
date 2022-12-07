@@ -2,10 +2,14 @@
     declare(strict_types=1);
 
     // add
-    function add(int $x): int {
-        return $x + 1;
+    function add(int $x, int $y): int {
+        return $x + $y;
     }
-    $test_3 = add(6);
-    write($test_3);
+
+    $num = add(add(1 + 1, 1 + 1), add(1 + 1, 1 + 1));
+    write($num);
+
+    $num = add(add(1 + 1, 1 + 1), add(1 + 1, 1 + 1));
+    write($num);
 
 ?>  

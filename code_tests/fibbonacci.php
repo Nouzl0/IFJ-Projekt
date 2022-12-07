@@ -1,7 +1,7 @@
 <?php
     declare(strict_types=1);
 
-    function fibonacci(int $number): int {
+    function fibbonacci(int $number): int {
         
         if ($number == 0) {
             return 0;
@@ -9,21 +9,21 @@
             if ($number == 1) {
                 return 1;
             } else {
-                return fibonacci($number - 1) + fibonacci($number - 2);
+                return fibbonacci($number - 1) + fibbonacci($number - 2);
             }
         } 
     }
 
-    $number = 10;
+    $number = 20;
     $counter = 0;
 
     while ($counter < $number) {
-
         // counter
         $counter = $counter + 1;
+        $number = fibbonacci($number);
 
         // fibonacci
-        write(fibonacci($number), " ");
+        write($number, " ");
     }
 
 ?>

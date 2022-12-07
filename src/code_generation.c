@@ -81,10 +81,15 @@ void do_block(stx_node_t *AS_Tree, STList *symbol_table, bool is_func) // a.k.a 
 
         printf("# - FUNCTION GLOBAL VARIABLES - #\n");
         printf("DEFVAR GF@%%freturn\n");
+        printf("DEFVAR GF@%%fparam0\n");
+        printf("DEFVAR GF@%%fparam1\n");
+        printf("DEFVAR GF@%%fparam2\n");
+        printf("DEFVAR GF@%%fparam3\n");
+        printf("DEFVAR GF@%%fparam4\n");
         printf("# =============================== #\n");
         
         // print langauge defined functions
-        func_substring();
+        //func_substring();
     }
 
     // #3 - go through all nodes in tree recursively
@@ -196,7 +201,7 @@ void do_assignexpr(stx_node_t* AS_Tree, STList *symbol_table) {
                 func_print(AS_Tree->expr, AS_Tree->token->content);
             }
 
-        // is not arithmetic expression
+        // is assignment
         } else {
             printf("MOVE LF@%s %s\n", AS_Tree->token->content, stack_pop(&right_stack));
         }
@@ -937,8 +942,13 @@ void logic_print(expr_node_t* AP_Tree, STList *symbol_table, char* label, int la
 
 void func_print(expr_node_t* AP_Tree, char *token_content) {
     
+    // #0 - variables
+    static int func_call = 0;
+    static int first_params_len = 0;
+
     // #1 - checking if the function is language-defined
     int func_num = is_defined_func(AP_Tree);
+    
 
     // #2 - if defined, does the function
     switch (func_num) {
@@ -975,50 +985,80 @@ void func_print(expr_node_t* AP_Tree, char *token_content) {
 
         // user defined
         default:
-            // create function frame
-            printf("CREATEFRAME\n"); 
 
             // init function variables
             for (int i = 0; i < AP_Tree->params_len; i++) {
 
-                // printing move instruction
-                if ((AP_Tree->params[i]->left == NULL) && (AP_Tree->params[i]->right == NULL)) {
-                    // is func call
-                    if (AP_Tree->params[i]->token.type == IDENTIFIER) {
-                        func_print(AP_Tree->params[i], token_content);
+                // function call which calls functions
+                if (AP_Tree->token.type == IDENTIFIER && AP_Tree->params[i]->token.type == IDENTIFIER) {
+                    
+                    // recursive call
+                    func_call++;
+                    func_print(AP_Tree->params[i], token_content);
 
-                    // is arithmetic expression
-                    } else {
+                    // printing
+                    printf("DEFVAR LF@%%ffvar%d\n", func_call);
+                    printf("MOVE LF@%%ffvar%d GF@%%freturn\n", func_call);
+
+                    // saving to buffer
+                    char buffer[1000];
+                    sprintf(buffer, "LF@%%ffvar%d", func_call);
+                    stack_push_string(&right_stack, buffer);
+
+                    printf("\n");
+
+                    if (i == AP_Tree->params_len - 1) {
+                        
+                        // creating frame for last call
+                        printf("CREATEFRAME\n");
+                        for (int i = 0; i < AP_Tree->params_len; i++) {
+                            char *ffvar = stack_pop(&right_stack);
+                            printf("DEFVAR TF@%%fvar%d\n", i);
+                            printf("MOVE TF@%%fvar%d %s\n", i, ffvar);
+                        }
+
+                        // printing call instruction
+                        printf("CALL func%s\n", AP_Tree->token.content);
+                    }
+
+                // normal function call
+                } else {
+
+                    // printing createframe instruction
+                    if (i == 0) {
+                        printf("CREATEFRAME\n");
+                    }
+
+                    // printing move instruction
+                    if ((AP_Tree->params[i]->left == NULL) && (AP_Tree->params[i]->right == NULL)) {
+
                         // define variables
                         printf("DEFVAR TF@%%fvar%d\n", i);
 
                         // adding to stack and printing from it
                         print_stack(AP_Tree->params[i], false);
                         printf("MOVE TF@%%fvar%d %s\n", i, stack_pop(&right_stack));
+
+                    // else solve arithmetic expression
+                    } else {
+                            // define variables
+                            printf("DEFVAR TF@%%fvar%d\n", i);
+                            // appending the number to the variable name
+                            char buffer[1000];
+                            sprintf(buffer, "TF@%%fvar%d", i);
+
+                            // recurive call
+                            arithmetic_print(AP_Tree->params[i], buffer, false);
                     }
 
-                // else solve arithmetic expression
-                } else {
-                    // is func call
-                    if (AP_Tree->params[i]->token.type == IDENTIFIER) {
-                        func_print(AP_Tree->params[i], token_content);
-
-                    // is arithmetic expression
-                    } else {
-                        // define variables
-                        printf("DEFVAR TF@%%fvar%d\n", i);
-                        // appending the number to the variable name
-                        char buffer[1000];
-                        sprintf(buffer, "TF@%%fvar%d", i);
-
-                        // recurive call
-                        arithmetic_print(AP_Tree->params[i], buffer, false);
+                    // printing call instruction
+                    if (i == AP_Tree->params_len - 1) {
+                        printf("CALL func%s\n", AP_Tree->token.content);
                     }
                 }
+                
             }
-
-            // print function call
-            printf("CALL func%s\n", AP_Tree->token.content);
+            
             break;
         }
 }
@@ -1070,9 +1110,26 @@ void func_readf(expr_node_t* AP_Tree, char *token_content) {
 // simple print used for debugging
 void func_write(expr_node_t* AP_Tree) 
 {
-    for(int i = 0; i < AP_Tree->params_len; i++){
-        print_stack(AP_Tree->params[i], false);
-        printf("WRITE %s\n", stack_pop(&right_stack));
+    for (int i = 0; i < AP_Tree->params_len; i++) {
+
+        // if func call
+        if (AP_Tree->params[i]->token.type == IDENTIFIER) {
+            // go to bottom
+            func_print(AP_Tree->params[i], NULL); 
+            // define variables
+            printf("WRITE GF@%%freturn\n", i);
+        }
+
+        // if arithmetic expression
+        if (AP_Tree->params[i]->token.type != IDENTIFIER) {
+            if (AP_Tree->params[i]->left == NULL && AP_Tree->params[i]->right == NULL) {
+                print_stack(AP_Tree->params[i], false);
+                printf("WRITE %s\n", stack_pop(&right_stack));
+            } else {
+                arithmetic_print(AP_Tree->params[i], "GF@\%freturn", true);
+                printf("WRITE GF@%%freturn\n");
+            }
+        }
     }
 }
 
@@ -1113,10 +1170,6 @@ void func_floatval(expr_node_t* AP_Tree, char *token_content){
 void func_substring(void) 
 {
     printf("# - FUNCTION SUBSTRING - #\n");
-    printf("#check vars\n");
-    printf("#var1 is input string\n");
-    printf("#var2 is the beginning index\n");
-    printf("#var3 is the index after end of substring\n");
     printf("JUMP %%substring\n");
     printf("LABEL funcsubstring\n");
     printf("PUSHFRAME\n");
@@ -1142,7 +1195,6 @@ void func_substring(void)
     printf("MOVE GF@%%tmp1 string@\n");
     printf("JUMP %%substring1\n");
     printf("LABEL %%substring1\n");
-    printf("#keep only desired chars\n");
     printf("JUMPIFEQ %%strkeep GF@%%tmp0 LF@var2\n");
     printf("ADD GF@%%tmp0 GF@%%tmp0 int@1\n");
     printf("JUMP %%substring1\n");

@@ -9,12 +9,6 @@
 #include "tokens_lib.h"
 #include "stack_lib.h"
 
-// checks if AP_Tree token is number terminal, may be changed
-#define both_terminal(AP_Tree) (((AP_Tree->left->is_terminal == true) && (AP_Tree->right->is_terminal == true)) && ((AP_Tree->left->token.type != IDENTIFIER) && (AP_Tree->right->token.type != IDENTIFIER)))
-#define both_nonterminal(AP_Tree) (((AP_Tree->left->is_terminal == false) && (AP_Tree->right->is_terminal == false)) || ((AP_Tree->left->token.type == IDENTIFIER) && (AP_Tree->right->token.type == IDENTIFIER)))
-#define left_terminal(AP_Tree) (((AP_Tree->left->is_terminal == true) && (AP_Tree->right->is_terminal == false)) && (AP_Tree->left->token.type != IDENTIFIER))
-#define right_terminal(AP_Tree) (((AP_Tree->left->is_terminal == false) && (AP_Tree->right->is_terminal == true)) && (AP_Tree->right->token.type != IDENTIFIER))
-
 // main function
 void generate_code(stx_node_t *AS_Tree);
 
